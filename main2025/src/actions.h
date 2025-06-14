@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 extern void action_test_action1(lv_event_t * e);
+extern void action_main_menu_start_inspection(lv_event_t * e);
 
 
 #ifdef __cplusplus

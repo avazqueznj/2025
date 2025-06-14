@@ -1,251 +1,113 @@
+
+/********************************************************************************************
+ * CONFIDENTIAL AND PROPRIETARY
+ * 
+ * 2025 
+ * Zonar systems
+ * v1 (2025) Alejandro Vazquez 
+ * 
+ * This source code is the confidential and proprietary information of [Zonar Systems]
+ * ("Confidential Information"). You shall not disclose such Confidential Information and
+ * shall use it only in accordance with the terms of the license agreement you entered into
+ * with [Zonar Systems].
+ * 
+ * © [2025] [Zonar Systems]. All rights reserved.
+ * 
+ * NOTICE: All information contained herein is, and remains the property of [Zonar Systems]
+ * and its suppliers, if any. The intellectual and technical concepts contained herein are
+ * proprietary to [Zonar Systems] and its suppliers and may be covered by U.S. and Foreign
+ * Patents, patents in process, and are protected by trade secret or copyright law.
+ * Dissemination of this information or reproduction of this material is strictly forbidden
+ * unless prior written permission is obtained from [Zonar Systems].
+ ********************************************************************************************/
+
+
 #include <WiFi.h>
+
+// configure lvgl
 #include "Arduino_H7_Video.h"
 #include "lvgl.h"
 #include "Arduino_GigaDisplayTouch.h"
 
-// display variables
-Arduino_H7_Video          Display(800, 480, GigaDisplayShield);
-Arduino_GigaDisplayTouch  TouchDetector;
-bool screenIsUp = false;
+#include "src/ui.h"
+#include "controlManager.hpp"
+#include "state.hpp"
 
-// the setup function runs once when you press reset or power the board
+
+
+//----------------------------------------------------------
+
+Arduino_H7_Video Display(800, 480, GigaDisplayShield);
+Arduino_GigaDisplayTouch TouchDetector;
+stateClass* stateManager;
 void setup() {
   
-  // initialize digital pin LED_BUILTIN as an output.
+  Display.begin();
+  TouchDetector.begin();
+    
+  // initialize serial comms 
   pinMode(LED_BUILTIN, OUTPUT);
-
-  //Initialize serial and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
-    blinkerror();
+    delayBlink();
   }
 
-  Serial.println("2025 starting....");
+  create_screens();           
+  stateManager = new stateClass();
+  stateManager->openMainScreen();
 
-  setupScreen();
+  // done!!
+  Serial.println("2025 init .... DONE!");  
 }
 
 
+//-----------------
+
+// paint loop
 void loop() {
-
-  
-  Serial.println("2025 looping .. ");
-  delay(200);
-  blinkerror();
-
-  // refresh screen
-  if( screenIsUp ){
-    Serial.println("Painting ... ");
-    lv_timer_handler();
-    
-  }
-
-  Serial.println("2025 looping .. DONE");
+  delayBlink();
+  lv_timer_handler(); 
+  ui_tick();       
 }
 
+//----------------------------------------------------------
 
-//================================================== TEST
 
+#include "src/actions.h"
 
-static void btn_event_cb(lv_event_t * e) {
+extern "C" void action_test_action1(lv_event_t *e) {
   lv_obj_t* btn = (lv_obj_t*) lv_event_get_target(e);
   lv_obj_t* label = (lv_obj_t*) lv_obj_get_child(btn, 0);
   lv_label_set_text_fmt(label, "Clicked!");
+  loadScreen( SCREEN_ID_SELECT_ASSET_SCREEN  );
 }
 
-
-void setupScreen(){
-
-  Serial.println("Initializing screen....");
-  delay(3000);
-  Display.begin();
-  TouchDetector.begin();
-  Serial.println("Initializing screen.... done");
-
-  Serial.println("Begin screen test .... ");
-
-    Serial.println("Get handlers and configure screena  .... ");
-    lv_obj_t * screen = lv_obj_create( lv_scr_act() );
-    lv_obj_set_size(screen, Display.width(), Display.height());
-    Serial.println("Get handlers and configure screena  .... done");
-
-    Serial.println("Configure layout  .... ");    
-    // get handler to grid
-    lv_obj_t * grid = lv_obj_create(lv_scr_act());
-    // set grid
-    static lv_coord_t col_dsc[] = {370, 370, LV_GRID_TEMPLATE_LAST};
-    static lv_coord_t row_dsc[] = {215, 215, LV_GRID_TEMPLATE_LAST};
-    lv_obj_set_grid_dsc_array(grid, col_dsc, row_dsc);
-    lv_obj_set_size(grid, Display.width(), Display.height());
-    Serial.println("Configure layout  .... done");    
+extern "C" void action_main_menu_start_inspection(lv_event_t *e) {
 
 
-  Serial.println("Create cells  .... ");    
-
-    //top left
-    
-    lv_obj_t*  obj1 = lv_obj_create(grid);
-    lv_obj_set_grid_cell(obj1, LV_GRID_ALIGN_STRETCH, 0, 1,  LV_GRID_ALIGN_STRETCH, 0, 1);      //row
-    //bottom left
-    lv_obj_t* obj2 = lv_obj_create(grid);
-    lv_obj_set_grid_cell(obj2, LV_GRID_ALIGN_STRETCH, 0, 1,  LV_GRID_ALIGN_STRETCH, 1, 1);      //row
-    //top right
-    lv_obj_t* obj3 = lv_obj_create(grid);
-    lv_obj_set_grid_cell(obj3, LV_GRID_ALIGN_STRETCH, 1, 1,  LV_GRID_ALIGN_STRETCH, 0, 1);      //row
-    //bottom right
-    lv_obj_t* obj4 = lv_obj_create(grid);
-    lv_obj_set_grid_cell(obj4, LV_GRID_ALIGN_STRETCH, 1, 1,  LV_GRID_ALIGN_STRETCH, 1, 1);      //row
-
-  Serial.println("Create cells  .... done.");    
-
-
-  Serial.println("Label test  .... ");    
-
-    lv_obj_t * label;
-    lv_obj_t * obj;
-
-    lv_obj_t * btn = lv_btn_create(obj1);
-    lv_obj_set_size(btn, 100, 40);
-    lv_obj_center(btn);
-    lv_obj_add_event_cb(btn, btn_event_cb, LV_EVENT_CLICKED, NULL);
-
-    label = lv_label_create(btn);
-    lv_label_set_text(label, "Click me!");
-    lv_obj_center(label);
-
-  Serial.println("Label test  .... done");    
-
-  screenIsUp = true;
 }
 
 
 
+//----------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-//==========================================================================================================
-
-
-char ssid[] = "irazu2G";
-char pass[] = "casiocasio";
-int keyIndex = 0;  
-int status = WL_IDLE_STATUS;
-WiFiClient client;
-
-
-void blinkerror(){
+void delayBlink(){
     digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
-    delay(100);                      // wait for a second
+    delay(50);                      // wait for a second
     digitalWrite(LED_BUILTIN, LOW);   // turn the LED off by making the voltage LOW
-    delay(100);                      // wait for a second  
-}
-
-void printWifiStatus() {
-  // print the SSID of the network you're attached to:
-  Serial.print("SSID: ");
-  Serial.println(WiFi.SSID());
-
-  // print your board's IP address:
-  IPAddress ip = WiFi.localIP();
-  Serial.print("IP Address: ");
-  Serial.println(ip);
-
-  // print the received signal strength:
-  long rssi = WiFi.RSSI();
-  Serial.print("signal strength (RSSI):");
-  Serial.print(rssi);
-  Serial.println(" dBm");
-}
-
-void connectWifi(){
-
-  Serial.println("check wifi hardware....");
-  if (WiFi.status() == WL_NO_SHIELD) {
-    Serial.println("Fatal WL_NO_SHIELD");
-    blinkerror();
-    while (true);
-  }else{
-      Serial.println("... status OK");
-  }
-
-  Serial.println("Connecting....");
-  while ( true ) {
-
-    Serial.println("Attempting to connect to SSID: ");
-    Serial.println(ssid);
-    Serial.println(pass);
-    status = WiFi.begin(ssid, pass);
-    delay(5000);
-
-    if( status == WL_CONNECT_FAILED ){
-      Serial.println("While connecting: [WL_CONNECT_FAILED]"); 
-      blinkerror();
-    } 
-
-    if( status == WL_CONNECTED ){
-      Serial.println("Connected !!"); 
-      break;
-    }
-  }
-  
-  printWifiStatus();
-
-}
-
-void loadConfig(){
-
-  Serial.println("Starting connection to server...");
-  IPAddress server(10,0,0,141);
-  while(!client.connect( server, 8080 ) ){
-    Serial.println("Starting connection to server... FAILED!");
-    Serial.println("Starting connection to server... retry....");
-    blinkerror();
-    delay( 3000 );  
-  }
-
-  Serial.println("GET /server2025/config");
-  client.println("GET /server2025/config");
-  client.println("Accept: */*");
-  client.println("\r\n");
-
-  delay( 1000 ); // <-- fix this - you load until timeo or end of trx marker - for all trxs
-
-  Serial.println("READ ----------------------");
-  Serial.print( "Available: " ); Serial.println( client.available() );
-
-  while ( client.available() ) {
-    char c = client.read();
-    Serial.write(c);
-  }
-
-  Serial.println("---------------------- READ");
-
-  Serial.println("Disconnect!");
-  if (!client.connected()) {
-    Serial.println();
-    Serial.println("disconnecting from server.");
-    client.stop();
-  }
+    delay(50);                      // wait for a second  
 }
 
 
 
-
-  
-
-
+//----------------------------------------------------------
+//----------------------------------------------------------
 
 
-
-
+// setup eez
+// in eez peoject override location of lvgl heder -> "lvglInclude": "lvgl.h"
+// in sketch add folder src, and copy the code
+// set code output to sketch path, so it makes a src folder with all the files
+// in ino, include ui.h
+// lv_conf in C:\Users\alejandro.vazquez\AppData\Local\Arduino15\packages\arduino\hardware\mbed_giga\4.3.1\libraries\Arduino_H7_Video\src
 

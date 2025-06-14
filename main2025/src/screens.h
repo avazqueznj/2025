@@ -11,8 +11,12 @@ typedef struct _objects_t {
     lv_obj_t *main;
     lv_obj_t *select_asset_screen;
     lv_obj_t *obj0;
-    lv_obj_t *button1;
     lv_obj_t *logo1;
+    lv_obj_t *button1_2;
+    lv_obj_t *button1;
+    lv_obj_t *button1_1;
+    lv_obj_t *obj1;
+    lv_obj_t *logo1_1;
 } objects_t;
 
 extern objects_t objects;
