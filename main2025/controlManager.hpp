@@ -9,26 +9,24 @@
 
 class screenClass{
 public:
-    // uses
     ScreensEnum screenId;
-    // has
 
-    screenClass( ScreensEnum screenIdParam ): screenId{screenIdParam}
-    {
-    }
-
+    screenClass( ScreensEnum screenIdParam ): screenId{screenIdParam}{}
     virtual void open(){
         loadScreen( screenId );        
     };
-
     virtual bool close(){
         return( true );
     }
-
+    virtual void handleEvents( lv_event_t* e ){
+        Serial.println("basescreen: event unhandled ...");  
+    }
     virtual ~screenClass(){
     }
 };
 
+//-------------------------------------------------
+//-------------------------------------------------
 //-------------------------------------------------
 
 
@@ -37,7 +35,34 @@ public:
     mainScreenClass(): screenClass( SCREEN_ID_MAIN ){    
     }
 
+    void handleEvents( lv_event_t* e ) override{
+        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
+        if(target == objects.do_sync ){
+            Serial.println("main: sync ...");  
+        }else
+        if(target == objects.do_settings ){
+            Serial.println("main: settings ...");  
+        }else{
+            Serial.println("main: unkown event ?");  
+        }
+    }
+
     virtual ~mainScreenClass(){};
+};
+
+
+//-------------------------------------------------
+
+
+class selectAssetScreenClass:public screenClass{
+public:
+    selectAssetScreenClass(): screenClass( SCREEN_ID_SELECT_ASSET_SCREEN ){    
+    }
+
+    void handleEvents( lv_event_t* e ) override{       
+    }
+
+    virtual ~selectAssetScreenClass(){};
 };
 
 

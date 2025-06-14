@@ -37,9 +37,11 @@
 
 //----------------------------------------------------------
 
+
 Arduino_H7_Video Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch TouchDetector;
-stateClass* stateManager;
+stateClass* stateManager = NULL;
+
 void setup() {
   
   Display.begin();
@@ -60,7 +62,6 @@ void setup() {
   Serial.println("2025 init .... DONE!");  
 }
 
-
 //-----------------
 
 // paint loop
@@ -69,24 +70,6 @@ void loop() {
   lv_timer_handler(); 
   ui_tick();       
 }
-
-//----------------------------------------------------------
-
-
-#include "src/actions.h"
-
-extern "C" void action_test_action1(lv_event_t *e) {
-  lv_obj_t* btn = (lv_obj_t*) lv_event_get_target(e);
-  lv_obj_t* label = (lv_obj_t*) lv_obj_get_child(btn, 0);
-  lv_label_set_text_fmt(label, "Clicked!");
-  loadScreen( SCREEN_ID_SELECT_ASSET_SCREEN  );
-}
-
-extern "C" void action_main_menu_start_inspection(lv_event_t *e) {
-
-
-}
-
 
 
 //----------------------------------------------------------

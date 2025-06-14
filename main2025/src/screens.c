@@ -46,11 +46,12 @@ void create_screen_main() {
             lv_label_set_text(obj, "EVIR 2025");
         }
         {
-            // button1_2
+            // doSettings
             lv_obj_t *obj = lv_btn_create(parent_obj);
-            objects.button1_2 = obj;
+            objects.do_settings = obj;
             lv_obj_set_pos(obj, 306, 314);
             lv_obj_set_size(obj, 188, 50);
+            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
             {
                 lv_obj_t *parent_obj = obj;
                 {
@@ -64,12 +65,12 @@ void create_screen_main() {
             }
         }
         {
-            // button1
+            // doInspectButton
             lv_obj_t *obj = lv_btn_create(parent_obj);
-            objects.button1 = obj;
+            objects.do_inspect_button = obj;
             lv_obj_set_pos(obj, 306, 116);
             lv_obj_set_size(obj, 188, 50);
-            lv_obj_add_event_cb(obj, action_main_menu_start_inspection, LV_EVENT_PRESSED, (void *)0);
+            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
             {
                 lv_obj_t *parent_obj = obj;
                 {
@@ -83,11 +84,12 @@ void create_screen_main() {
             }
         }
         {
-            // button1_1
+            // doSync
             lv_obj_t *obj = lv_btn_create(parent_obj);
-            objects.button1_1 = obj;
+            objects.do_sync = obj;
             lv_obj_set_pos(obj, 306, 196);
             lv_obj_set_size(obj, 188, 50);
+            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
             {
                 lv_obj_t *parent_obj = obj;
                 {
@@ -101,9 +103,12 @@ void create_screen_main() {
             }
         }
         {
+            // doPower
             lv_obj_t *obj = lv_btn_create(parent_obj);
+            objects.do_power = obj;
             lv_obj_set_pos(obj, 353, 440);
             lv_obj_set_size(obj, 94, 40);
+            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
             {
                 lv_obj_t *parent_obj = obj;
                 {
