@@ -18,6 +18,21 @@ typedef struct _objects_t {
     lv_obj_t *do_power;
     lv_obj_t *obj1;
     lv_obj_t *logo1_1;
+    lv_obj_t *forward_from_select_asset;
+    lv_obj_t *back_from_select_asset;
+    lv_obj_t *obj2;
+    lv_obj_t *obj3;
+    lv_obj_t *obj4;
+    lv_obj_t *obj5;
+    lv_obj_t *obj6;
+    lv_obj_t *obj7;
+    lv_obj_t *obj8;
+    lv_obj_t *obj9;
+    lv_obj_t *obj10;
+    lv_obj_t *obj11;
+    lv_obj_t *de_select_asset;
+    lv_obj_t *select_asset;
+    lv_obj_t *read_asset_tag;
 } objects_t;
 
 extern objects_t objects;

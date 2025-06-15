@@ -16,12 +16,19 @@ public:
   }
 
   void handleEvents( lv_event_t* e ){
+      Serial.println("state: Event ...");    
       lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
       if(target == objects.do_inspect_button ){
         openSelectAssetScreen();
-      }else{
-        if( currentScreenState != NULL ) currentScreenState->handleEvents( e );          
+      }else        
+      if(target == objects.back_from_select_asset ){
+        openMainScreen();
+      }else
+      if( currentScreenState != NULL ){ 
+        Serial.println("state: ? Forwarding ...");    
+        currentScreenState->handleEvents( e );          
       }
+      
   }
 
   void openMainScreen(){
