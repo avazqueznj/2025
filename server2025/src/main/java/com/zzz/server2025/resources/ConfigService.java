@@ -10,10 +10,12 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.BufferedReader;
 import java.util.Iterator;
 
 @WebServlet(name = "config", urlPatterns = {"/config"})
-public class server2025 extends HttpServlet {
+public class ConfigService extends HttpServlet {
+    
     
     @Override
     protected void doGet(
@@ -22,11 +24,10 @@ public class server2025 extends HttpServlet {
 
               
         Logger logger = Logger.getLogger(getClass().getName());
-        logger.info("GETCONFIG: Start....");
+        logger.info("GETCONFIG: Start....12");
                 
-        try{
-            
-            logger.info("GETCONFIG: Send....");
+        try{                                  
+            logger.info( "GETCONFIG: Sending config...." + KMetaUtilsClass.timeStamp() );
             
             logger.info("GETCONFIG: Loading....");            
             persistentTextClass configFile = new persistentTextClass( "EVIRconfig1.txt" );
@@ -35,22 +36,25 @@ public class server2025 extends HttpServlet {
             
             response.setContentType("text/html;charset=UTF-8");
             PrintWriter writer = response.getWriter();
-            
+                                  
             //write the response
+            writer.println( "DATE*" + KMetaUtilsClass.timeStamp() );
             Iterator configFileLine = configFile.iterator();
             while( configFileLine.hasNext() ){
                 writer.println( configFileLine.next() );
             }
 
             writer.close();
-            logger.info("GETCONFIG: Send.... DONE!\r\n");            
+            logger.info( "GETCONFIG: Send.... DONE!\r\n");            
                                                
         }catch( Exception error ){
-            logger.severe(
+            logger.severe(                    
                     KMetaUtilsClass.getStackTrace(error) );
         }
                         
     }
-
+    
+    //------------------------------------------------
+            
 }
 
