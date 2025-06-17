@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "src/screens.h"
 #include <exception>
+#include "domainManager.hpp"
 
 //-------------------------------------------------
 
@@ -32,22 +33,40 @@ public:
 
 class mainScreenClass:public screenClass{
 public:
+
+    commsClass* comms = NULL;
+
     mainScreenClass(): screenClass( SCREEN_ID_MAIN ){    
+        comms = new commsClass();
     }
 
     void handleEvents( lv_event_t* e ) override{
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
         if(target == objects.do_sync ){
             Serial.println("main: sync ...");  
+            try{
+
+                comms->up();
+                comms->getConfigFromServer();
+
+            }catch( const std::runtime_error& error ){
+                Serial.println("** ERROR **");  
+                Serial.println( error.what() );  
+            }
+
         }else
         if(target == objects.do_settings ){
             Serial.println("main: settings ...");  
+
+            
         }else{
             Serial.println("main: unkown event ?");  
         }
     }
 
-    virtual ~mainScreenClass(){};
+    virtual ~mainScreenClass(){
+        delete comms;
+    };
 };
 
 

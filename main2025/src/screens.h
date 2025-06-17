@@ -16,6 +16,7 @@ typedef struct _objects_t {
     lv_obj_t *do_inspect_button;
     lv_obj_t *do_sync;
     lv_obj_t *do_power;
+    lv_obj_t *help1;
     lv_obj_t *obj1;
     lv_obj_t *logo1_1;
     lv_obj_t *forward_from_select_asset;
@@ -33,6 +34,7 @@ typedef struct _objects_t {
     lv_obj_t *de_select_asset;
     lv_obj_t *select_asset;
     lv_obj_t *read_asset_tag;
+    lv_obj_t *help2;
 } objects_t;
 
 extern objects_t objects;

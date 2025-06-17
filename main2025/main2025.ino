@@ -41,6 +41,7 @@
 Arduino_H7_Video Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch TouchDetector;
 stateClass* stateManager = NULL;
+WiFiClient client;
 
 void setup() {
   

@@ -121,6 +121,25 @@ void create_screen_main() {
                 }
             }
         }
+        {
+            // help1
+            lv_obj_t *obj = lv_btn_create(parent_obj);
+            objects.help1 = obj;
+            lv_obj_set_pos(obj, 685, 26);
+            lv_obj_set_size(obj, 94, 40);
+            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    lv_obj_set_pos(obj, 0, 0);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text(obj, "help");
+                }
+            }
+        }
     }
     
     tick_screen_main();
@@ -400,8 +419,8 @@ void create_screen_select_asset_screen() {
         }
         {
             lv_obj_t *obj = lv_list_create(parent_obj);
-            lv_obj_set_pos(obj, 460, 68);
-            lv_obj_set_size(obj, 314, 349);
+            lv_obj_set_pos(obj, 460, 146);
+            lv_obj_set_size(obj, 314, 271);
             lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC);
             lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_ON);
             lv_obj_set_scroll_dir(obj, LV_DIR_VER);
@@ -470,8 +489,8 @@ void create_screen_select_asset_screen() {
         }
         {
             lv_obj_t *obj = lv_textarea_create(parent_obj);
-            lv_obj_set_pos(obj, 21, 70);
-            lv_obj_set_size(obj, 321, 70);
+            lv_obj_set_pos(obj, 21, 79);
+            lv_obj_set_size(obj, 321, 61);
             lv_textarea_set_max_length(obj, 128);
             lv_textarea_set_one_line(obj, false);
             lv_textarea_set_password_mode(obj, false);
@@ -492,6 +511,25 @@ void create_screen_select_asset_screen() {
                     lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_label_set_text(obj, "\uF1EB");
+                }
+            }
+        }
+        {
+            // help2
+            lv_obj_t *obj = lv_btn_create(parent_obj);
+            objects.help2 = obj;
+            lv_obj_set_pos(obj, 681, 26);
+            lv_obj_set_size(obj, 94, 40);
+            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    lv_obj_set_pos(obj, 0, 0);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text(obj, "help");
                 }
             }
         }
