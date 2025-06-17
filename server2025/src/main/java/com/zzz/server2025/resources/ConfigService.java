@@ -25,7 +25,8 @@ public class ConfigService extends HttpServlet {
               
         Logger logger = Logger.getLogger(getClass().getName());
         logger.info("GETCONFIG: Start....12");
-                
+        PrintWriter writer = response.getWriter(); 
+        
         try{                                  
             logger.info( "GETCONFIG: Sending config...." + KMetaUtilsClass.timeStamp() );
             
@@ -35,7 +36,6 @@ public class ConfigService extends HttpServlet {
             logger.info("GETCONFIG: Loading.... DONE");
             
             response.setContentType("text/html;charset=UTF-8");
-            PrintWriter writer = response.getWriter();
                                   
             //write the response
             writer.println( "DATE*" + KMetaUtilsClass.timeStamp() );
@@ -49,7 +49,10 @@ public class ConfigService extends HttpServlet {
                                                
         }catch( Exception error ){
             logger.severe(                    
-                    KMetaUtilsClass.getStackTrace(error) );
+                    KMetaUtilsClass.getStackTrace(error) );            
+            writer.println( "*** Error ***" );
+            writer.println( KMetaUtilsClass.getStackTrace(error) );
+            writer.close();
         }
                         
     }
