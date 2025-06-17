@@ -28,12 +28,9 @@
 #include "Arduino_H7_Video.h"
 #include "lvgl.h"
 #include "Arduino_GigaDisplayTouch.h"
-
 #include "src/ui.h"
-#include "controlManager.hpp"
+
 #include "state.hpp"
-
-
 
 //----------------------------------------------------------
 
@@ -41,10 +38,9 @@
 Arduino_H7_Video Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch TouchDetector;
 stateClass* stateManager = NULL;
-WiFiClient client;
+
 
 void setup() {
-  
   Display.begin();
   TouchDetector.begin();
     
