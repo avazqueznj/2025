@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 extern void action_main_event_dispatcher(lv_event_t * e);
+extern void action_message_box_event_handler(lv_event_t * e);
 
 
 #ifdef __cplusplus

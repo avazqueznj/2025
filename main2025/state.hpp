@@ -56,7 +56,6 @@ public:
 //------------------------------------------------------
 
 extern stateClass* stateManager;
-
 #include "src/actions.h"
 extern "C" void action_main_event_dispatcher(lv_event_t *e) {
   if( stateManager != NULL ){
