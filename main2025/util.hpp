@@ -66,6 +66,9 @@ void createDialog( const char* message )
 #include <vector>
 
 std::vector<String> tokenize(String input, char delimiter) {
+
+    Serial.println( input );
+
     std::vector<String> result;
     int start = 0;
     int end = input.indexOf(delimiter);

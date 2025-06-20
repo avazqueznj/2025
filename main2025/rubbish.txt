@@ -242,7 +242,38 @@ void loadConfig(){
   }
 }
 
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+#include <LittleFS.h>
+
+void setup() {
+  Serial.begin(115200);
+
+  if (!LittleFS.begin()) {
+    Serial.println("LittleFS Mount Failed");
+    return;
+  }
+
+  File file = LittleFS.open("/test.txt", "w");
+  if (!file) {
+    Serial.println("File open failed");
+    return;
+  }
+
+  file.println("Hello from QSPI Flash!");
+  file.close();
+
+  // Read back
+  file = LittleFS.open("/test.txt", "r");
+  while (file.available()) {
+    Serial.write(file.read());
+  }
+  file.close();
+}
+
+void loop() {}
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 
   
