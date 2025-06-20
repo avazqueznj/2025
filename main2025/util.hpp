@@ -1,3 +1,4 @@
+#include "misc/lv_color.h"
 #ifndef UTIL_H
 #define UTIL_H
 
@@ -81,6 +82,46 @@ std::vector<String> tokenize(String input, char delimiter) {
 
     result.push_back(input.substring(start));
     return result;
+}
+
+//----------------------------------------------
+
+// Declare a global pointer for the spinner so we can remove it later
+static lv_obj_t * spinner = NULL;
+
+// Timer callback to remove the spinner
+static void spinnerEnd() {
+
+    if (spinner) {
+        lv_obj_del(spinner);  // Remove (delete) the spinner from screen
+        spinner = NULL;
+    }
+
+}
+
+void spinnerStart() {
+
+    if (spinner) {
+        lv_obj_del(spinner);  // Remove (delete) the spinner from screen
+        spinner = NULL;
+    }
+
+    // Create a spinner with 1000ms rotation and 60 degree arc
+    spinner = lv_spinner_create(lv_scr_act(), 1000, 60);
+
+    // Set spinner size and center it
+    lv_obj_set_size(spinner, 100, 100);
+    lv_obj_center(spinner);
+
+    // Customize appearance (optional)
+    lv_obj_set_style_arc_color(spinner, lv_palette_main(LV_PALETTE_YELLOW), LV_PART_MAIN);
+    lv_obj_set_style_arc_width(spinner, 8, LV_PART_MAIN);
+
+    lv_timer_handler(); // Trigger one UI update
+    delay(20);          // Give display time to actually render
+
+    lv_refr_now(NULL);
+
 }
 
 //----------------------------------------------

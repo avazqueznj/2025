@@ -1,176 +1,7 @@
 #ifndef DOMAIN_H
 #define DOMAIN_H
 
-#include <Arduino.h>
-#include <exception>
-#include <WiFi.h>
-#include "util.hpp"
-
-//-------------------------------------------------------------------------------------
-
-WiFiClient client;
-class commsClass{
-public:
-
-    String ssid = "irazu2G";
-    String pass = "casiocasio";
-
-    enum connectionState{
-        OFF,
-        ON,
-        CONNECTED1
-    };
-    connectionState connState = OFF;
-
-    commsClass(){
-    }
-
-    virtual ~commsClass(){
-    }
-
-    void printWifiStatus() {
-
-        Serial.print("SSID: ");
-        Serial.println(WiFi.SSID());
-
-        IPAddress ip = WiFi.localIP();
-        Serial.print("IP Address: ");
-        Serial.println(ip);
-
-        long rssi = WiFi.RSSI();
-        Serial.print("signal strength (RSSI):");
-        Serial.print(rssi);
-        Serial.println(" dBm");
-    }
-
-    void up(){
-
-        Serial.println("WIFI connect....");  
-
-        if( connState == ON ){
-            Serial.println( "Error attempt connect when connection is ON, ignoring ..." );
-            return;
-        }    
-        if( connState != OFF ){
-            throw std::runtime_error( "Error attempt connect when connection is not OFF or ON" );
-        }    
-        if (WiFi.status() == WL_NO_SHIELD) {
-            throw std::runtime_error("Fatal WL_NO_SHIELD" );
-        }
-
-        Serial.println("Attempting to connect to SSID: ");
-        Serial.println( ssid.c_str() );
-        Serial.println( pass.c_str() );
-        
-        int status = 4;
-        for( int i = 0 ; i < 20; i++){
-            status = WiFi.begin( ssid.c_str(), pass.c_str() );
-            if( ( status ) != WL_CONNECTED ){
-                Serial.print("Waiting ... status: ");             
-                Serial.println( status );        
-                delayBlink();     
-                delay(1000);
-            }else{
-                break;
-            }
-        }
-
-        if( status != WL_CONNECTED ){
-            throw std::runtime_error("While connecting: not [WL_CONNECTED] after 10 sec"); 
-        } else
-        {
-            Serial.println("Connected !!");             
-            printWifiStatus();
-            connState = ON;
-        }        
-    }
-
-    void down(){        
-    }
-
-    std::vector<String> getContent(){
-
-        if( connState != ON ){
-            throw std::runtime_error( "Error attempt read when connection is not ON" );
-        }    
-
-        Serial.println("Starting connection to server... http://155.138.194.237:8080/server2025/config ");
-        IPAddress server(155,138,194,237);
-        for( int i = 0 ; i < 3; i++){
-            if( !client.connect( server, 8080 ) ){
-                Serial.println("Starting connection to server... FAILED!");
-                Serial.println("Starting connection to server... retry....");                
-                delay( 3000 );  
-                delayBlink();
-            }else{
-                Serial.println("Connected to server!");     
-                connState =  CONNECTED1;
-                break;
-            }
-        }
-
-        if( connState != CONNECTED1 ){
-            throw std::runtime_error( "Error could not connect to server !" );
-        }
-
-        // ok send content request
-        Serial.println("GET /server2025/config ...");
-        // send request
-        client.println("GET /server2025/config");
-        client.println("Accept: */*");
-        client.println("\r\n");
-        
-        // read the response ...
-        int wait = 0;
-        std::vector<String> response;        
-        String currentRow;
-        while (true) {            
-
-            if( !client.connected() ){
-                Serial.println("Server disconnected!!");
-                connState =  ON;
-                break;
-            }
-
-            if (client.available()) {
-
-                // read pending data
-                char c = client.read();              
-
-                // end of row   ...                 
-                if( c == '\r' or c == '\n' ){                    
-                    if( currentRow == "" ) continue;  // null line
-                    response.push_back( currentRow );  // add, next ...       
-                    Serial.println(currentRow );
-                    currentRow = "";
-                    continue;
-                }
-
-                // keep reading
-                currentRow += c;
-
-            }else{
-
-                // no data ... wait
-                Serial.println("{no data wait}");
-                delayBlink();
-                wait += 100;
-                if( wait >= 10000 ) throw std::runtime_error( "*** ERROR *** read timeout -" );
-            }                        
-        }
-
-        Serial.println("READ---------------------- done!");
-
-        Serial.println("Release client!");
-        client.stop();            
-        connState =  ON;
-
-        return response;
-    }
-
-    
-
-};
+#include"comms.hpp"
 
 //-------------------------------------------------
 
@@ -178,14 +9,43 @@ public:
 
 //-------------------------------------------------
 
+class layoutZoneClass{
+public:
+    String name;
+    String tag;
+    std::vector<  std::vector<String>  > components;    
+    layoutZoneClass(String nameParam, String tagParam):name(nameParam),tag(tagParam){}
+    virtual ~layoutZoneClass(){}
+};
+
+class layoutClass{
+public:
+    String name;
+    std::vector<  layoutZoneClass  > zones;    
+    layoutClass(String nameParam):name(nameParam){}
+    virtual ~layoutClass(){}    
+};
+
 class assetClass{
 public:
     String ID;
-    String type;
+    String layoutName;
     String tag;
     assetClass( const String IDparam, const String typeParam, const String tagParam ):
-        ID(IDparam),type(typeParam),tag(tagParam) {}
+        ID(IDparam),layoutName(typeParam),tag(tagParam) {}
+    virtual ~assetClass(){}            
 };
+
+class inspectionTypeClass{
+public:
+    String name;
+    std::vector<  String  > layouts;    
+    std::vector<  std::vector<String>  > formFields;    
+    inspectionTypeClass(String nameParam):name(nameParam){}
+    virtual ~inspectionTypeClass(){}    
+};
+
+
 
 //-------------------------------------------------
 
@@ -193,6 +53,9 @@ class domainManagerClass {
 public:
     // has
     commsClass* comms = NULL;
+    std::vector<assetClass> assets;
+    std::vector<layoutClass> layouts;
+    std::vector<inspectionTypeClass> inspectionTypes;
 
     // singleton
     static domainManagerClass& getInstance() {
@@ -209,48 +72,49 @@ public:
     }
 
     void sync(){
+
+        spinnerStart();
+
         try{
+
             comms->up();
             std::vector<String> config = comms->getContent();
             parse( &config );
             comms->down();
 
         }catch( const std::runtime_error& error ){
+            spinnerEnd();
             String chainedError = String( "ERROR: Could not sync: " ) + error.what();            
             throw std::runtime_error( chainedError.c_str() );
         }
+
+        spinnerEnd();        
     }
 
 
-    std::vector<assetClass> assets;
-    void addAsset( std::vector<String>* tokens ){
-        // guard
-        if( tokens->size() != 4 ) throw std::runtime_error( "Parse AS error, expecting 4 tokens" );
-        assets.push_back( assetClass( (*tokens)[ 1 ] , (*tokens)[ 2 ] , (*tokens)[ 3 ]  ) );        
-    }
-
-
-    void parse( std::vector<String>* config ){
-
-        // iterate
+    void parse( std::vector<String>* config ){        
         Serial.println( "Parsing ..." );
 
         std::vector<String>::iterator iterator = config->begin();    
-        while ( iterator != config->end() ) {
-            
+        while ( iterator != config->end() ) {   
+
             // HEADER ----->
             ++iterator; std::vector<String> tokens = tokenize( *iterator , '*' ); 
-            if( tokens[ 0 ] == "2025CONFIG" ){ Serial.println( "[2025CONFIG] found..." );
+            if( tokens[ 0 ] == "2025CONFIG" ){ 
+                Serial.println( "[2025CONFIG] found..." );
 
                 // ASSETS ----->
                 ++iterator; tokens = tokenize( *iterator , '*' );
-                if( tokens[ 0 ] == "ASSETS" ){ Serial.println( "[ASSETS] found... load assets!" );
+                if( tokens[ 0 ] == "ASSETS" ){ 
+                    Serial.println( "[ASSETS] found... load assets!" );
 
                     while( true ){ // read the next asset
                         ++iterator;tokens = tokenize( *iterator , '*' );
                         if( tokens[ 0 ] != "AS" ) break;
 
-                        addAsset( &tokens );
+                        Serial.println( "[ASSET] found... load asset!" );
+                        if( tokens.size() != 4 ) throw std::runtime_error( "Parse AS error, expecting 4 tokens" );
+                        assets.push_back( assetClass( tokens[ 1 ] , tokens[ 2 ] , tokens[ 3 ]  ) );        
                         Serial.println( "Asset added!!" );
                     }
 
@@ -259,25 +123,112 @@ public:
                 }                    
 
                 //  LAYOUTS ----->
-                if( tokens[ 0 ] == "LAYOUTS" ){
+                if( tokens[ 0 ] == "LAYOUTS" ){ 
                     Serial.println( "[LAYOUTS] found... load layout!" );
                     
-                    while( true ){  // get the next  layout
-                        ++iterator;  tokens = tokenize( *iterator , '*' );                    
-                        if( tokens[ 0 ] != "LAY" ) break; // end laypus?
+                    ++iterator;  tokens = tokenize( *iterator , '*' );                                        
+                    while( true ){  // get the next  layout                        
+                        if( tokens[ 0 ] != "LAY" ) break; // end layouts?                        
 
-                        // ====>
-                    }                    
+                        // get name
+                        String layoutName; Serial.println( "Found LAY ..." );                        
+                        if( tokens.size() == 2 ){
+                            layoutName = tokens[ 1 ];
+                        }else std::runtime_error( "Parse error token LAY expecting 2 tokens " );
+
+                        // make layout step 1
+                        layoutClass layout(layoutName);
+
+                        // ZONES --->
+                        ++iterator;tokens = tokenize( *iterator , '*' );
+                        while( true ){ // read the next zone                            
+                            if( tokens[ 0 ] != "LAYZONE" ) break;
+
+                            Serial.println( "Found LayoutZone ..." );                        
+                            if( tokens.size() == 3 ){
+                                String zoneTag = tokens[ 1 ];
+                                String zoneName = tokens[ 2 ];
+
+                                // make layout step 2
+                                layoutZoneClass zone(zoneName,zoneTag);
+
+                                // COMPONENTS ----->
+                                while( true ){ // read the next component
+                                    ++iterator;tokens = tokenize( *iterator , '*' );
+                                    if( tokens[ 0 ] != "ZONECOMP" ) break;
+
+                                    Serial.println( "Found Zone component & defects..." );                        
+                                    if( tokens.size() < 3 ){
+
+                                        // make layout step 3
+                                        zone.components.push_back( tokens );
+
+                                    }else std::runtime_error( "Parse error token ZONECOMP expecting >=3 tokens " );                                                                        
+                                }
+
+                                layout.zones.push_back( zone );
+
+                            }else std::runtime_error( "Parse error token LAYZONE expecting 3 tokens " );
+
+                            // add layout
+                            layouts.push_back( layout );
+                        }
+                    }                 
                 }else{
                     throw std::runtime_error( "Parse error, expecting LAYOUTS" );
+                }     
+
+                //  INSPE TYPES ----->
+                if( tokens[ 0 ] == "INSPTYPES" ){ 
+                    Serial.println( "[INSPTYPES] found... load inpection types!" );
+
+                    ++iterator;  tokens = tokenize( *iterator , '*' );                                        
+                    while( true ){  // get the next inspt
+                        if( tokens[ 0 ] != "INSP" ) break; // end inspts
+                        Serial.println( "Found INSP ..." );                        
+
+                        // get name
+                        String inspName; 
+                        if( tokens.size() < 3 ){
+                            inspName = tokens[ 1 ];                            
+                        }else std::runtime_error( "Parse error token INSP expecting >= 3 tokens " );
+
+                        inspectionTypeClass inspType(inspName);
+                        tokens.erase(tokens.begin(), tokens.begin() + 2);
+                        inspType.layouts = tokens;
+
+                        // FORM FIELDS --->                    
+                        while( true ){ // read the next ff    
+                            ++iterator;tokens = tokenize( *iterator , '*' );                        
+                            if( tokens[ 0 ] != "INSPFF" ) break;
+
+                            Serial.println( "Found FF ..." );                        
+                            if( tokens.size() != 4 ){
+
+                                tokens.erase(tokens.begin(), tokens.begin() + 1);
+                                inspType.formFields.push_back( tokens );
+
+                            }else std::runtime_error( "Parse error token FF expecting 4 tokens " );
+
+                            // add inspt
+                            inspectionTypes.push_back( inspType );
+                        }
+                    }     
+
+                }else{
+                    throw std::runtime_error( "Parse error, expecting INSPTYPES" );
                 }                    
 
-                break;
+                // done?
+                if( tokens[ 0 ] == "END" ){ 
+                    Serial.println( "Found [END]" );                
+                    return;
+                };
 
-            }
-            
-        
-        }
+            } // header found
+        } // scanning
+
+        throw std::runtime_error( "Parse error: unexpected end of file." );   
     }
     
 
