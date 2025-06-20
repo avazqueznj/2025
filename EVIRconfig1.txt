@@ -1,0 +1,102 @@
+2025CONFIG*1
+
+ASSETS
+AS*123*TRUCK*123456
+AS*124*TRUCK*123456
+AS*125*TRUCK*123456
+AS*126*TRUCK*123456
+AS*127*TRUCK*123456
+AS*128*LIGHT DUTY*123456
+AS*129*LIGHT DUTY*123456
+AS*130*LIGHT DUTY*123456
+AS*131*MIXER*123456
+AS*132*MIXER*123456
+AS*133*MIXER*123456
+
+LAYOUTS
+
+LAY*TRUCK
+
+LAYZONE*1*front
+ZONECOMP*light left*broken*missing*blown
+ZONECOMP*light right*broken*missing*blown
+
+LAYZONE*2*engine
+ZONECOMP*oil*low*leaking
+ZONECOMP*break fluid*low*leaking
+
+LAYZONE*3*cabin
+ZONECOMP*license*missing*coffee stain
+ZONECOMP*wind shield*broken
+ZONECOMP*seat*damaged*missing
+
+LAYZONE*4*cargo area
+ZONECOMP*cargo*loose*missing*damaged
+
+LAYZONE*5*rear
+ZONECOMP*light left*broken*missing*blown
+ZONECOMP*light right*broken*missing*blown
+
+
+LAY*LIGHT DUTY
+
+LAYZONE*1*front
+ZONECOMP*light left*broken*missing*blown
+ZONECOMP*light right*broken*missing*blown
+
+LAYZONE*2*engine
+ZONECOMP*oil*low*leaking
+ZONECOMP*break fluid*low*leaking
+
+LAYZONE*3*cabin
+ZONECOMP*license*missing*coffee stain
+ZONECOMP*wind shield*broken
+ZONECOMP*seat*damaged*missing
+
+LAYZONE*5*rear
+ZONECOMP*light left*broken*missing*blown
+ZONECOMP*light right*broken*missing*blown
+
+
+
+LAY*MIXER
+
+LAYZONE*1*front
+ZONECOMP*light left*broken*missing*blown
+ZONECOMP*light right*broken*missing*blown
+
+LAYZONE*2*engine
+ZONECOMP*oil*low*leaking
+ZONECOMP*break fluid*low*leaking
+
+LAYZONE*3*cabin
+ZONECOMP*license*missing*coffee stain
+ZONECOMP*wind shield*broken
+ZONECOMP*seat*damaged*missing
+
+LAYZONE*4*mixer
+ZONECOMP*mixer container*leaking*damaged
+ZONECOMP*mixer control*damaged*failed
+
+LAYZONE*5*rear
+ZONECOMP*light left*broken*missing*blown
+ZONECOMP*light right*broken*missing*blown
+
+
+INSPTYPES
+
+INSP*pre-trip*ALL
+INSPFF*Odometer*text*10
+INSPFF*Fuel level*text*10
+
+INSP*post-trip*TRUCK*LIGHT DUTY
+INSPFF*Odometer*text*10
+INSPFF*Fuel level*text*10
+
+INSP*mixer weight*MIXER
+INSPFF*Odometer*text*10
+INSPFF*mix weight*text*10
+
+
+
+END
