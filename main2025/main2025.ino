@@ -21,7 +21,7 @@
  * unless prior written permission is obtained from [Zonar Systems].
  ********************************************************************************************/
 
-
+#include <SDRAM.h>
 #include <WiFi.h>
 
 // configure lvgl
@@ -34,39 +34,72 @@
 #include "state.hpp"
 
 //----------------------------------------------------------
-
+#include <SDRAM.h>
+extern "C" void* lv_sdram_malloc(size_t size) {
+  return SDRAM.malloc(size);
+}
+extern "C" void lv_sdram_free(void* ptr) {
+  SDRAM.free(ptr);
+}
+extern "C" void* lv_sdram_realloc(void* ptr, size_t size) {
+  // Optional: optimize this for your own allocator if needed
+  void* new_ptr = SDRAM.malloc(size);
+  if (ptr && new_ptr) {
+    memcpy(new_ptr, ptr, size);  // may copy more than old size
+    SDRAM.free(ptr);
+  }
+  return new_ptr;
+}
+//----------------------------------------------------------
 
 Arduino_H7_Video Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch TouchDetector;
-stateClass* stateManager = NULL;
-
-
+stateClass* stateManager = NULL;  
 void setup() {
-  Display.begin();
-  TouchDetector.begin();
-    
-  // initialize serial comms 
-  pinMode(LED_BUILTIN, OUTPUT);
+  SDRAM.begin();  // Initialize SDRAM first
+
   Serial.begin(9600);
   while (!Serial) {
     delayBlink();
-  }
+  } 
 
+  Display.begin();
+  TouchDetector.begin();
+  pinMode(LED_BUILTIN, OUTPUT);
+  
   create_screens();           
   stateManager = new stateClass();
-  stateManager->openMainScreen();
+  stateManager->openScreen( new mainScreenClass() );
 
-  // done!!
   Serial.println("2025 init .... DONE!");  
 }
 
 //-----------------
 
+extern char _end;
+extern "C" char* sbrk(int incr);
+
+int getFreeRam() {
+    char stack_dummy;
+    uintptr_t stack_top = (uintptr_t)&stack_dummy;
+    uintptr_t heap_end = (uintptr_t)sbrk(0);
+    return (int)(stack_top > heap_end ? stack_top - heap_end : heap_end - stack_top);
+}
+
 // paint loop
+int refreshCounts = 0;
 void loop() {
   delayBlink();
   lv_timer_handler(); 
   ui_tick();       
+
+  refreshCounts += 1;
+  if( refreshCounts == 50 ){
+    
+    Serial.println(getFreeRam());
+    refreshCounts = 0;
+   
+  } 
 }
 
 

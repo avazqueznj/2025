@@ -15,6 +15,7 @@ public:
 
     String ssid = "irazu2G";
     String pass = "casiocasio";
+    String serverURL = "zzz2025.duckdns.org";
 
     enum connectionState{
         OFF,
@@ -25,8 +26,14 @@ public:
 
     commsClass(){
     }
-
+  
     virtual ~commsClass(){
+    }
+
+    void setConnectionInfo(const String& ssidParam, const String& passParam, const String& serverURLParam) {
+        ssid = ssidParam;
+        pass = passParam;
+        serverURL = serverURLParam;
     }
 
     void printWifiStatus() {
@@ -95,10 +102,10 @@ public:
             throw std::runtime_error( "Error attempt read when connection is not ON" );
         }    
 
-        Serial.println("Starting connection to server... http://155.138.194.237:8080/server2025/config ");
-        IPAddress server(155,138,194,237);
+        Serial.print("Starting connection to server... ");        
+        Serial.println(serverURL);        
         for( int i = 0 ; i < 3; i++){
-            if( !client.connect( server, 8080 ) ){
+            if( !client.connect( serverURL.c_str(), 8080 ) ){
                 Serial.println("Starting connection to server... FAILED!");
                 Serial.println("Starting connection to server... retry....");                
                 delay( 3000 );  

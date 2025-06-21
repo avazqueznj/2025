@@ -15,15 +15,32 @@ public:
   virtual ~stateClass(){   
   }
 
+  // BASE DISPATCH ----------------------------------------
+
   void handleEvents( lv_event_t* e ){
+
       Serial.println("state: Event ...");    
       lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
+
       if(target == objects.do_inspect_button ){
-        openSelectAssetScreen();
+        Serial.println("state: Open selectAssetScreenClass..");    
+        openScreen( new selectAssetScreenClass() );
+
       }else        
-      if(target == objects.back_from_select_asset ){
-        openMainScreen();
+
+      if(target == objects.do_settings ){
+        Serial.println("state: Open settingsScreenClass..");            
+        openScreen( new settingsScreenClass() );
+
+      }else        
+
+      if( target == objects.back_from_select_asset || target == objects.back_from_settings ){
+        Serial.println("state: Open mainScreenClass..");            
+        openScreen( new mainScreenClass() );
+        
       }else
+
+      // else pass it to the active screen
       if( currentScreenState != NULL ){ 
         Serial.println("state: ? Forwarding ...");    
         currentScreenState->handleEvents( e );          
@@ -31,25 +48,30 @@ public:
       
   }
 
-  void openMainScreen(){
-    Serial.println("state: open main screen ....");        
-    if( currentScreenState != NULL ){
-          if( !currentScreenState->close() ) return;            
-          delete currentScreenState;          
-        }                      
-    currentScreenState = new mainScreenClass();
-    currentScreenState->open();
+  void openScreen( screenClass* screen ){        
+    try{
+
+      // can we close current ??
+      if( currentScreenState != NULL ){        
+        if( !currentScreenState->close() ){
+          Serial.println("state: Current screen says cannot close ... ignore");    
+          return;            
+        }
+      } 
+
+      // ok well see if it opens
+      screen->open();         
+
+      // ok replace and go
+      delete currentScreenState;
+      currentScreenState = screen;
+
+    }catch( const std::runtime_error& error ){
+        Serial.println( error.what() );            
+        createDialog( error.what() );  
+    }
   }
 
-  void openSelectAssetScreen(){
-      Serial.println("state: select asset ....");        
-      if( currentScreenState != NULL ){
-            if( !currentScreenState->close() ) return;            
-            delete currentScreenState;          
-          }                      
-      currentScreenState = new selectAssetScreenClass();
-      currentScreenState->open();
-    }      
 };
 
 

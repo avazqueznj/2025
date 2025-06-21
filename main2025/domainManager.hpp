@@ -52,15 +52,16 @@ public:
 class domainManagerClass {
 public:
     // has
+    bool isLoaded = false;
     commsClass* comms = NULL;
     std::vector<assetClass> assets;
     std::vector<layoutClass> layouts;
     std::vector<inspectionTypeClass> inspectionTypes;
 
     // singleton
-    static domainManagerClass& getInstance() {
+    static domainManagerClass* getInstance() {
         static domainManagerClass instance;  // Guaranteed to be created once (thread-safe in C++11+)
-        return instance;
+        return &instance;
     }    
 
     domainManagerClass(){        
@@ -71,14 +72,21 @@ public:
         delete comms;
     }
 
-    void sync(){
+    void emptyAll() {
+        assets.clear();
+        layouts.clear();
+        inspectionTypes.clear();
+    }
 
+    void sync(){
+        
         spinnerStart();
 
         try{
 
             comms->up();
             std::vector<String> config = comms->getContent();
+            emptyAll();
             parse( &config );
             comms->down();
 
@@ -222,6 +230,7 @@ public:
                 // done?
                 if( tokens[ 0 ] == "END" ){ 
                     Serial.println( "Found [END]" );                
+                    isLoaded = true;
                     return;
                 };
 
