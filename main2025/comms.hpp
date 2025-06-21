@@ -149,6 +149,9 @@ public:
                 if( c == '\r' or c == '\n' ){                    
                     if( currentRow == "" ) continue;  // null line
                     response.push_back( currentRow );  // add, next ...       
+                    if( response.size() > 10000 ){
+                        throw std::runtime_error( "Error more than 10,000 rows read" );
+                    }                
                     Serial.println(currentRow );
                     currentRow = "";
                     continue;
@@ -156,6 +159,9 @@ public:
 
                 // keep reading
                 currentRow += c;
+                if( currentRow.length() > 1000 ){
+                    throw std::runtime_error( "Error more than 1000 chars in line" );
+                }                
 
             }else{
 

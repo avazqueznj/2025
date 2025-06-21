@@ -21,6 +21,7 @@
  * unless prior written permission is obtained from [Zonar Systems].
  ********************************************************************************************/
 
+#include "mbed.h"
 #include <SDRAM.h>
 #include <WiFi.h>
 
@@ -32,23 +33,23 @@
 
 #include "util.hpp"
 #include "state.hpp"
+#include <SDRAM.h>
 
 //----------------------------------------------------------
-#include <SDRAM.h>
-extern "C" void* lv_sdram_malloc(size_t size) {
-  return SDRAM.malloc(size);
-}
-extern "C" void lv_sdram_free(void* ptr) {
-  SDRAM.free(ptr);
-}
-extern "C" void* lv_sdram_realloc(void* ptr, size_t size) {
-  // Optional: optimize this for your own allocator if needed
-  void* new_ptr = SDRAM.malloc(size);
-  if (ptr && new_ptr) {
-    memcpy(new_ptr, ptr, size);  // may copy more than old size
-    SDRAM.free(ptr);
+static void* lvgl_sdram_pool = nullptr;
+extern "C" void* lvgl_get_sdram_pool() {
+  if (!lvgl_sdram_pool) {
+    lvgl_sdram_pool = SDRAM.malloc(3U * 1024U * 1024U);    
+    if (!lvgl_sdram_pool) {
+      Serial.println("SDRAM.malloc failed!");
+      while (true);  // Halt safely
+
+    } else {
+      Serial.print("LVGL pool at 0x");
+      Serial.println((uintptr_t)lvgl_sdram_pool, HEX);
+    }
   }
-  return new_ptr;
+  return lvgl_sdram_pool;
 }
 //----------------------------------------------------------
 
@@ -56,12 +57,13 @@ Arduino_H7_Video Display(800, 480, GigaDisplayShield);
 Arduino_GigaDisplayTouch TouchDetector;
 stateClass* stateManager = NULL;  
 void setup() {
-  SDRAM.begin();  // Initialize SDRAM first
-
+  
   Serial.begin(9600);
   while (!Serial) {
     delayBlink();
   } 
+
+SDRAM.begin();         // Must be FIRST
 
   Display.begin();
   TouchDetector.begin();
@@ -76,15 +78,19 @@ void setup() {
 
 //-----------------
 
-extern char _end;
-extern "C" char* sbrk(int incr);
 
-int getFreeRam() {
-    char stack_dummy;
-    uintptr_t stack_top = (uintptr_t)&stack_dummy;
-    uintptr_t heap_end = (uintptr_t)sbrk(0);
-    return (int)(stack_top > heap_end ? stack_top - heap_end : heap_end - stack_top);
+int getInternalHeapFreeBytes() {
+
+    mbed_stats_heap_t heap_stats;
+    mbed_stats_heap_get(&heap_stats);    
+    const int total_internal_ram = 491520;  
+    int heap_used = heap_stats.current_size;
+    int heap_free = total_internal_ram - heap_used;
+    if (heap_free < 0) heap_free = 0;
+    Serial.print( "Heap free:" );
+    Serial.println( heap_free );
 }
+
 
 // paint loop
 int refreshCounts = 0;
@@ -94,14 +100,11 @@ void loop() {
   ui_tick();       
 
   refreshCounts += 1;
-  if( refreshCounts == 50 ){
-    
-    Serial.println(getFreeRam());
-    refreshCounts = 0;
-   
+  if( refreshCounts == 50 ){  
+    getInternalHeapFreeBytes();
+    refreshCounts = 0;   
   } 
 }
-
 
 
 //----------------------------------------------------------
@@ -114,4 +117,5 @@ void loop() {
 // set code output to sketch path, so it makes a src folder with all the files
 // in ino, include ui.h
 // lv_conf in C:\Users\alejandro.vazquez\AppData\Local\Arduino15\packages\arduino\hardware\mbed_giga\4.3.1\libraries\Arduino_H7_Video\src
+
 
