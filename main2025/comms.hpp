@@ -9,9 +9,10 @@
 
 //-------------------------------------------------------------------------------------
 
-WiFiClient client;
+
 class commsClass{
 public:
+    WiFiClient client;
 
     String ssid = "irazu2G";
     String pass = "casiocasio";
@@ -126,7 +127,7 @@ public:
         // send request
         client.println("GET /server2025/config");
         client.println("Accept: */*");
-        client.println("\r\n");
+        client.println();
         
         // read the response ...
         int wait = 0;

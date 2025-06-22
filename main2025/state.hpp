@@ -3,11 +3,11 @@
 
 #include "controlManager.hpp"
 
-screenClass* currentScreenState = NULL;
-
 class stateClass{
 public:
-  
+
+  screenClass* currentScreenState = NULL;
+
   stateClass( ){            
     currentScreenState =  NULL;  
   }    

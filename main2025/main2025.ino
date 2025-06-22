@@ -80,7 +80,6 @@ SDRAM.begin();         // Must be FIRST
 
 
 void getInternalHeapFreeBytes() {
-
     mbed_stats_heap_t heap_stats;
     mbed_stats_heap_get(&heap_stats);    
     const int total_internal_ram = 491520;  

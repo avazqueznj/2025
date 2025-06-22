@@ -107,12 +107,14 @@ public:
         while ( iterator != config->end() ) {   
 
             // HEADER ----->
-            ++iterator; std::vector<String> tokens = tokenize( *iterator , '*' ); 
+            if (++iterator == config->end()) throw std::runtime_error("Unexpected end ");            
+            std::vector<String> tokens = tokenize( *iterator , '*' );     
             if( tokens[ 0 ] == "2025CONFIG" ){ 
                 Serial.println( "[2025CONFIG] found..." );
 
                 // ASSETS ----->
-                ++iterator; tokens = tokenize( *iterator , '*' );
+                if (++iterator == config->end()) throw std::runtime_error("Unexpected end ");
+                tokens = tokenize( *iterator , '*' );
                 if( tokens[ 0 ] == "ASSETS" ){ 
                     Serial.println( "[ASSETS] found... load assets!" );
 
@@ -134,7 +136,8 @@ public:
                 if( tokens[ 0 ] == "LAYOUTS" ){ 
                     Serial.println( "[LAYOUTS] found... load layout!" );
                     
-                    ++iterator;  tokens = tokenize( *iterator , '*' );                                        
+                    if (++iterator == config->end()) throw std::runtime_error("Unexpected end ");
+                    tokens = tokenize( *iterator , '*' );                                        
                     while( true ){  // get the next  layout                        
                         if( tokens[ 0 ] != "LAY" ) break; // end layouts?                        
 
@@ -142,13 +145,14 @@ public:
                         String layoutName; Serial.println( "Found LAY ..." );                        
                         if( tokens.size() == 2 ){
                             layoutName = tokens[ 1 ];
-                        }else std::runtime_error( "Parse error token LAY expecting 2 tokens " );
+                        }else throw std::runtime_error( "Parse error token LAY expecting 2 tokens " );
 
                         // make layout step 1
                         layoutClass layout(layoutName);
 
                         // ZONES --->
-                        ++iterator;tokens = tokenize( *iterator , '*' );
+                        if (++iterator == config->end()) throw std::runtime_error("Unexpected end ");
+                        tokens = tokenize( *iterator , '*' );
                         while( true ){ // read the next zone                            
                             if( tokens[ 0 ] != "LAYZONE" ) break;
 
@@ -162,25 +166,27 @@ public:
 
                                 // COMPONENTS ----->
                                 while( true ){ // read the next component
-                                    ++iterator;tokens = tokenize( *iterator , '*' );
+                                    if (++iterator == config->end()) throw std::runtime_error("Unexpected end ");
+                                    tokens = tokenize( *iterator , '*' );
                                     if( tokens[ 0 ] != "ZONECOMP" ) break;
 
                                     Serial.println( "Found Zone component & defects..." );                        
-                                    if( tokens.size() < 3 ){
+                                    if( tokens.size() >= 3 ){
 
                                         // make layout step 3
                                         zone.components.push_back( tokens );
 
-                                    }else std::runtime_error( "Parse error token ZONECOMP expecting >=3 tokens " );                                                                        
+                                    }else throw std::runtime_error( "Parse error token ZONECOMP expecting >=3 tokens " );                                                                        
                                 }
 
                                 layout.zones.push_back( zone );
 
-                            }else std::runtime_error( "Parse error token LAYZONE expecting 3 tokens " );
-
-                            // add layout
-                            layouts.push_back( layout );
+                            }else throw std::runtime_error( "Parse error token LAYZONE expecting 3 tokens " );
                         }
+
+                        // add layout
+                        layouts.push_back( layout );
+
                     }                 
                 }else{
                     throw std::runtime_error( "Parse error, expecting LAYOUTS" );
@@ -190,16 +196,17 @@ public:
                 if( tokens[ 0 ] == "INSPTYPES" ){ 
                     Serial.println( "[INSPTYPES] found... load inpection types!" );
 
-                    ++iterator;  tokens = tokenize( *iterator , '*' );                                        
+                    if (++iterator == config->end()) throw std::runtime_error("Unexpected end ");
+                    tokens = tokenize( *iterator , '*' );                                        
                     while( true ){  // get the next inspt
                         if( tokens[ 0 ] != "INSP" ) break; // end inspts
                         Serial.println( "Found INSP ..." );                        
 
                         // get name
                         String inspName; 
-                        if( tokens.size() < 3 ){
+                        if( tokens.size() >= 3 ){
                             inspName = tokens[ 1 ];                            
-                        }else std::runtime_error( "Parse error token INSP expecting >= 3 tokens " );
+                        }else throw std::runtime_error( "Parse error token INSP expecting >= 3 tokens " );
 
                         inspectionTypeClass inspType(inspName);
                         tokens.erase(tokens.begin(), tokens.begin() + 2);
@@ -207,20 +214,23 @@ public:
 
                         // FORM FIELDS --->                    
                         while( true ){ // read the next ff    
-                            ++iterator;tokens = tokenize( *iterator , '*' );                        
+                            if (++iterator == config->end()) throw std::runtime_error("Unexpected end ");
+                            tokens = tokenize( *iterator , '*' );                        
                             if( tokens[ 0 ] != "INSPFF" ) break;
 
                             Serial.println( "Found FF ..." );                        
-                            if( tokens.size() != 4 ){
+                            if( tokens.size() == 4 ){
 
                                 tokens.erase(tokens.begin(), tokens.begin() + 1);
                                 inspType.formFields.push_back( tokens );
 
-                            }else std::runtime_error( "Parse error token FF expecting 4 tokens " );
+                            }else throw std::runtime_error( "Parse error token FF expecting 4 tokens " );
 
-                            // add inspt
-                            inspectionTypes.push_back( inspType );
                         }
+
+                        // add inspt
+                        inspectionTypes.push_back( inspType );
+
                     }     
 
                 }else{
@@ -231,6 +241,7 @@ public:
                 if( tokens[ 0 ] == "END" ){ 
                     Serial.println( "Found [END]" );                
                     isLoaded = true;
+                    printDebugContents();
                     return;
                 };
 
@@ -240,6 +251,51 @@ public:
         throw std::runtime_error( "Parse error: unexpected end of file." );   
     }
     
+
+    void printDebugContents() {
+        Serial.println("========= ASSETS =========");
+        for (const assetClass& a : assets) {
+            Serial.print("ID: "); Serial.print(a.ID);
+            Serial.print(", Layout: "); Serial.print(a.layoutName);
+            Serial.print(", Tag: "); Serial.println(a.tag);
+        }
+
+        Serial.println("========= LAYOUTS =========");
+        for (const layoutClass& l : layouts) {
+            Serial.print("Layout Name: "); Serial.println(l.name);
+            for (const layoutZoneClass& z : l.zones) {
+                Serial.print("  Zone Name: "); Serial.print(z.name);
+                Serial.print(", Tag: "); Serial.println(z.tag);
+                for (const auto& compGroup : z.components) {
+                    Serial.print("    Component Group: ");
+                    for (const String& comp : compGroup) {
+                        Serial.print(comp); Serial.print(" | ");
+                    }
+                    Serial.println();
+                }
+            }
+        }
+
+        Serial.println("========= INSPECTION TYPES =========");
+        for (const inspectionTypeClass& i : inspectionTypes) {
+            Serial.print("Inspection Name: "); Serial.println(i.name);
+            
+            Serial.print("  Layouts: ");
+            for (const String& layout : i.layouts) {
+                Serial.print(layout); Serial.print(" | ");
+            }
+            Serial.println();
+
+            Serial.println("  Form Fields:");
+            for (const auto& fieldGroup : i.formFields) {
+                Serial.print("    ");
+                for (const String& field : fieldGroup) {
+                    Serial.print(field); Serial.print(" | ");
+                }
+                Serial.println();
+            }
+        }
+    }
 
 };
 

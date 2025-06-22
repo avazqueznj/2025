@@ -233,6 +233,8 @@ void create_screen_select_asset_screen() {
                     objects.obj2 = obj;
                     lv_obj_set_pos(obj, 503, 42);
                     lv_obj_set_size(obj, 293, 50);
+                    lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+                    lv_obj_add_flag(obj, LV_OBJ_FLAG_CHECKABLE);
                     lv_obj_set_style_bg_color(obj, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_text_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_layout(obj, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
