@@ -101,8 +101,25 @@ public:
         if( target == objects.select_asset  ){
             Serial.println("select: do select");              
             if( selectedButton != NULL ){
+
+                // get selected asset
                 assetClass* asset = (assetClass*) lv_obj_get_user_data(selectedButton);
                 if (!asset) return;
+                
+                // Check if asset is already in selected_asset_list
+                uint32_t child_count = lv_obj_get_child_cnt(objects.selected_asset_list);
+                for (uint32_t i = 0; i < child_count; ++i) {
+                    lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, i);
+
+                    if (lv_obj_check_type(child, &lv_btn_class)) {
+                        assetClass* childAsset = static_cast<assetClass*>(lv_obj_get_user_data(child));                    
+                        if (childAsset && childAsset == asset) {
+                            return;  // Asset already in list, skip adding
+                        }
+                    }
+                }
+
+                // else, add it
                 addAssetToList( objects.selected_asset_list ,  asset ); 
             }       
             Serial.println("select: do select  OK");                           
