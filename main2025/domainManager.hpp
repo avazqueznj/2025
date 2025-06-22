@@ -31,8 +31,13 @@ public:
     String ID;
     String layoutName;
     String tag;
+    String buttonName;
     assetClass( const String IDparam, const String typeParam, const String tagParam ):
-        ID(IDparam),layoutName(typeParam),tag(tagParam) {}
+        ID(IDparam),layoutName(typeParam),tag(tagParam) {    
+            buttonName += ID;
+            buttonName += ": ";
+            buttonName += layoutName;
+        }
     virtual ~assetClass(){}            
 };
 
