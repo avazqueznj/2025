@@ -79,7 +79,7 @@ SDRAM.begin();         // Must be FIRST
 //-----------------
 
 
-int getInternalHeapFreeBytes() {
+void getInternalHeapFreeBytes() {
 
     mbed_stats_heap_t heap_stats;
     mbed_stats_heap_get(&heap_stats);    
