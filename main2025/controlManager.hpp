@@ -148,6 +148,11 @@ public:
                     }
                 }
 
+                if (!hasCommonInspectionType(asset)) {
+                    createDialog("Error: The assets selected do have a common inspection type!");
+                    return;
+                }
+
                 // else, add it
                 addAssetToList( objects.selected_asset_list ,  asset, false ); 
             }       
@@ -270,11 +275,59 @@ public:
     
     //-------------------------------
 
+
+ bool hasCommonInspectionType(const assetClass* newAsset) {
+        domainManagerClass* domain = domainManagerClass::getInstance();
+
+        for (const inspectionTypeClass& type : domain->inspectionTypes) {
+            bool newAssetOk = false;
+            bool allSelectedOk = true;
+
+            // --- Does this type cover the NEW asset?
+            for (const String& layout : type.layouts) {
+                if (layout == "ALL" || layout == newAsset->layoutName) {
+                    newAssetOk = true;
+                    break;
+                }
+            }
+
+            if (!newAssetOk) continue;
+
+            // --- Does this type cover ALL SELECTED assets?
+            uint32_t child_count = lv_obj_get_child_cnt(objects.selected_asset_list);
+            for (uint32_t i = 0; i < child_count; ++i) {
+                lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, i);
+
+                if (lv_obj_check_type(child, &lv_btn_class)) {
+                    assetClass* childAsset = static_cast<assetClass*>(lv_obj_get_user_data(child));
+                    if (childAsset) {
+                        bool found = false;
+                        for (const String& layout : type.layouts) {
+                            if (layout == "ALL" || layout == childAsset->layoutName) {
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) {
+                            allSelectedOk = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (newAssetOk && allSelectedOk) {
+                return true;  // Found valid inspection type
+            }
+        }
+
+        return false;  // No valid type found
+    }
+
 };
 
 
 //-------------------------------------------------
-
 
 
 class selectInspectionTypeScreenClass:public screenClass{
@@ -285,8 +338,87 @@ public:
 
     void handleEvents( lv_event_t* e ) override{
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
-        
+
+        // button clicks 
+        if (lv_obj_check_type(target, &lv_btn_class)) {
+
+            uint32_t child_count = lv_obj_get_child_cnt(objects.inspection_types);
+
+            for (uint32_t i = 0; i < child_count; ++i) {
+                lv_obj_t* btn = lv_obj_get_child(objects.inspection_types, i);
+
+                if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
+
+                if (btn == target) {
+                    Serial.println("inspection type: click button ...");
+                    // LVGL toggles state automatically
+                } else {
+                    lv_obj_clear_state(btn, LV_STATE_CHECKED);
+                }
+            }
+
+            Serial.println("inspection type: click button DONE");
+            return;
+        }     
+
+        //------------------
+
     }
+
+    void open() override {
+
+        domainManagerClass* domain = domainManagerClass::getInstance();
+
+        // LOAD the LIST from ASSETS ...
+
+        // Clear the list in case it has old items
+        lv_obj_clean(objects.inspection_types);
+
+        // For each inspection type, check if it matches ALL selected assets
+        for (const inspectionTypeClass& type : domain->inspectionTypes) {
+            bool valid = true;
+
+            for (const assetClass& asset : domain->currentInspection.assets) {
+                bool found = false;
+
+                for (const String& layout : type.layouts) {
+                    if (layout == "ALL" || layout == asset.layoutName) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (valid) {
+                // Create button for this inspection type
+                lv_obj_t* btn = lv_btn_create(objects.inspection_types);
+                lv_obj_set_size(btn, 411, 84);
+                lv_obj_add_event_cb(btn, action_main_event_dispatcher, LV_EVENT_PRESSED, static_cast<void*>(const_cast<inspectionTypeClass*>(&type)));
+                lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
+                lv_obj_set_style_bg_color(btn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_text_color(btn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_layout(btn, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_flex_track_place(btn, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+                // Add label with inspection type name
+                {
+                    lv_obj_t* label = lv_label_create(btn);
+                    lv_obj_set_style_align(label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_font(label, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text(label, type.name.c_str());
+                }
+            }
+        }
+
+
+        screenClass::open(); 
+    }
+
 
     virtual ~selectInspectionTypeScreenClass(){
     };
