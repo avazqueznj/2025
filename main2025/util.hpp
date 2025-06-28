@@ -25,11 +25,26 @@ static void btn_event_cb(lv_event_t * e)
 {
     if (lv_event_get_code(e) == LV_EVENT_VALUE_CHANGED) {
         if (overlay) {
-            lv_async_call((lv_async_cb_t)lv_obj_del, overlay);
+            lv_async_call((lv_async_cb_t)lv_obj_del, overlay); // deletes the window
             overlay = NULL;
         }
     }
 }
+
+
+// pass async function to handle the process in the main event loop
+
+/*
+void msgbox_event_cb(lv_event_t *e) {
+    lv_obj_t *msgbox = lv_event_get_target(e);
+    const char *btn_txt = lv_msgbox_get_active_btn_text(msgbox);
+    lv_obj_del(msgbox);
+
+    // Schedule continuation
+    lv_async_call(continue_after_modal, (void *)btn_txt);
+}
+*/
+
 
 void createDialog( const char* message )
 {

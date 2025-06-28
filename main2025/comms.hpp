@@ -5,17 +5,20 @@
 #include <Arduino.h>
 #include <exception>
 #include <WiFi.h>
-#include "util.hpp"
-
-//-------------------------------------------------------------------------------------
 
 
 class commsClass{
 public:
     WiFiClient client;
 
+
     String ssid = "irazu2G";
     String pass = "casiocasio";
+
+    //String ssid = "irazu5g";
+    //String pass = "Casiopea3";
+
+
     String serverURL = "zzz2025.duckdns.org";
 
     enum connectionState{

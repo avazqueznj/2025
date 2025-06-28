@@ -24,16 +24,13 @@ public:
         loadScreen( screenId );        
     };
 
-    virtual bool close(){
-        return( true );
-    }
-
     virtual void handleEvents( lv_event_t* e ){
         Serial.println("basescreen: event unhandled ...");  
     }
 
     virtual ~screenClass(){
     }
+
 };
 
 
@@ -43,6 +40,28 @@ public:
 // SCREEN BACKING STATE
 //-------------------------------------------------
 
+
+class settingsScreenClass:public screenClass{
+public:
+
+    settingsScreenClass(): screenClass( SCREEN_ID_SETTINGS ){    
+    }
+
+    void handleEvents( lv_event_t* e ) override{       
+    }
+
+    void open() override {
+        lv_textarea_set_text( objects.setting_wifi_name,  domainManagerClass::getInstance()->comms->ssid.c_str() );
+        lv_textarea_set_text( objects.setting_wifi_password, domainManagerClass::getInstance()->comms->pass.c_str()  );
+        lv_textarea_set_text( objects.setting_server_url, domainManagerClass::getInstance()->comms->serverURL.c_str()  );
+        screenClass::open();
+    }
+
+    virtual ~settingsScreenClass(){};
+};
+
+
+//-------------------------------------------------
 
 class mainScreenClass:public screenClass{
 public:
@@ -57,17 +76,27 @@ public:
 
                 Serial.println("main: sync ...");  
                 domainManagerClass::getInstance()->sync();
-                createDialog( "Sync successful." );   
+
+                String syncMessage = "Sync successful. \n";
+                syncMessage += "Loaded: \n";
+
+                syncMessage += domainManagerClass::getInstance()->assets.size();
+                syncMessage += " assets \n";
+
+
+                syncMessage += domainManagerClass::getInstance()->layouts.size();
+                syncMessage += " layouts \n";
+
+
+                syncMessage += domainManagerClass::getInstance()->inspectionTypes.size();
+                syncMessage += " Inspection types \n";
+
+                createDialog( syncMessage.c_str() );   
 
             }catch( const std::runtime_error& error ){
                 Serial.println( error.what() );            
                 createDialog( error.what() );     
             }
-        }else
-        if(target == objects.do_settings ){
-
-            Serial.println("main: settings ...");  
-            
         }else{
             Serial.println("main: unkown event ?");  
         }
@@ -120,7 +149,7 @@ public:
                 }
 
                 // else, add it
-                addAssetToList( objects.selected_asset_list ,  asset ); 
+                addAssetToList( objects.selected_asset_list ,  asset, false ); 
             }       
             Serial.println("select: do select  OK");                           
             return;
@@ -162,21 +191,20 @@ public:
         domainManagerClass* domain = domainManagerClass::getInstance();        
         if( !domain->isLoaded ) throw std::runtime_error( "Error, no config has been loaded" );
     
-        // reset
+        // clean
         listButtons.clear();
         lv_obj_clean(objects.asset_list); 
         lv_obj_clean(objects.selected_asset_list); 
-
-        // add buttons
+        // load
         for (const assetClass& asset : domain->assets) {   
-            listButtons.push_back( addAssetToList( objects.asset_list ,  &asset ) ); 
+            listButtons.push_back( addAssetToList( objects.asset_list ,  &asset, true ) ); 
         }
         
         screenClass::open(); // always last, only if no issues
     }
 
 
-    lv_obj_t* addAssetToList( lv_obj_t* parent_obj, const assetClass* asset ){
+    lv_obj_t* addAssetToList( lv_obj_t* parent_obj, const assetClass* asset, bool checkable ){
                     
         lv_obj_t* button = lv_btn_create(parent_obj);
         lv_obj_set_pos(button, 503, 42);
@@ -184,7 +212,7 @@ public:
 
         lv_obj_add_event_cb(button, action_main_event_dispatcher, LV_EVENT_PRESSED, const_cast<assetClass*>(asset) );
 
-        lv_obj_add_flag(button, LV_OBJ_FLAG_CHECKABLE);
+        if( checkable ) lv_obj_add_flag(button, LV_OBJ_FLAG_CHECKABLE);
 
         lv_obj_set_user_data(button, const_cast<assetClass*>(asset));
 
@@ -207,30 +235,12 @@ public:
         return( button );            
     }
     
+    
+    //-------------------------------
 
 };
 
 
-//-------------------------------------------------
-
-class settingsScreenClass:public screenClass{
-public:
-
-    settingsScreenClass(): screenClass( SCREEN_ID_SETTINGS ){    
-    }
-
-    void handleEvents( lv_event_t* e ) override{       
-    }
-
-    void open() override {
-        lv_textarea_set_text( objects.setting_wifi_name,  domainManagerClass::getInstance()->comms->ssid.c_str() );
-        lv_textarea_set_text( objects.setting_wifi_password, domainManagerClass::getInstance()->comms->pass.c_str()  );
-        lv_textarea_set_text( objects.setting_server_url, domainManagerClass::getInstance()->comms->serverURL.c_str()  );
-        screenClass::open();
-    }
-
-    virtual ~settingsScreenClass(){};
-};
 
 
 

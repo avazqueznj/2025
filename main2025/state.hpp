@@ -48,16 +48,10 @@ public:
       
   }
 
+  // SCREEN NAVIGATION
+
   void openScreen( screenClass* screen ){        
     try{
-
-      // can we close current ??
-      if( currentScreenState != NULL ){        
-        if( !currentScreenState->close() ){
-          Serial.println("state: Current screen says cannot close ... ignore");    
-          return;            
-        }
-      } 
 
       // ok well see if it opens
       screen->open();         
