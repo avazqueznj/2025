@@ -46,7 +46,7 @@ typedef struct _objects_t {
     lv_obj_t *logo1_3;
     lv_obj_t *forward_from_select_inspt;
     lv_obj_t *back_from_select_insp;
-    lv_obj_t *asset_list_1;
+    lv_obj_t *inspection_types;
     lv_obj_t *obj6;
     lv_obj_t *help2_2;
 } objects_t;

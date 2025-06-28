@@ -643,9 +643,9 @@ void create_screen_select_asset_inspection_type() {
             }
         }
         {
-            // asset_list_1
+            // inspectionTypes
             lv_obj_t *obj = lv_list_create(parent_obj);
-            objects.asset_list_1 = obj;
+            objects.inspection_types = obj;
             lv_obj_set_pos(obj, 167, 126);
             lv_obj_set_size(obj, 466, 293);
             lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC);

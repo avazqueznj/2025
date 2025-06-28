@@ -2,6 +2,7 @@
 #define DOMAIN_H
 
 #include"comms.hpp"
+#include <LittleFS.h>
 
 //-------------------------------------------------
 

@@ -44,14 +44,14 @@ public:
             static_cast<selectAssetScreenClass*>(currentScreenState)->syncToInspection();
             if (domainManagerClass::getInstance()->currentInspection.assets.size() == 0) {
                 createDialog("Error: No assets selected!");
-                return;  // Or handle it however you need
+                return;  
             }
         } else {
             Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
         }
         openScreen( new selectInspectionTypeScreenClass() );
 
-        
+
       }else        
 
 
