@@ -194,7 +194,9 @@ public:
     void open() override {
 
         domainManagerClass* domain = domainManagerClass::getInstance();        
-        if( !domain->isLoaded ) throw std::runtime_error( "Error, no config has been loaded" );
+        if( !domain->isLoaded ){
+            domain->loadConfigFromKVStore();
+        }
     
         // clean
         listButtons.clear();
@@ -276,7 +278,7 @@ public:
     //-------------------------------
 
 
- bool hasCommonInspectionType(const assetClass* newAsset) {
+    bool hasCommonInspectionType(const assetClass* newAsset) {
         domainManagerClass* domain = domainManagerClass::getInstance();
 
         for (const inspectionTypeClass& type : domain->inspectionTypes) {
@@ -329,11 +331,10 @@ public:
 
 //-------------------------------------------------
 
-
 class selectInspectionTypeScreenClass:public screenClass{
 public:
 
-    selectInspectionTypeScreenClass(): screenClass( SCREEN_ID_SELECT_ASSET_INSPECTION_TYPE ){            
+    selectInspectionTypeScreenClass(): screenClass( SCREEN_ID_SELECT_INSPECTION_TYPE ){            
     }
 
     void handleEvents( lv_event_t* e ) override{
@@ -405,6 +406,12 @@ public:
                 lv_obj_set_style_layout(btn, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_obj_set_style_flex_track_place(btn, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+                lv_obj_set_user_data(btn, static_cast<void*>(const_cast<inspectionTypeClass*>(&type)));
+
+                if (domain->currentInspection.type == &type) {
+                    lv_obj_add_state(btn, LV_STATE_CHECKED);
+                }
+
                 // Add label with inspection type name
                 {
                     lv_obj_t* label = lv_label_create(btn);
@@ -415,16 +422,70 @@ public:
             }
         }
 
+        screenClass::open(); 
+    }
+
+
+   void syncToInspection() {
+
+        domainManagerClass* domain = domainManagerClass::getInstance();
+
+        uint32_t child_count = lv_obj_get_child_cnt(objects.inspection_types);
+
+        for (uint32_t i = 0; i < child_count; ++i) {
+            lv_obj_t* btn = lv_obj_get_child(objects.inspection_types, i);
+
+            if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
+
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                inspectionTypeClass* selectedType =
+                    static_cast<inspectionTypeClass*>(lv_obj_get_user_data(btn));
+
+                if (selectedType != NULL) {
+                    domain->currentInspection.type = selectedType;
+                    Serial.println("syncToInspection: Selected inspection type set by user_data.");
+                } else {
+                    Serial.println("syncToInspection: WARNING — user_data is NULL!");
+                }
+                return; // found checked → done
+            }
+        }
+
+        // If none found checked, clear current type
+        domain->currentInspection.type = NULL;
+        Serial.println("syncToInspection: No inspection type selected — cleared.");
+    }
+
+
+
+
+};
+
+
+//-------------------------------------------------
+
+class formFieldsScreenClass:public screenClass{
+public:
+
+    formFieldsScreenClass(): screenClass( SCREEN_ID_INSPECTION_FORM ){            
+    }
+
+    void handleEvents( lv_event_t* e ) override{
+        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
+
+
+    }
+
+    void open() override {
 
         screenClass::open(); 
     }
 
 
-    virtual ~selectInspectionTypeScreenClass(){
+    virtual ~formFieldsScreenClass(){
     };
 };
 
 
-//-------------------------------------------------
 
 #endif 

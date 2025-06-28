@@ -22,17 +22,20 @@ public:
       Serial.println("state: Event ...");    
       lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
 
-      // MAIN -> open inspect
-      if(target == objects.do_inspect_button ){
-        Serial.println("state: Open selectAssetScreenClass..");    
-        openScreen( new selectAssetScreenClass() );
-      }else        
 
       // MAIN -> open settings
       if(target == objects.do_settings ){
         Serial.println("state: Open settingsScreenClass..");            
         openScreen( new settingsScreenClass() );
       }else        
+
+
+      // MAIN -> open select asset
+      if(target == objects.do_inspect_button ){
+        Serial.println("state: Open selectAssetScreenClass..");    
+        openScreen( new selectAssetScreenClass() );
+      }else        
+
 
       // SELECT -> open select inspection type from select asset
       if(target == objects.do_select_inspection_type ){
@@ -49,8 +52,23 @@ public:
         } else {
             Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
         }
-        openScreen( new selectInspectionTypeScreenClass() );
 
+        openScreen( new selectInspectionTypeScreenClass() );
+      }else        
+
+
+      // INSPE -> open form
+      if(target == objects.do_inspection_form ){
+        Serial.println("state: Open FF ..");            
+
+        // sync the inspe type
+        if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_INSPECTION_TYPE) {          
+            static_cast<selectInspectionTypeScreenClass*>(currentScreenState)->syncToInspection();
+        } else {
+            Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+        }
+
+        openScreen( new formFieldsScreenClass() );
 
       }else        
 
@@ -60,7 +78,7 @@ public:
       // NAV  BUTTONS
       // -----------------------------------------------
 
-      //  SETTINGS or SELECT back to MAIN
+      //  back from asset or settings -> to main
       if( target == objects.back_from_select_asset || target == objects.back_from_settings ){
         Serial.println("state: Open mainScreenClass..");            
         openScreen( new mainScreenClass() );        
@@ -71,6 +89,14 @@ public:
         Serial.println("state: Open select asset..");      
         openScreen( new selectAssetScreenClass() );        
       }else
+
+      // back from form
+      if( target == objects.back_from_form_fields  ){
+        Serial.println("state: Open select inspe..");      
+        openScreen( new selectInspectionTypeScreenClass() );        
+      }else
+
+
 
 
       // -------------------------------------------------------

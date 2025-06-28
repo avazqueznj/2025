@@ -2,7 +2,10 @@
 #define DOMAIN_H
 
 #include"comms.hpp"
-#include <LittleFS.h>
+
+
+#include "KVStore.h"
+#include "kvstore_global_api.h"
 
 //-------------------------------------------------
 
@@ -83,7 +86,14 @@ public:
     inspectionTypeClass* type = NULL;
     std::vector<assetClass> assets;    
     std::vector<defectClass> defects;
+
     inspectionClass(){}
+
+    void clear() {
+        type = NULL;
+        assets.clear();
+        defects.clear();
+    }
 
     std::string toString() const {
         std::string result = "INSPECTION\n";
@@ -196,6 +206,7 @@ public:
             std::vector<String> config = comms->getContent();
             emptyAll();
             parse( &config );
+            saveConfigToKVStore( &config );
             comms->down();
 
         }catch( const std::runtime_error& error ){
@@ -210,6 +221,8 @@ public:
 
     void parse( std::vector<String>* config ){        
         Serial.println( "Parsing ..." );
+
+        currentInspection.clear();
 
         std::vector<String>::iterator iterator = config->begin();    
         while ( iterator != config->end() ) {   
@@ -405,8 +418,63 @@ public:
         }
     }
 
-};
+    //------------------------------
+
+void saveConfigToKVStore(const std::vector<String>* config) {
+
+    Serial.println("Config save to KVStore....");
+
+    String joined = "";
+    for (size_t i = 0; i < config->size(); i++) {
+        joined += config->at(i);
+        joined += '\n';
+    }
+
+    int ret = kv_set("/kv/config2025", joined.c_str(), joined.length(), 0);
+    if (ret != MBED_SUCCESS) {
+        throw std::runtime_error("Failed to save config to KVStore!");
+    }
+
+    Serial.println("Config saved to KVStore.");
+}
+
+void loadConfigFromKVStore() {
+    Serial.println("Config load from KVStore and parsed  ....");
+
+    size_t actual_size = 0;
+    char buffer[4096]; // adjust if your config is bigger
+
+    int ret = kv_get("/kv/config2025", buffer, sizeof(buffer), &actual_size);
+    if (ret != MBED_SUCCESS || actual_size == 0) {
+        throw std::runtime_error("Failed to read config from disk!\nHave you ever synced ?");
+    }
+
+    String joined = String(buffer).substring(0, actual_size);
+
+    std::vector<String> config;
+    int start = 0;
+    int end = joined.indexOf('\n');
+    while (end >= 0) {
+        String line = joined.substring(start, end);
+        line.trim();
+        if (line.length() > 0) {
+            config.push_back(line);
+        }
+        start = end + 1;
+        end = joined.indexOf('\n', start);
+    }
+
+    assets.clear();
+    layouts.clear();
+    inspectionTypes.clear();
+
+    parse(&config);
+
+    Serial.println("Config loaded from KVStore and parsed!");
+}
 
 //-------------------------------------------------
+
+};
 
 #endif 
