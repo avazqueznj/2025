@@ -50,7 +50,104 @@ public:
     virtual ~inspectionTypeClass(){}    
 };
 
+//----------------------
+//----------------------
+//----------------------
 
+
+class defectClass {
+public:
+    std::string zoneName;
+    std::string componentName;
+    std::string defectType;
+    int severity;
+    std::string notes;
+
+    defectClass(const std::string& zoneName,
+                const std::string& componentName,
+                const std::string& defectType,
+                int severity,
+                const std::string& notes)
+        : zoneName(zoneName),
+          componentName(componentName),
+          defectType(defectType),
+          severity(severity),
+          notes(notes)
+    {}
+};
+
+
+class inspectionClass {
+public:
+    inspectionTypeClass* type = NULL;
+    std::vector<assetClass> assets;    
+    std::vector<defectClass> defects;
+    inspectionClass(){}
+
+    std::string toString() const {
+        std::string result = "INSPECTION\n";
+
+        // --- Inspection Type ---
+        if (type != NULL) {
+            result += "Type: ";
+            result += type->name.c_str();
+            result += "\n";
+
+            result += "Layouts:\n";
+            for (const auto& layout : type->layouts) {
+                result += " - ";
+                result += layout.c_str();
+                result += "\n";
+            }
+
+            result += "Form Fields:\n";
+            size_t rowIndex = 0;
+            for (const auto& row : type->formFields) {
+                result += "  Row ";
+                result += std::to_string(rowIndex++);
+                result += ": ";
+                for (size_t i = 0; i < row.size(); ++i) {
+                    result += row[i].c_str();
+                    if (i < row.size() - 1) {
+                        result += ", ";
+                    }
+                }
+                result += "\n";
+            }
+
+        } else {
+            result += "Type: NULL\n";
+        }
+
+        // --- Assets ---
+        result += "Assets:\n";
+        for (const auto& asset : assets) {
+            result += " - ID: ";
+            result += asset.ID.c_str();
+            result += ", Layout: ";
+            result += asset.layoutName.c_str();
+            result += ", Tag: ";
+            result += asset.tag.c_str();
+            result += ", ButtonName: ";
+            result += asset.buttonName.c_str();
+            result += "\n";
+        }
+
+        // --- Defects ---
+        result += "Defects:\n";
+        for (const auto& defect : defects) {
+            result += " - Zone: " + defect.zoneName;
+            result += ", Component: " + defect.componentName;
+            result += ", Type: " + defect.defectType;
+            result += ", Severity: " + std::to_string(defect.severity);
+            result += ", Notes: " + defect.notes;
+            result += "\n";
+        }
+
+        return result;
+    }
+    
+};
 
 //-------------------------------------------------
 
@@ -59,9 +156,14 @@ public:
     // has
     bool isLoaded = false;
     commsClass* comms = NULL;
+
+    // database
     std::vector<assetClass> assets;
     std::vector<layoutClass> layouts;
     std::vector<inspectionTypeClass> inspectionTypes;
+
+    // inspection
+    inspectionClass currentInspection;
 
     // singleton
     static domainManagerClass* getInstance() {

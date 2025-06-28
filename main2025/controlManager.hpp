@@ -195,14 +195,46 @@ public:
         listButtons.clear();
         lv_obj_clean(objects.asset_list); 
         lv_obj_clean(objects.selected_asset_list); 
-        // load
-        for (const assetClass& asset : domain->assets) {   
-            listButtons.push_back( addAssetToList( objects.asset_list ,  &asset, true ) ); 
+
+        // sync with current inspection
+        for (assetClass& asset : domain->assets) {
+            bool inInspection = false;
+
+            for (assetClass& selected : domain->currentInspection.assets) {
+                if (asset.ID == selected.ID) {
+                    addAssetToList(objects.selected_asset_list, &asset, false);
+                    inInspection = true;
+                    break;
+                }
+            }
+
+            if (!inInspection) {
+                listButtons.push_back(addAssetToList(objects.asset_list, &asset, true));
+            }
         }
         
         screenClass::open(); // always last, only if no issues
     }
 
+    void syncToInspection(){
+
+        domainManagerClass* domain = domainManagerClass::getInstance();    
+        domain->currentInspection.assets.clear();
+
+        // Count selected asset buttons
+        uint32_t child_count = lv_obj_get_child_cnt(objects.selected_asset_list);
+        for (uint32_t i = 0; i < child_count; ++i) {
+            lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, i);
+
+            if (lv_obj_check_type(child, &lv_btn_class)) {
+                assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(child));
+                if (asset) {
+                    domain->currentInspection.assets.push_back(*asset);
+                }
+            }
+        }
+
+    }
 
     lv_obj_t* addAssetToList( lv_obj_t* parent_obj, const assetClass* asset, bool checkable ){
                     
@@ -241,7 +273,24 @@ public:
 };
 
 
+//-------------------------------------------------
 
+
+
+class selectInspectionTypeScreenClass:public screenClass{
+public:
+
+    selectInspectionTypeScreenClass(): screenClass( SCREEN_ID_SELECT_ASSET_INSPECTION_TYPE ){            
+    }
+
+    void handleEvents( lv_event_t* e ) override{
+        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
+        
+    }
+
+    virtual ~selectInspectionTypeScreenClass(){
+    };
+};
 
 
 //-------------------------------------------------

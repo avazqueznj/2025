@@ -22,25 +22,59 @@ public:
       Serial.println("state: Event ...");    
       lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
 
+      // MAIN -> open inspect
       if(target == objects.do_inspect_button ){
         Serial.println("state: Open selectAssetScreenClass..");    
         openScreen( new selectAssetScreenClass() );
-
       }else        
 
+      // MAIN -> open settings
       if(target == objects.do_settings ){
         Serial.println("state: Open settingsScreenClass..");            
         openScreen( new settingsScreenClass() );
-
       }else        
 
+      // SELECT -> open select inspection type from select asset
+      if(target == objects.do_select_inspection_type ){
+
+        Serial.println("state: Open select inspe ..");            
+
+        // sync the assets
+        if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_ASSET_SCREEN) {          
+            static_cast<selectAssetScreenClass*>(currentScreenState)->syncToInspection();
+            if (domainManagerClass::getInstance()->currentInspection.assets.size() == 0) {
+                createDialog("Error: No assets selected!");
+                return;  // Or handle it however you need
+            }
+        } else {
+            Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+        }
+        openScreen( new selectInspectionTypeScreenClass() );
+
+        
+      }else        
+
+
+
+      // -----------------------------------------------
+      // NAV  BUTTONS
+      // -----------------------------------------------
+
+      //  SETTINGS or SELECT back to MAIN
       if( target == objects.back_from_select_asset || target == objects.back_from_settings ){
         Serial.println("state: Open mainScreenClass..");            
-        openScreen( new mainScreenClass() );
-        
+        openScreen( new mainScreenClass() );        
       }else
 
-      // else pass it to the active screen
+      // back from select inspe
+      if( target == objects.back_from_select_insp  ){
+        Serial.println("state: Open select asset..");      
+        openScreen( new selectAssetScreenClass() );        
+      }else
+
+
+      // -------------------------------------------------------
+      // else pass the event to the active screen
       if( currentScreenState != NULL ){ 
         Serial.println("state: ? Forwarding ...");    
         currentScreenState->handleEvents( e );          
