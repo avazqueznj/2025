@@ -464,28 +464,154 @@ public:
 
 //-------------------------------------------------
 
-class formFieldsScreenClass:public screenClass{
-public:
+    class formFieldsScreenClass : public screenClass {
+    public:
+        lv_obj_t* kb = NULL;                   
+        std::vector<lv_obj_t*> textareas;     
 
-    formFieldsScreenClass(): screenClass( SCREEN_ID_INSPECTION_FORM ){            
-    }
+        formFieldsScreenClass() : screenClass(SCREEN_ID_INSPECTION_FORM) {
+        }
 
-    void handleEvents( lv_event_t* e ) override{
-        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
+        void handleEvents(lv_event_t* e) override {
+            lv_obj_t* target = lv_event_get_target(e);
+            // For now, no extra event handling
+        }
 
+        void open() override {
+            domainManagerClass* domain = domainManagerClass::getInstance();
+            inspectionTypeClass* currentType = domain->currentInspection.type;
 
-    }
+            if (currentType == NULL) {
+                Serial.println("formFieldsScreenClass: No inspection type selected!");
+                return;
+            }
 
-    void open() override {
+            // Clear old textarea handles
+            textareas.clear();
 
-        screenClass::open(); 
-    }
+            // Use your EEZ-generated list container
+            lv_obj_t* parent_obj = objects.inspection_types_1;
+            lv_obj_clean(parent_obj);
 
+            // Create keyboard if needed
+            if (kb == NULL) {
+                kb = lv_keyboard_create(objects.inspection_form);
+                lv_obj_set_size(kb, 800, 200);
+                lv_obj_align(kb, LV_ALIGN_BOTTOM_MID, 0, 0);
+                lv_obj_add_flag(kb, LV_OBJ_FLAG_HIDDEN);
 
-    virtual ~formFieldsScreenClass(){
+                lv_obj_add_event_cb(kb, [](lv_event_t* e) {
+                    lv_event_code_t code = lv_event_get_code(e);
+                    formFieldsScreenClass* self = static_cast<formFieldsScreenClass*>(lv_event_get_user_data(e));
+                    if (code == LV_EVENT_CANCEL || code == LV_EVENT_READY) {
+                        lv_obj_add_flag(self->kb, LV_OBJ_FLAG_HIDDEN);
+                        Serial.println("Keyboard hidden (OK/Cancel).");
+                    }
+                }, LV_EVENT_ALL, this);
+            }
+
+            for (size_t i = 0; i < currentType->formFields.size(); ++i) {
+                const std::vector<String>& row = currentType->formFields[i];
+
+                String fieldName = row[0];
+                String fieldType = row[1];
+                String fieldMax = row.size() >= 3 ? row[2] : "128";
+
+                int maxLength = fieldMax.toInt();
+                if (maxLength <= 0) maxLength = 128;
+
+                // === Flex container ===
+                lv_obj_t* rowContainer = lv_obj_create(parent_obj);
+                lv_obj_set_size(rowContainer, 700, 72);
+                lv_obj_set_style_pad_right(rowContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_pad_bottom(rowContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_bg_opa(rowContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_border_width(rowContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_radius(rowContainer, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_layout(rowContainer, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_pad_top(rowContainer, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_pad_left(rowContainer, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+                // === Label ===
+                lv_obj_t* label = lv_label_create(rowContainer);
+                lv_obj_set_size(label, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                lv_obj_set_style_text_font(label, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_pad_top(label, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_label_set_text(label, fieldName.c_str());
+
+                // === Textarea ===
+                lv_obj_t* textarea = lv_textarea_create(rowContainer);
+                lv_obj_set_size(textarea, 388, 54);
+                lv_textarea_set_max_length(textarea, maxLength);
+
+                // If there’s a previous value, restore it
+                String prefill = "";
+                if (i < currentType->formFieldValues.size()) {
+                    prefill = currentType->formFieldValues[i];
+                }
+                lv_textarea_set_text(textarea, prefill.c_str());
+
+                lv_textarea_set_one_line(textarea, false);
+                lv_textarea_set_password_mode(textarea, false);
+                lv_obj_clear_flag(textarea,
+                    LV_OBJ_FLAG_SCROLLABLE |
+                    LV_OBJ_FLAG_SCROLL_CHAIN_HOR |
+                    LV_OBJ_FLAG_SCROLL_CHAIN_VER |
+                    LV_OBJ_FLAG_SCROLL_ELASTIC |
+                    LV_OBJ_FLAG_SCROLL_MOMENTUM |
+                    LV_OBJ_FLAG_SCROLL_ON_FOCUS |
+                    LV_OBJ_FLAG_SCROLL_WITH_ARROW);
+                lv_obj_set_style_text_font(textarea, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_obj_set_style_text_color(textarea, lv_color_hex(0xff7095c8), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+                // Save handle for sync
+                textareas.push_back(textarea);
+
+                // Hook: show keyboard on focus
+                lv_obj_add_event_cb(textarea, [](lv_event_t* e) {
+                    lv_obj_t* ta = lv_event_get_target(e);
+                    formFieldsScreenClass* self = static_cast<formFieldsScreenClass*>(lv_event_get_user_data(e));
+                    lv_obj_clear_flag(self->kb, LV_OBJ_FLAG_HIDDEN);
+                    lv_keyboard_set_textarea(self->kb, ta);
+                    Serial.println("Keyboard opened for textarea.");
+                }, LV_EVENT_FOCUSED, this);
+            }
+
+            screenClass::open();
+        }
+
+        void syncToInspection() {
+            domainManagerClass* domain = domainManagerClass::getInstance();
+            inspectionTypeClass* currentType = domain->currentInspection.type;
+
+            if (currentType == NULL) {
+                Serial.println("syncToInspection: No inspection type selected!");
+                return;
+            }
+
+            currentType->formFieldValues.clear();
+
+            for (lv_obj_t* ta : textareas) {
+                const char* input = lv_textarea_get_text(ta);
+                currentType->formFieldValues.push_back(String(input));
+            }
+
+            Serial.println("syncToInspection: Form field values saved:");
+            for (size_t i = 0; i < currentType->formFieldValues.size(); ++i) {
+                Serial.print("  [");
+                Serial.print(i);
+                Serial.print("] ");
+                Serial.println(currentType->formFieldValues[i]);
+            }
+        }
+
+        virtual ~formFieldsScreenClass() {
+            if (kb != NULL) {
+                lv_obj_del(kb);
+                kb = NULL;
+                Serial.println("Keyboard destroyed by formFieldsScreenClass destructor.");
+            }
+        }
     };
-};
-
-
 
 #endif 

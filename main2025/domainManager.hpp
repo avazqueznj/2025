@@ -50,6 +50,7 @@ public:
     String name;
     std::vector<  String  > layouts;    
     std::vector<  std::vector<String>  > formFields;    
+    std::vector<  String  > formFieldValues;    
     inspectionTypeClass(String nameParam):name(nameParam){}
     virtual ~inspectionTypeClass(){}    
 };
