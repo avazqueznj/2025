@@ -58,6 +58,7 @@ typedef struct _objects_t {
     lv_obj_t *back_from_form;
     lv_obj_t *inspection_types_1;
     lv_obj_t *obj8;
+    lv_obj_t *inspection_type_name;
 } objects_t;
 
 extern objects_t objects;

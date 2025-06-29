@@ -482,9 +482,11 @@ public:
             inspectionTypeClass* currentType = domain->currentInspection.type;
 
             if (currentType == NULL) {
-                Serial.println("formFieldsScreenClass: No inspection type selected!");
-                return;
+                throw std::runtime_error("formFieldsScreenClass: No inspection type selected!");
             }
+
+            // Show the current inspection type name at top
+            lv_label_set_text(objects.inspection_type_name, currentType->name.c_str());            
 
             // Clear old textarea handles
             textareas.clear();

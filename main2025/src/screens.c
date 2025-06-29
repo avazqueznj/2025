@@ -853,7 +853,9 @@ void create_screen_inspection_form() {
             }
         }
         {
+            // InspectionTypeName
             lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.inspection_type_name = obj;
             lv_obj_set_pos(obj, 26, 83);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
