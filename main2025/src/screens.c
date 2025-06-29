@@ -859,6 +859,7 @@ void create_screen_inspection_form() {
             lv_obj_set_pos(obj, 26, 83);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xfff90505), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_label_set_text(obj, "Inspection type");
         }
     }
@@ -867,6 +868,113 @@ void create_screen_inspection_form() {
 }
 
 void tick_screen_inspection_form() {
+}
+
+void create_screen_inspection_zones() {
+    lv_obj_t *obj = lv_obj_create(0);
+    objects.inspection_zones = obj;
+    lv_obj_set_pos(obj, 0, 0);
+    lv_obj_set_size(obj, 800, 480);
+    lv_obj_clear_flag(obj, LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_GESTURE_BUBBLE|LV_OBJ_FLAG_SNAPPABLE|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER);
+    {
+        lv_obj_t *parent_obj = obj;
+        {
+            lv_obj_t *obj = lv_obj_create(parent_obj);
+            objects.obj9 = obj;
+            lv_obj_set_pos(obj, 1, 431);
+            lv_obj_set_size(obj, 800, 50);
+            lv_obj_set_style_bg_color(obj, lv_color_hex(0xff326496), LV_PART_MAIN | LV_STATE_DEFAULT);
+        }
+        {
+            // logo1_5
+            lv_obj_t *obj = lv_img_create(parent_obj);
+            objects.logo1_5 = obj;
+            lv_obj_set_pos(obj, 20, 21);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_img_set_src(obj, &img_zonarlogo1);
+            lv_obj_clear_flag(obj, LV_OBJ_FLAG_ADV_HITTEST|LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_GESTURE_BUBBLE|LV_OBJ_FLAG_PRESS_LOCK|LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW|LV_OBJ_FLAG_SNAPPABLE);
+        }
+        {
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            lv_obj_set_pos(obj, 193, 33);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "EVIR 2025");
+        }
+        {
+            // help2_4
+            lv_obj_t *obj = lv_btn_create(parent_obj);
+            objects.help2_4 = obj;
+            lv_obj_set_pos(obj, 681, 26);
+            lv_obj_set_size(obj, 94, 40);
+            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    lv_obj_set_pos(obj, 0, 0);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text(obj, "help");
+                }
+            }
+        }
+        {
+            // submit
+            lv_obj_t *obj = lv_btn_create(parent_obj);
+            objects.submit = obj;
+            lv_obj_set_pos(obj, 610, 437);
+            lv_obj_set_size(obj, 164, 40);
+            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+            lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    lv_obj_set_pos(obj, 0, 0);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text(obj, "Submit \uF0E7");
+                }
+            }
+        }
+        {
+            // backFromFormZones
+            lv_obj_t *obj = lv_btn_create(parent_obj);
+            objects.back_from_form_zones = obj;
+            lv_obj_set_pos(obj, 21, 437);
+            lv_obj_set_size(obj, 94, 40);
+            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    // backFromForm_1
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    objects.back_from_form_1 = obj;
+                    lv_obj_set_pos(obj, 0, 0);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text(obj, "\uF053");
+                }
+            }
+        }
+        {
+            // InspectionTypeName_1
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.inspection_type_name_1 = obj;
+            lv_obj_set_pos(obj, 26, 83);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "Inspection type");
+        }
+    }
+    
+    tick_screen_inspection_zones();
+}
+
+void tick_screen_inspection_zones() {
 }
 
 
@@ -878,6 +986,7 @@ tick_screen_func_t tick_screen_funcs[] = {
     tick_screen_select_asset_screen,
     tick_screen_select_inspection_type,
     tick_screen_inspection_form,
+    tick_screen_inspection_zones,
 };
 void tick_screen(int screen_index) {
     tick_screen_funcs[screen_index]();
@@ -896,4 +1005,5 @@ void create_screens() {
     create_screen_select_asset_screen();
     create_screen_select_inspection_type();
     create_screen_inspection_form();
+    create_screen_inspection_zones();
 }

@@ -13,6 +13,7 @@ typedef struct _objects_t {
     lv_obj_t *select_asset_screen;
     lv_obj_t *select_inspection_type;
     lv_obj_t *inspection_form;
+    lv_obj_t *inspection_zones;
     lv_obj_t *obj0;
     lv_obj_t *logo1;
     lv_obj_t *do_settings;
@@ -59,6 +60,13 @@ typedef struct _objects_t {
     lv_obj_t *inspection_types_1;
     lv_obj_t *obj8;
     lv_obj_t *inspection_type_name;
+    lv_obj_t *obj9;
+    lv_obj_t *logo1_5;
+    lv_obj_t *help2_4;
+    lv_obj_t *submit;
+    lv_obj_t *back_from_form_zones;
+    lv_obj_t *back_from_form_1;
+    lv_obj_t *inspection_type_name_1;
 } objects_t;
 
 extern objects_t objects;
@@ -69,6 +77,7 @@ enum ScreensEnum {
     SCREEN_ID_SELECT_ASSET_SCREEN = 3,
     SCREEN_ID_SELECT_INSPECTION_TYPE = 4,
     SCREEN_ID_INSPECTION_FORM = 5,
+    SCREEN_ID_INSPECTION_ZONES = 6,
 };
 
 void create_screen_main();
@@ -85,6 +94,9 @@ void tick_screen_select_inspection_type();
 
 void create_screen_inspection_form();
 void tick_screen_inspection_form();
+
+void create_screen_inspection_zones();
+void tick_screen_inspection_zones();
 
 void tick_screen_by_id(enum ScreensEnum screenId);
 void tick_screen(int screen_index);

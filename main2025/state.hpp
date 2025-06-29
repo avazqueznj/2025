@@ -73,6 +73,21 @@ public:
       }else        
 
 
+      // FORM -> open zones
+      if(target == objects.do_zones ){
+        Serial.println("state: Open Zones ..");            
+
+        // sync the inspe type
+        if (currentScreenState && currentScreenState->screenId == SCREEN_ID_INSPECTION_FORM) {          
+            static_cast<formFieldsScreenClass*>(currentScreenState)->syncToInspection();
+        } else {
+            Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+        }
+
+        openScreen( new inspectionZonesScreenClass() );
+
+      }else        
+
 
       // -----------------------------------------------
       // NAV  BUTTONS
@@ -90,13 +105,18 @@ public:
         openScreen( new selectAssetScreenClass() );        
       }else
 
-      // back from form
+      // back from FF
       if( target == objects.back_from_form_fields  ){
         Serial.println("state: Open select inspe..");      
         openScreen( new selectInspectionTypeScreenClass() );        
       }else
 
 
+      // back from ZONES
+      if( target == objects.back_from_form_zones  ){
+        Serial.println("state: Open form ");      
+        openScreen( new formFieldsScreenClass() );        
+      }else
 
 
       // -------------------------------------------------------

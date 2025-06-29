@@ -482,7 +482,7 @@ public:
             inspectionTypeClass* currentType = domain->currentInspection.type;
 
             if (currentType == NULL) {
-                throw std::runtime_error("formFieldsScreenClass: No inspection type selected!");
+                throw std::runtime_error("Error: No inspection type selected!");
             }
 
             // Show the current inspection type name at top
@@ -615,5 +615,31 @@ public:
             }
         }
     };
+
+//-------------------------------------------------
+
+    class inspectionZonesScreenClass : public screenClass {
+    public:
+
+        inspectionZonesScreenClass() : screenClass(SCREEN_ID_INSPECTION_ZONES) {
+        }
+
+        void handleEvents(lv_event_t* e) override {
+            lv_obj_t* target = lv_event_get_target(e);
+            // For now, no extra event handling
+        }
+
+        void open() override {
+            
+            screenClass::open();
+        }
+
+        void syncToInspection() {
+        }
+
+        virtual ~inspectionZonesScreenClass() {
+        }
+    };
+
 
 #endif 
