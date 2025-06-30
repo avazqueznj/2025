@@ -32,20 +32,6 @@ static void btn_event_cb(lv_event_t * e)
 }
 
 
-// pass async function to handle the process in the main event loop
-
-/*
-void msgbox_event_cb(lv_event_t *e) {
-    lv_obj_t *msgbox = lv_event_get_target(e);
-    const char *btn_txt = lv_msgbox_get_active_btn_text(msgbox);
-    lv_obj_del(msgbox);
-
-    // Schedule continuation
-    lv_async_call(continue_after_modal, (void *)btn_txt);
-}
-*/
-
-
 void createDialog( const char* message )
 {
     static const char * btns[] = { "OK", "" };

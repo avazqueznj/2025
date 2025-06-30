@@ -629,7 +629,8 @@ public:
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
         lv_obj_t* parent = lv_obj_get_parent(target);
 
-        // On ASSET click -->
+        // =====================================================
+        // On ASSET ----
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_asset_list ) {
             Serial.println("Asset clicked...");
 
@@ -770,140 +771,157 @@ public:
             return;
         }     
 
-        // defect click
-        if (  target == objects.defect_button ) {
-        Serial.println("defect click");
+//----------
+                
+// defect click
+if (target == objects.defect_button) {
+    Serial.println("defect click");
 
-            lv_obj_t *parent_obj = objects.inspection_zones;
+    lv_obj_t *parent_obj = objects.inspection_zones;
 
-            {            
-                // defectDialog
-                lv_obj_t *obj = lv_msgbox_create( parent_obj, "", "", 0, true);
-                objects.defect_dialog = obj;
-                lv_obj_set_pos(obj, 89, 39);
-                lv_obj_set_size(obj, 626, 394);
-                lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW);
-                lv_obj_set_style_align(obj, LV_ALIGN_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_layout(obj, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-                {
-                    lv_obj_t *parent_obj = obj;
-                    {
-                        // minorButton
-                        lv_obj_t *obj = lv_btn_create(parent_obj);
-                        objects.minor_button = obj;
-                        lv_obj_set_pos(obj, 42, 305);
-                        lv_obj_set_size(obj, 164, 40);
-                        lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
-                        lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        {
-                            lv_obj_t *parent_obj = obj;
-                            {
-                                lv_obj_t *obj = lv_label_create(parent_obj);
-                                lv_obj_set_pos(obj, 0, 0);
-                                lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                                lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-                                lv_label_set_text(obj, "minor");
-                            }
-                        }
-                    }
-                    {
-                        // majorButton
-                        lv_obj_t *obj = lv_btn_create(parent_obj);
-                        objects.major_button = obj;
-                        lv_obj_set_pos(obj, 365, 306);
-                        lv_obj_set_size(obj, 164, 40);
-                        lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
-                        lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        {
-                            lv_obj_t *parent_obj = obj;
-                            {
-                                lv_obj_t *obj = lv_label_create(parent_obj);
-                                lv_obj_set_pos(obj, 0, 0);
-                                lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                                lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-                                lv_label_set_text(obj, "major");
-                            }
-                        }
-                    }
-                    {
-                        // zoneList_1
-                        lv_obj_t *obj = lv_list_create(parent_obj);
-                        objects.zone_list_1 = obj;
-                        lv_obj_set_pos(obj, -1, 52);
-                        lv_obj_set_size(obj, 250, 227);
-                        lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC);
-                        lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_ON);
-                        lv_obj_set_scroll_dir(obj, LV_DIR_VER);
-                        lv_obj_set_style_pad_top(obj, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_obj_set_style_pad_left(obj, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_obj_set_style_pad_right(obj, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        {
-                            lv_obj_t *parent_obj = obj;
-                            {
-                                // zoneTemplate_1
-                                lv_obj_t *obj = lv_btn_create(parent_obj);
-                                objects.zone_template_1 = obj;
-                                lv_obj_set_pos(obj, 503, 42);
-                                lv_obj_set_size(obj, 230, 50);
-                                lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
-                                lv_obj_add_flag(obj, LV_OBJ_FLAG_CHECKABLE);
-                                lv_obj_set_style_bg_color(obj, lv_color_hex(0xffdddddd), LV_PART_MAIN | LV_STATE_DEFAULT);
-                                lv_obj_set_style_text_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-                                lv_obj_set_style_layout(obj, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
-                                lv_obj_set_style_flex_track_place(obj, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-                                {
-                                    lv_obj_t *parent_obj = obj;
-                                    {
-                                        lv_obj_t *obj = lv_label_create(parent_obj);
-                                        lv_obj_set_pos(obj, 0, 0);
-                                        lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                                        lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-                                        lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                                        lv_label_set_text(obj, "1 Front");
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    {
-                        lv_obj_t *obj = lv_label_create(parent_obj);
-                        lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_obj_set_pos(obj, 56, 6);
-                        lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                        lv_label_set_text(obj, "Defect:");
-                    }
+    // Find selected component in zone_component_list (index version)
+    std::vector<String>* compVec = nullptr;
+    uint32_t i = 0;
+    lv_obj_t* btn = lv_obj_get_child(objects.zone_component_list, i);
+    while (btn) {
+        if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+            compVec = (std::vector<String>*) lv_obj_get_user_data(btn);
+            break;
+        }
+        ++i;
+        btn = lv_obj_get_child(objects.zone_component_list, i);
+    }
 
-                    {
-                        // defectiveComponentLabel
-                        lv_obj_t *obj = lv_label_create(parent_obj);
-                        lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        objects.defective_component_label = obj;
-                        lv_obj_set_pos(obj, 170, 6 );
-                        lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                        lv_obj_set_style_text_color(obj, lv_color_hex(0xff2196f3), LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_label_set_text(obj, "Lights");
-                    }
-                    {
-                        lv_obj_t *obj = lv_label_create(parent_obj);
-                        lv_obj_set_pos(obj, 255, 52);
-                        lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
-                        lv_label_set_text(obj, "Notes:");
-                    }
-                    {
-                        lv_obj_t *obj = lv_textarea_create(parent_obj);
-                        lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_obj_set_pos(obj, 255, 80);
-                        lv_obj_set_size(obj, 323, 190);
-                        lv_textarea_set_max_length(obj, 128);
-                        lv_textarea_set_one_line(obj, false);
-                        lv_textarea_set_password_mode(obj, false);
-                    }      
+    if (compVec != nullptr) {
 
+        // Create defectDialog
+        lv_obj_t *dialog = lv_msgbox_create(parent_obj, "", "", 0, true);
+        objects.defect_dialog = dialog;
+        lv_obj_set_pos(dialog, 89, 39);
+        lv_obj_set_size(dialog, 626, 500); // Make dialog taller to fit keyboard
+        lv_obj_clear_flag(dialog, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_CHAIN_VER |
+                                    LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_WITH_ARROW);
+        lv_obj_set_style_align(dialog, LV_ALIGN_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_layout(dialog, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+        {
+            lv_obj_t *parent_obj = dialog;
+
+            // minorButton
+            lv_obj_t *minor_btn = lv_btn_create(parent_obj);
+            objects.minor_button = minor_btn;
+            lv_obj_set_pos(minor_btn, 42, 305);
+            lv_obj_set_size(minor_btn, 164, 40);
+            lv_obj_add_event_cb(minor_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+            lv_obj_set_style_text_font(minor_btn, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_t *minor_label = lv_label_create(minor_btn);
+            lv_obj_set_style_align(minor_label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(minor_label, "minor");
+
+            // majorButton
+            lv_obj_t *major_btn = lv_btn_create(parent_obj);
+            objects.major_button = major_btn;
+            lv_obj_set_pos(major_btn, 365, 306);
+            lv_obj_set_size(major_btn, 164, 40);
+            lv_obj_add_event_cb(major_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+            lv_obj_set_style_text_font(major_btn, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_t *major_label = lv_label_create(major_btn);
+            lv_obj_set_style_align(major_label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(major_label, "major");
+
+            // zoneList_1 (defect list)
+            lv_obj_t *zone_list = lv_list_create(parent_obj);
+            objects.zone_list_1 = zone_list;
+            lv_obj_set_pos(zone_list, -1, 52);
+            lv_obj_set_size(zone_list, 250, 227);
+            lv_obj_clear_flag(zone_list, LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_CHAIN_VER | LV_OBJ_FLAG_SCROLL_ELASTIC);
+            lv_obj_set_scrollbar_mode(zone_list, LV_SCROLLBAR_MODE_ON);
+            lv_obj_set_scroll_dir(zone_list, LV_DIR_VER);
+            lv_obj_set_style_pad_top(zone_list, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(zone_list, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(zone_list, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            if (compVec->size() >= 2) {
+                String compName = (*compVec)[1];
+                Serial.print("Selected component: ");
+                Serial.println(compName);
+
+                // Defective component label
+                lv_obj_t *defective_component_label = lv_label_create(parent_obj);
+                lv_obj_set_style_text_font(defective_component_label, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                objects.defective_component_label = defective_component_label;
+                lv_obj_set_pos(defective_component_label, 170, 6);
+                lv_obj_set_style_text_color(defective_component_label, lv_color_hex(0xff2196f3), LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_label_set_text(defective_component_label, compName.c_str());
+
+                // Add defect buttons
+                for (size_t i = 2; i < compVec->size(); ++i) {
+                    String defectName = (*compVec)[i];
+
+                    lv_obj_t* defect_btn = lv_btn_create(zone_list);
+                    lv_obj_set_size(defect_btn, 230, 50);
+                    lv_obj_add_event_cb(defect_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void*)&(*compVec)[i]);
+
+                    lv_obj_set_style_bg_color(defect_btn, lv_color_hex(0xffdddddd), LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_text_color(defect_btn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_layout(defect_btn, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_flex_track_place(defect_btn, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+                    lv_obj_t* label = lv_label_create(defect_btn);
+                    lv_obj_set_style_text_font(label, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text(label, defectName.c_str());
                 }
-
             }
-            Serial.println("defect click done!");
-        }        
+
+            // Static defect label
+            lv_obj_t *defect_label = lv_label_create(parent_obj);
+            lv_obj_set_style_text_font(defect_label, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_pos(defect_label, 56, 6);
+            lv_label_set_text(defect_label, "Defect:");
+
+            // Notes label
+            lv_obj_t *notes_label = lv_label_create(parent_obj);
+            lv_obj_set_pos(notes_label, 255, 52);
+            lv_label_set_text(notes_label, "Notes:");
+
+            // Notes textarea
+            lv_obj_t *notes_textarea = lv_textarea_create(parent_obj);
+            lv_obj_set_style_text_font(notes_textarea, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_pos(notes_textarea, 255, 80);
+            lv_obj_set_size(notes_textarea, 323, 190);
+            lv_textarea_set_max_length(notes_textarea, 128);
+            lv_textarea_set_one_line(notes_textarea, false);
+            lv_textarea_set_password_mode(notes_textarea, false);
+
+            // Keyboard for textarea
+            lv_obj_t *kb = lv_keyboard_create(parent_obj);
+            lv_obj_set_size(kb, 323, 150);
+            lv_obj_set_pos(kb, 255, 280); // below textarea
+            lv_keyboard_set_textarea(kb, notes_textarea);
+
+            // Show/hide keyboard on focus
+            lv_obj_add_event_cb(notes_textarea, [](lv_event_t * e) {
+                lv_event_code_t code = lv_event_get_code(e);
+                lv_obj_t *kb_obj = (lv_obj_t *) lv_event_get_user_data(e);
+
+                if (code == LV_EVENT_FOCUSED) {
+                    lv_obj_clear_flag(kb_obj, LV_OBJ_FLAG_HIDDEN);
+                }
+            }, LV_EVENT_ALL, kb);
+
+            lv_obj_add_flag(kb, LV_OBJ_FLAG_HIDDEN);
+        }
+
+        Serial.println("defect click done!");
+
+    } else {
+        Serial.println("No component selected!");
+        createDialog("Please select a component.");
+    }
+}
+//----------
 
     }
 
