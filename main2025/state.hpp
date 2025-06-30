@@ -129,6 +129,7 @@ public:
         }
 
       }catch( const std::runtime_error& error ){
+        Serial.println( "*** ERROR while handling event ***" );                    
         Serial.println( error.what() );                    
       }      
   }

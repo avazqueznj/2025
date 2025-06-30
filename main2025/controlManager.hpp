@@ -628,8 +628,9 @@ public:
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
         lv_obj_t* parent = lv_obj_get_parent(target);
 
-        // Make sure one button on 
+        // On ASSET -->
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_asset_list ) {
+            Serial.println("Asset clicked...");
 
             // iterate the list and reset
             uint32_t child_count = lv_obj_get_child_cnt(objects.zone_asset_list  ); // ZONE assetrs list
@@ -683,7 +684,6 @@ public:
                         lv_obj_t* zbtn = lv_btn_create(objects.zone_list);
                         lv_obj_set_size(zbtn, 230, 50);
                         lv_obj_add_flag(zbtn, LV_OBJ_FLAG_CHECKABLE);
-
                         lv_obj_set_style_bg_color(zbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                         lv_obj_set_style_text_color(zbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -717,15 +717,26 @@ public:
                     if (!foundZone) {
                         throw std::runtime_error("inspectionZonesScreenClass: no zones found in layout: " );
                     }
-
-                    if (!foundComponent) {
-                        throw std::runtime_error("inspectionZonesScreenClass: no components found in layout: " );
-                    }
                 }
 
             }
 
-            Serial.println("inspection type: click button DONE");
+            Serial.println("Asset clicked  DONE");
+            return;
+        }     
+
+
+        // On ZONE  -->
+        if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_list ) {
+            Serial.println("Zone click");
+            // iterate the list and reset
+            uint32_t child_count = lv_obj_get_child_cnt(objects.zone_list  ); // ZONE assetrs list
+            for (uint32_t i = 0; i < child_count; ++i) {
+                lv_obj_t* btn = lv_obj_get_child(objects.zone_list, i);
+                if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
+                if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);                
+            }
+            Serial.println("Zone click DONE");
             return;
         }     
 
