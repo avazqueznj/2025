@@ -59,11 +59,14 @@ stateClass* stateManager = NULL;
 void setup() {
   
   Serial.begin(9600);
+  int serialWait = 0;
   while (!Serial) {
-    delayBlink();
+    delayBlink();   
+    serialWait += 100;
+    if( serialWait > 5000 ) break;
   } 
 
-SDRAM.begin();         // Must be FIRST
+  SDRAM.begin();         // Must be FIRST
 
   Display.begin();
   TouchDetector.begin();

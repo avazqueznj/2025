@@ -66,7 +66,16 @@ typedef struct _objects_t {
     lv_obj_t *submit;
     lv_obj_t *back_from_form_zones;
     lv_obj_t *back_from_form_1;
-    lv_obj_t *inspection_type_name_1;
+    lv_obj_t *read_zone;
+    lv_obj_t *all_ok;
+    lv_obj_t *comp_ok;
+    lv_obj_t *defect;
+    lv_obj_t *zone_asset_list;
+    lv_obj_t *asset_template;
+    lv_obj_t *zone_list;
+    lv_obj_t *zone_template;
+    lv_obj_t *zone_component_list;
+    lv_obj_t *compo_template;
 } objects_t;
 
 extern objects_t objects;

@@ -19,113 +19,118 @@ public:
 
   void handleEvents( lv_event_t* e ){
 
-      Serial.println("state: Event ...");    
-      lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
+      try{
+
+        Serial.println("state: Event ...");    
+        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
 
 
-      // MAIN -> open settings
-      if(target == objects.do_settings ){
-        Serial.println("state: Open settingsScreenClass..");            
-        openScreen( new settingsScreenClass() );
-      }else        
+        // MAIN -> open settings
+        if(target == objects.do_settings ){
+          Serial.println("state: Open settingsScreenClass..");            
+          openScreen( new settingsScreenClass() );
+        }else        
 
 
-      // MAIN -> open select asset
-      if(target == objects.do_inspect_button ){
-        Serial.println("state: Open selectAssetScreenClass..");    
-        openScreen( new selectAssetScreenClass() );
-      }else        
+        // MAIN -> open select asset
+        if(target == objects.do_inspect_button ){
+          Serial.println("state: Open selectAssetScreenClass..");    
+          openScreen( new selectAssetScreenClass() );
+        }else        
 
 
-      // SELECT -> open select inspection type from select asset
-      if(target == objects.do_select_inspection_type ){
+        // SELECT -> open select inspection type from select asset
+        if(target == objects.do_select_inspection_type ){
 
-        Serial.println("state: Open select inspe ..");            
+          Serial.println("state: Open select inspe ..");            
 
-        // sync the assets
-        if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_ASSET_SCREEN) {          
-            static_cast<selectAssetScreenClass*>(currentScreenState)->syncToInspection();
-            if (domainManagerClass::getInstance()->currentInspection.assets.size() == 0) {
-                createDialog("Error: No assets selected!");
-                return;  
-            }
-        } else {
-            Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+          // sync the assets
+          if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_ASSET_SCREEN) {          
+              static_cast<selectAssetScreenClass*>(currentScreenState)->syncToInspection();
+              if (domainManagerClass::getInstance()->currentInspection.assets.size() == 0) {
+                  createDialog("Error: No assets selected!");
+                  return;  
+              }
+          } else {
+              Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+          }
+
+          openScreen( new selectInspectionTypeScreenClass() );
+        }else        
+
+
+        // INSPE -> open form
+        if(target == objects.do_inspection_form ){
+          Serial.println("state: Open FF ..");            
+
+          // sync the inspe type
+          if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_INSPECTION_TYPE) {          
+              static_cast<selectInspectionTypeScreenClass*>(currentScreenState)->syncToInspection();
+          } else {
+              Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+          }
+
+          openScreen( new formFieldsScreenClass() );
+
+        }else        
+
+
+        // FORM -> open zones
+        if(target == objects.do_zones ){
+          Serial.println("state: Open Zones ..");            
+
+          // sync the inspe type
+          if (currentScreenState && currentScreenState->screenId == SCREEN_ID_INSPECTION_FORM) {          
+              static_cast<formFieldsScreenClass*>(currentScreenState)->syncToInspection();
+          } else {
+              Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+          }
+
+          openScreen( new inspectionZonesScreenClass() );
+
+        }else        
+
+
+        // -----------------------------------------------
+        // NAV  BUTTONS
+        // -----------------------------------------------
+
+        //  back from asset or settings -> to main
+        if( target == objects.back_from_select_asset || target == objects.back_from_settings ){
+          Serial.println("state: Open mainScreenClass..");            
+          openScreen( new mainScreenClass() );        
+        }else
+
+        // back from select inspe
+        if( target == objects.back_from_select_insp  ){
+          Serial.println("state: Open select asset..");      
+          openScreen( new selectAssetScreenClass() );        
+        }else
+
+        // back from FF
+        if( target == objects.back_from_form_fields  ){
+          Serial.println("state: Open select inspe..");      
+          openScreen( new selectInspectionTypeScreenClass() );        
+        }else
+
+
+        // back from ZONES
+        if( target == objects.back_from_form_zones  ){
+          Serial.println("state: Open form ");      
+          openScreen( new formFieldsScreenClass() );        
+        }else
+
+
+        // -------------------------------------------------------
+        // else pass the event to the active screen
+        if( currentScreenState != NULL ){ 
+          Serial.println("state: ? Forwarding ...");    
+          currentScreenState->handleEvents( e );          
         }
 
-        openScreen( new selectInspectionTypeScreenClass() );
-      }else        
-
-
-      // INSPE -> open form
-      if(target == objects.do_inspection_form ){
-        Serial.println("state: Open FF ..");            
-
-        // sync the inspe type
-        if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_INSPECTION_TYPE) {          
-            static_cast<selectInspectionTypeScreenClass*>(currentScreenState)->syncToInspection();
-        } else {
-            Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
-        }
-
-        openScreen( new formFieldsScreenClass() );
-
-      }else        
-
-
-      // FORM -> open zones
-      if(target == objects.do_zones ){
-        Serial.println("state: Open Zones ..");            
-
-        // sync the inspe type
-        if (currentScreenState && currentScreenState->screenId == SCREEN_ID_INSPECTION_FORM) {          
-            static_cast<formFieldsScreenClass*>(currentScreenState)->syncToInspection();
-        } else {
-            Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
-        }
-
-        openScreen( new inspectionZonesScreenClass() );
-
-      }else        
-
-
-      // -----------------------------------------------
-      // NAV  BUTTONS
-      // -----------------------------------------------
-
-      //  back from asset or settings -> to main
-      if( target == objects.back_from_select_asset || target == objects.back_from_settings ){
-        Serial.println("state: Open mainScreenClass..");            
-        openScreen( new mainScreenClass() );        
-      }else
-
-      // back from select inspe
-      if( target == objects.back_from_select_insp  ){
-        Serial.println("state: Open select asset..");      
-        openScreen( new selectAssetScreenClass() );        
-      }else
-
-      // back from FF
-      if( target == objects.back_from_form_fields  ){
-        Serial.println("state: Open select inspe..");      
-        openScreen( new selectInspectionTypeScreenClass() );        
-      }else
-
-
-      // back from ZONES
-      if( target == objects.back_from_form_zones  ){
-        Serial.println("state: Open form ");      
-        openScreen( new formFieldsScreenClass() );        
-      }else
-
-
-      // -------------------------------------------------------
-      // else pass the event to the active screen
-      if( currentScreenState != NULL ){ 
-        Serial.println("state: ? Forwarding ...");    
-        currentScreenState->handleEvents( e );          
-      }
-      
+      }catch( const std::runtime_error& error ){
+        Serial.println( error.what() );                    
+      }      
   }
 
   // SCREEN NAVIGATION

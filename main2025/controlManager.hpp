@@ -328,6 +328,7 @@ public:
 
 };
 
+//****
 
 //-------------------------------------------------
 
@@ -340,14 +341,12 @@ public:
     void handleEvents( lv_event_t* e ) override{
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
 
-        // button clicks 
+        // make sure one button is selected at a time
         if (lv_obj_check_type(target, &lv_btn_class)) {
 
             uint32_t child_count = lv_obj_get_child_cnt(objects.inspection_types);
-
             for (uint32_t i = 0; i < child_count; ++i) {
                 lv_obj_t* btn = lv_obj_get_child(objects.inspection_types, i);
-
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
 
                 if (btn == target) {
@@ -618,28 +617,163 @@ public:
 
 //-------------------------------------------------
 
-    class inspectionZonesScreenClass : public screenClass {
-    public:
+class inspectionZonesScreenClass : public screenClass {
+public:
+    inspectionZonesScreenClass() : screenClass(SCREEN_ID_INSPECTION_ZONES) {
+    }
 
-        inspectionZonesScreenClass() : screenClass(SCREEN_ID_INSPECTION_ZONES) {
+
+    assetClass* lastSelectedAsset = nullptr;
+    void handleEvents(lv_event_t* e) override {
+        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
+        lv_obj_t* parent = lv_obj_get_parent(target);
+
+        // Make sure one button on 
+        if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_asset_list ) {
+
+            // iterate the list and reset
+            uint32_t child_count = lv_obj_get_child_cnt(objects.zone_asset_list  ); // ZONE assetrs list
+            for (uint32_t i = 0; i < child_count; ++i) {
+
+                lv_obj_t* btn = lv_obj_get_child(objects.zone_asset_list, i);
+                if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
+                if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);
+
+                if (btn == target) {
+
+                    assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
+                    if (!asset) {
+                        throw std::runtime_error("inspectionZonesScreenClass: asset is null");
+                    }
+
+                    if (asset == lastSelectedAsset) {
+                        return; // nothing to do
+                    }else{
+                        lastSelectedAsset = asset;                    
+                    }
+                    
+                    domainManagerClass* domain = domainManagerClass::getInstance();
+                    if (!domain) {
+                        throw std::runtime_error("inspectionZonesScreenClass: domainManagerClass is null");
+                    }
+
+                    lv_obj_clean(objects.zone_list);
+                    lv_obj_clean(objects.zone_component_list);
+
+                    // Find the matching layoutClass
+                    layoutClass* layout = nullptr;
+                    for (layoutClass& l : domain->layouts) {
+                        if (l.name == asset->layoutName) {
+                            layout = &l;
+                            break;
+                        }
+                    }
+
+                    if (!layout) {
+                        throw std::runtime_error("inspectionZonesScreenClass: layout not found" );
+                    }
+
+                    bool foundZone = false;
+                    bool foundComponent = false;
+
+                    for (layoutZoneClass& zone : layout->zones) {
+                        foundZone = true;
+
+                        // Add zone button
+                        lv_obj_t* zbtn = lv_btn_create(objects.zone_list);
+                        lv_obj_set_size(zbtn, 230, 50);
+                        lv_obj_add_flag(zbtn, LV_OBJ_FLAG_CHECKABLE);
+
+                        lv_obj_set_style_bg_color(zbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+                        lv_obj_set_style_text_color(zbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+                        lv_obj_add_event_cb(zbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
+
+                            lv_obj_t* zlabel = lv_label_create(zbtn);
+                            lv_obj_set_style_text_font(zlabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                            lv_label_set_text(zlabel, zone.name.c_str());
+                            lv_obj_set_user_data(zbtn, (void*)&zone);
+
+                        // Add each component inside the zone
+                        /*
+                        for (const std::vector<String>& compVec : zone.components) {
+                            if (compVec.empty()) continue;
+
+                            String compName = compVec[0];
+                            foundComponent = true;
+
+                            lv_obj_t* cbtn = lv_btn_create(objects.zone_component_list);
+                            lv_obj_set_size(cbtn, 280, 50);
+                            lv_obj_add_flag(cbtn, LV_OBJ_FLAG_CHECKABLE);
+                            lv_obj_add_event_cb(cbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
+
+                            lv_obj_t* clabel = lv_label_create(cbtn);
+                            lv_label_set_text(clabel, compName.c_str());
+                            lv_obj_set_user_data(cbtn, (void*)&zone);  // or store compVec pointer if needed
+                        }
+                        */
+                    }
+
+                    if (!foundZone) {
+                        throw std::runtime_error("inspectionZonesScreenClass: no zones found in layout: " );
+                    }
+
+                    if (!foundComponent) {
+                        throw std::runtime_error("inspectionZonesScreenClass: no components found in layout: " );
+                    }
+                }
+
+            }
+
+            Serial.println("inspection type: click button DONE");
+            return;
+        }     
+
+        //------------------
+    }
+
+    void open() override {
+        domainManagerClass* domain = domainManagerClass::getInstance();
+
+        // Clear existing items
+        lv_obj_clean(objects.zone_asset_list);
+        lv_obj_clean(objects.zone_list);
+        lv_obj_clean(objects.zone_component_list);
+
+        for (assetClass& asset : domain->currentInspection.assets) {
+            lv_obj_t* btn = lv_btn_create(objects.zone_asset_list);
+
+            lv_obj_set_size(btn, 182, 84);
+            lv_obj_add_event_cb(btn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
+            lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
+            lv_obj_set_user_data(btn, static_cast<void*>(&asset));
+
+            // Style
+            lv_obj_set_style_bg_color(btn, lv_color_hex(0xff2196f3), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(btn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_layout(btn, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_flex_track_place(btn, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_bottom(btn, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_top(btn, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_left(btn, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_pad_right(btn, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            // Label
+            lv_obj_t* label = lv_label_create(btn);
+            lv_obj_set_style_align(label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_font(label, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(label, asset.ID.c_str());
         }
 
-        void handleEvents(lv_event_t* e) override {
-            lv_obj_t* target = lv_event_get_target(e);
-            // For now, no extra event handling
-        }
+        screenClass::open();
+    }
 
-        void open() override {
-            
-            screenClass::open();
-        }
+    void syncToInspection() {
+        // Placeholder if needed later
+    }
 
-        void syncToInspection() {
-        }
-
-        virtual ~inspectionZonesScreenClass() {
-        }
-    };
-
+    virtual ~inspectionZonesScreenClass() {
+    }
+};
 
 #endif 
