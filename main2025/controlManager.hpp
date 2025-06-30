@@ -628,19 +628,19 @@ public:
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
         lv_obj_t* parent = lv_obj_get_parent(target);
 
-        // On ASSET -->
+        // On ASSET click -->
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_asset_list ) {
             Serial.println("Asset clicked...");
 
             // iterate the list and reset
             uint32_t child_count = lv_obj_get_child_cnt(objects.zone_asset_list  ); // ZONE assetrs list
             for (uint32_t i = 0; i < child_count; ++i) {
-
+                // reset the asset
                 lv_obj_t* btn = lv_obj_get_child(objects.zone_asset_list, i);
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
                 if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);
-
-                if (btn == target) {
+                // build zone list
+                if (btn == target) {  // i know it is unecessary ... now -
 
                     assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
                     if (!asset) {
@@ -661,7 +661,7 @@ public:
                     lv_obj_clean(objects.zone_list);
                     lv_obj_clean(objects.zone_component_list);
 
-                    // Find the matching layoutClass
+                    // Find the layout for the asset
                     layoutClass* layout = nullptr;
                     for (layoutClass& l : domain->layouts) {
                         if (l.name == asset->layoutName) {
@@ -669,14 +669,15 @@ public:
                             break;
                         }
                     }
-
                     if (!layout) {
                         throw std::runtime_error("inspectionZonesScreenClass: layout not found" );
                     }
 
-                    bool foundZone = false;
-                    bool foundComponent = false;
+                    //=================================================
+                    // ZONE RENDER
 
+                    // read the zones from the layout
+                    bool foundZone = false;
                     for (layoutZoneClass& zone : layout->zones) {
                         foundZone = true;
 
@@ -692,26 +693,7 @@ public:
                             lv_obj_t* zlabel = lv_label_create(zbtn);
                             lv_obj_set_style_text_font(zlabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
                             lv_label_set_text(zlabel, zone.name.c_str());
-                            lv_obj_set_user_data(zbtn, (void*)&zone);
-
-                        // Add each component inside the zone
-                        /*
-                        for (const std::vector<String>& compVec : zone.components) {
-                            if (compVec.empty()) continue;
-
-                            String compName = compVec[0];
-                            foundComponent = true;
-
-                            lv_obj_t* cbtn = lv_btn_create(objects.zone_component_list);
-                            lv_obj_set_size(cbtn, 280, 50);
-                            lv_obj_add_flag(cbtn, LV_OBJ_FLAG_CHECKABLE);
-                            lv_obj_add_event_cb(cbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
-
-                            lv_obj_t* clabel = lv_label_create(cbtn);
-                            lv_label_set_text(clabel, compName.c_str());
-                            lv_obj_set_user_data(cbtn, (void*)&zone);  // or store compVec pointer if needed
-                        }
-                        */
+                            lv_obj_set_user_data(zbtn, (void*)&zone);    
                     }
 
                     if (!foundZone) {
@@ -726,21 +708,68 @@ public:
         }     
 
 
-        // On ZONE  -->
+        // On ZONE click -->
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_list ) {
             Serial.println("Zone click");
-            // iterate the list and reset
+            // iterate the zone list and reset
             uint32_t child_count = lv_obj_get_child_cnt(objects.zone_list  ); // ZONE assetrs list
             for (uint32_t i = 0; i < child_count; ++i) {
+                // reset selection
                 lv_obj_t* btn = lv_obj_get_child(objects.zone_list, i);
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
-                if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);                
+                if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);   
+
+                if (btn == target) {  // i know it is unecessary ... now -   
+                    // clear
+                    lv_obj_clean(objects.zone_component_list);          
+                    // get the zone
+                    layoutZoneClass* zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(target));
+
+                    //=================================================
+                    // COMPO RENDER
+
+                    // Add each component inside the zone
+                    for (const std::vector<String>& compVec : zone->components) {
+                        if (compVec.empty()) continue;
+
+                        String compName = compVec[ 1 ];
+
+                        lv_obj_t* cbtn = lv_btn_create(objects.zone_component_list);
+                        lv_obj_set_size(cbtn, 280, 50);
+                        lv_obj_add_flag(cbtn, LV_OBJ_FLAG_CHECKABLE);
+                        lv_obj_set_style_bg_color(cbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+                        lv_obj_set_style_text_color(cbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+                        lv_obj_add_event_cb(cbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
+
+                        lv_obj_t* clabel = lv_label_create(cbtn);
+                        lv_obj_set_style_text_font(clabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                        lv_label_set_text(clabel, compName.c_str());
+                        lv_obj_set_user_data(cbtn, (void*)&compVec); 
+                    }
+
+                }
             }
             Serial.println("Zone click DONE");
             return;
         }     
 
-        //------------------
+        // On COMPONENT click reset check -->
+        if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_component_list ) {
+            Serial.println("compo click");
+            // iterate the  list and reset
+            uint32_t child_count = lv_obj_get_child_cnt(objects.zone_component_list  ); 
+            for (uint32_t i = 0; i < child_count; ++i) {
+                // reset selection
+                lv_obj_t* btn = lv_obj_get_child(objects.zone_component_list, i);
+                if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
+                if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);   
+            }
+            Serial.println("compo click DONE");
+            return;
+        }     
+
+
     }
 
     void open() override {

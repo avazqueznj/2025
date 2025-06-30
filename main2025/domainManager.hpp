@@ -13,6 +13,8 @@
 
 //-------------------------------------------------
 
+
+
 class layoutZoneClass{
 public:
     String name;
@@ -55,29 +57,31 @@ public:
     virtual ~inspectionTypeClass(){}    
 };
 
-//----------------------
-//----------------------
-//----------------------
-
+// ***
 
 class defectClass {
 public:
+    assetClass* asset = NULL;  // from inpection!!! not from domain
     std::string zoneName;
     std::string componentName;
     std::string defectType;
     int severity;
     std::string notes;
 
-    defectClass(const std::string& zoneName,
+    defectClass(
+                assetClass* assetParam,
+                const std::string& zoneName,
                 const std::string& componentName,
                 const std::string& defectType,
                 int severity,
                 const std::string& notes)
-        : zoneName(zoneName),
-          componentName(componentName),
-          defectType(defectType),
-          severity(severity),
-          notes(notes)
+        : 
+        asset(assetParam),
+        zoneName(zoneName),
+        componentName(componentName),
+        defectType(defectType),
+        severity(severity),
+        notes(notes)
     {}
 };
 
