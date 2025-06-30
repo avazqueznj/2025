@@ -14,6 +14,7 @@ typedef struct _objects_t {
     lv_obj_t *select_inspection_type;
     lv_obj_t *inspection_form;
     lv_obj_t *inspection_zones;
+    lv_obj_t *sandbox;
     lv_obj_t *obj0;
     lv_obj_t *logo1;
     lv_obj_t *do_settings;
@@ -67,15 +68,21 @@ typedef struct _objects_t {
     lv_obj_t *back_from_form_zones;
     lv_obj_t *back_from_form_1;
     lv_obj_t *read_zone;
-    lv_obj_t *all_ok;
-    lv_obj_t *comp_ok;
-    lv_obj_t *defect;
+    lv_obj_t *all_ok_button;
+    lv_obj_t *comp_ok_button;
+    lv_obj_t *defect_button;
     lv_obj_t *zone_asset_list;
     lv_obj_t *asset_template;
     lv_obj_t *zone_list;
     lv_obj_t *zone_template;
     lv_obj_t *zone_component_list;
     lv_obj_t *compo_template;
+    lv_obj_t *defect_dialog;
+    lv_obj_t *minor_button;
+    lv_obj_t *major_button;
+    lv_obj_t *zone_list_1;
+    lv_obj_t *zone_template_1;
+    lv_obj_t *defective_component_label;
 } objects_t;
 
 extern objects_t objects;
@@ -87,6 +94,7 @@ enum ScreensEnum {
     SCREEN_ID_SELECT_INSPECTION_TYPE = 4,
     SCREEN_ID_INSPECTION_FORM = 5,
     SCREEN_ID_INSPECTION_ZONES = 6,
+    SCREEN_ID_SANDBOX = 7,
 };
 
 void create_screen_main();
@@ -106,6 +114,9 @@ void tick_screen_inspection_form();
 
 void create_screen_inspection_zones();
 void tick_screen_inspection_zones();
+
+void create_screen_sandbox();
+void tick_screen_sandbox();
 
 void tick_screen_by_id(enum ScreensEnum screenId);
 void tick_screen(int screen_index);

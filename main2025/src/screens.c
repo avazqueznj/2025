@@ -992,9 +992,9 @@ void create_screen_inspection_zones() {
                             }
                         }
                         {
-                            // allOk
+                            // allOkButton
                             lv_obj_t *obj = lv_btn_create(parent_obj);
-                            objects.all_ok = obj;
+                            objects.all_ok_button = obj;
                             lv_obj_set_pos(obj, 432, -13);
                             lv_obj_set_size(obj, 90, 40);
                             lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
@@ -1011,9 +1011,9 @@ void create_screen_inspection_zones() {
                             }
                         }
                         {
-                            // compOk
+                            // compOkButton
                             lv_obj_t *obj = lv_btn_create(parent_obj);
-                            objects.comp_ok = obj;
+                            objects.comp_ok_button = obj;
                             lv_obj_set_pos(obj, 538, -13);
                             lv_obj_set_size(obj, 90, 40);
                             lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
@@ -1030,9 +1030,9 @@ void create_screen_inspection_zones() {
                             }
                         }
                         {
-                            // defect
+                            // defectButton
                             lv_obj_t *obj = lv_btn_create(parent_obj);
-                            objects.defect = obj;
+                            objects.defect_button = obj;
                             lv_obj_set_pos(obj, 646, -13);
                             lv_obj_set_size(obj, 90, 40);
                             lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
@@ -1213,6 +1213,143 @@ void create_screen_inspection_zones() {
 void tick_screen_inspection_zones() {
 }
 
+void create_screen_sandbox() {
+    lv_obj_t *obj = lv_obj_create(0);
+    objects.sandbox = obj;
+    lv_obj_set_pos(obj, 0, 0);
+    lv_obj_set_size(obj, 800, 480);
+    lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_layout(obj, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
+    {
+        lv_obj_t *parent_obj = obj;
+        {
+            // defectDialog
+            lv_obj_t *obj = lv_msgbox_create(parent_obj, "", "", 0, true);
+            objects.defect_dialog = obj;
+            lv_obj_set_pos(obj, 89, 39);
+            lv_obj_set_size(obj, 626, 394);
+            lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC|LV_OBJ_FLAG_SCROLL_MOMENTUM|LV_OBJ_FLAG_SCROLL_WITH_ARROW);
+            lv_obj_set_style_align(obj, LV_ALIGN_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_layout(obj, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
+            {
+                lv_obj_t *parent_obj = obj;
+                {
+                    // minorButton
+                    lv_obj_t *obj = lv_btn_create(parent_obj);
+                    objects.minor_button = obj;
+                    lv_obj_set_pos(obj, 42, 305);
+                    lv_obj_set_size(obj, 164, 40);
+                    lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+                    lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    {
+                        lv_obj_t *parent_obj = obj;
+                        {
+                            lv_obj_t *obj = lv_label_create(parent_obj);
+                            lv_obj_set_pos(obj, 0, 0);
+                            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                            lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                            lv_label_set_text(obj, "minor");
+                        }
+                    }
+                }
+                {
+                    // majorButton
+                    lv_obj_t *obj = lv_btn_create(parent_obj);
+                    objects.major_button = obj;
+                    lv_obj_set_pos(obj, 365, 306);
+                    lv_obj_set_size(obj, 164, 40);
+                    lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+                    lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    {
+                        lv_obj_t *parent_obj = obj;
+                        {
+                            lv_obj_t *obj = lv_label_create(parent_obj);
+                            lv_obj_set_pos(obj, 0, 0);
+                            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                            lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                            lv_label_set_text(obj, "major");
+                        }
+                    }
+                }
+                {
+                    // zoneList_1
+                    lv_obj_t *obj = lv_list_create(parent_obj);
+                    objects.zone_list_1 = obj;
+                    lv_obj_set_pos(obj, -1, 52);
+                    lv_obj_set_size(obj, 250, 227);
+                    lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC);
+                    lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_ON);
+                    lv_obj_set_scroll_dir(obj, LV_DIR_VER);
+                    lv_obj_set_style_pad_top(obj, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_pad_left(obj, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_pad_right(obj, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    {
+                        lv_obj_t *parent_obj = obj;
+                        {
+                            // zoneTemplate_1
+                            lv_obj_t *obj = lv_btn_create(parent_obj);
+                            objects.zone_template_1 = obj;
+                            lv_obj_set_pos(obj, 503, 42);
+                            lv_obj_set_size(obj, 230, 50);
+                            lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+                            lv_obj_add_flag(obj, LV_OBJ_FLAG_CHECKABLE);
+                            lv_obj_set_style_bg_color(obj, lv_color_hex(0xffdddddd), LV_PART_MAIN | LV_STATE_DEFAULT);
+                            lv_obj_set_style_text_color(obj, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+                            lv_obj_set_style_layout(obj, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
+                            lv_obj_set_style_flex_track_place(obj, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                            {
+                                lv_obj_t *parent_obj = obj;
+                                {
+                                    lv_obj_t *obj = lv_label_create(parent_obj);
+                                    lv_obj_set_pos(obj, 0, 0);
+                                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                                    lv_obj_set_style_align(obj, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                                    lv_label_set_text(obj, "1 Front");
+                                }
+                            }
+                        }
+                    }
+                }
+                {
+                    lv_obj_t *obj = lv_label_create(parent_obj);
+                    lv_obj_set_pos(obj, 56, 6);
+                    lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+                    lv_label_set_text(obj, "Defect:");
+                }
+            }
+        }
+        {
+            // defectiveComponentLabel
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.defective_component_label = obj;
+            lv_obj_set_pos(obj, 283, 68);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_obj_set_style_text_color(obj, lv_color_hex(0xff2196f3), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(obj, "Lights");
+        }
+        {
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            lv_obj_set_pos(obj, 376, 114);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "Notes:");
+        }
+        {
+            lv_obj_t *obj = lv_textarea_create(parent_obj);
+            lv_obj_set_pos(obj, 376, 150);
+            lv_obj_set_size(obj, 323, 190);
+            lv_textarea_set_max_length(obj, 128);
+            lv_textarea_set_one_line(obj, false);
+            lv_textarea_set_password_mode(obj, false);
+        }
+    }
+    
+    tick_screen_sandbox();
+}
+
+void tick_screen_sandbox() {
+}
+
 
 
 typedef void (*tick_screen_func_t)();
@@ -1223,6 +1360,7 @@ tick_screen_func_t tick_screen_funcs[] = {
     tick_screen_select_inspection_type,
     tick_screen_inspection_form,
     tick_screen_inspection_zones,
+    tick_screen_sandbox,
 };
 void tick_screen(int screen_index) {
     tick_screen_funcs[screen_index]();
@@ -1242,4 +1380,5 @@ void create_screens() {
     create_screen_select_inspection_type();
     create_screen_inspection_form();
     create_screen_inspection_zones();
+    create_screen_sandbox();
 }
