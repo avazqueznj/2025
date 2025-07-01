@@ -643,31 +643,27 @@ public:
         // On Close defect
 
         if( close_btn != nullptr ){
-            if (  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
-
-                lv_async_call((lv_async_cb_t)lv_obj_del, overlay);
-                return;
+            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
+                lv_msgbox_close_async(dialog);               
+                return;                
             }
         }
 
         if( del_btn != nullptr ){
-            if (  lv_obj_check_type(target, &lv_btn_class) &&  target == del_btn ) {
-
-                lv_async_call((lv_async_cb_t)lv_obj_del, overlay); // deletes the window
+            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == del_btn ) {
+                lv_msgbox_close_async(dialog);               
                 return;                
             }
         }
         if( minor_btn != nullptr ){
-            if (  lv_obj_check_type(target, &lv_btn_class) &&  target == minor_btn ) {
-
-                lv_async_call((lv_async_cb_t)lv_obj_del, overlay); // deletes the window
+            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == minor_btn ) {
+                lv_msgbox_close_async(dialog);               
                 return;                
             }
         }
         if( major_btn != nullptr ){
-            if (  lv_obj_check_type(target, &lv_btn_class) &&  target == major_btn ) {
-
-                lv_async_call((lv_async_cb_t)lv_obj_del, overlay); // deletes the window
+            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == major_btn ) {
+                lv_msgbox_close_async(dialog);               
                 return;                
             }
         }
@@ -837,15 +833,18 @@ public:
 
             if (compVec != nullptr) {
 
+/**
                 // Create overlay
                 overlay = lv_obj_create(lv_scr_act());
                 lv_obj_set_size(overlay, LV_PCT(100), LV_PCT(100));
                 lv_obj_set_style_bg_color(overlay, lv_color_black(), 0);
                 lv_obj_set_style_bg_opa(overlay, LV_OPA_50, 0);
                 lv_obj_clear_flag(overlay, LV_OBJ_FLAG_SCROLLABLE);
+                lv_obj_add_flag(overlay, LV_OBJ_FLAG_CLICKABLE); 
+                */
 
                 // Create defectDialog
-                lv_obj_t *dialog = lv_msgbox_create(overlay, "", "", 0, true);                
+                dialog = lv_msgbox_create(NULL, "", "", 0, true);                
                 lv_obj_set_pos(dialog, 89, 39);
                 lv_obj_set_size(dialog, 626, 400); // Make dialog taller to fit keyboard
                 lv_obj_clear_flag(dialog, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_CHAIN_VER |
@@ -867,7 +866,7 @@ public:
                     del_btn = lv_btn_create(parent_obj);
                     lv_obj_set_pos(del_btn, 20, 305);
                     lv_obj_set_size(del_btn, 164, 40);
-                    lv_obj_add_event_cb(del_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+                        lv_obj_add_event_cb(del_btn, action_main_event_dispatcher, LV_EVENT_CLICKED, (void *)0);
                     lv_obj_set_style_text_font(del_btn, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_t *del_label = lv_label_create(del_btn);
                     lv_obj_set_style_align(del_label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -877,7 +876,7 @@ public:
                     minor_btn = lv_btn_create(parent_obj);
                     lv_obj_set_pos(minor_btn, 202, 305);
                     lv_obj_set_size(minor_btn, 164, 40);
-                    lv_obj_add_event_cb(minor_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+                        lv_obj_add_event_cb(minor_btn, action_main_event_dispatcher, LV_EVENT_CLICKED, (void *)0);
                     lv_obj_set_style_text_font(minor_btn, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_t *minor_label = lv_label_create(minor_btn);
                     lv_obj_set_style_align(minor_label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -887,7 +886,7 @@ public:
                     major_btn = lv_btn_create(parent_obj);
                     lv_obj_set_pos(major_btn, 385, 305);
                     lv_obj_set_size(major_btn, 164, 40);
-                    lv_obj_add_event_cb(major_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+                        lv_obj_add_event_cb(major_btn, action_main_event_dispatcher, LV_EVENT_CLICKED, (void *)0);
                     lv_obj_set_style_text_font(major_btn, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_t *major_label = lv_label_create(major_btn);
                     lv_obj_set_style_align(major_label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);

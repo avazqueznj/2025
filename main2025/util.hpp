@@ -42,6 +42,7 @@ void createDialog( const char* message )
     lv_obj_set_style_bg_color(overlay, lv_color_black(), 0);
     lv_obj_set_style_bg_opa(overlay, LV_OPA_50, 0);
     lv_obj_clear_flag(overlay, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(overlay, LV_OBJ_FLAG_CLICKABLE); 
 
     // Create message box
     lv_obj_t * mbox = lv_msgbox_create(overlay, "", message, btns, false);

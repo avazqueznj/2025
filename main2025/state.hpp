@@ -160,7 +160,7 @@ public:
 extern stateClass* stateManager;
 #include "src/actions.h"
 extern "C" void action_main_event_dispatcher(lv_event_t *e) {
-  if (lv_event_get_code(e) != LV_EVENT_PRESSED) return;  
+  if ( (lv_event_get_code(e) != LV_EVENT_PRESSED) && (lv_event_get_code(e) != LV_EVENT_CLICKED)   )return;    
   if( stateManager != NULL ){
       stateManager->handleEvents( e );
   }                      
