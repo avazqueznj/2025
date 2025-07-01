@@ -616,14 +616,19 @@ public:
     };
 
 //-------------------------------------------------
-
+//_+_+_+
 
                 
 class inspectionZonesScreenClass : public screenClass {
 public:
 
-    lv_obj_t *dialog = nullptr;
     assetClass* lastSelectedAsset = nullptr;
+
+    lv_obj_t *dialog = nullptr;    
+    lv_obj_t *close_btn = nullptr;
+    lv_obj_t *del_btn = nullptr;
+    lv_obj_t *minor_btn = nullptr;
+    lv_obj_t *major_btn = nullptr;
 
     inspectionZonesScreenClass() : screenClass(SCREEN_ID_INSPECTION_ZONES) {
     }
@@ -637,12 +642,36 @@ public:
         // =====================================================
         // On Close defect
 
-        /*        
-        if (  lv_obj_check_type(target, &lv_btn_class) &&  target = ?? ) {
+        if( close_btn != nullptr ){
+            if (  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
 
-
+                lv_async_call((lv_async_cb_t)lv_obj_del, overlay);
+                return;
+            }
         }
-        */
+
+        if( del_btn != nullptr ){
+            if (  lv_obj_check_type(target, &lv_btn_class) &&  target == del_btn ) {
+
+                lv_async_call((lv_async_cb_t)lv_obj_del, overlay); // deletes the window
+                return;                
+            }
+        }
+        if( minor_btn != nullptr ){
+            if (  lv_obj_check_type(target, &lv_btn_class) &&  target == minor_btn ) {
+
+                lv_async_call((lv_async_cb_t)lv_obj_del, overlay); // deletes the window
+                return;                
+            }
+        }
+        if( major_btn != nullptr ){
+            if (  lv_obj_check_type(target, &lv_btn_class) &&  target == major_btn ) {
+
+                lv_async_call((lv_async_cb_t)lv_obj_del, overlay); // deletes the window
+                return;                
+            }
+        }
+
 
         // =====================================================
         // On ASSET ----
@@ -825,7 +854,7 @@ public:
                 lv_obj_set_style_layout(dialog, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
                 // add event handler
-                lv_obj_t *close_btn = lv_msgbox_get_close_btn(dialog);
+                close_btn = lv_msgbox_get_close_btn(dialog);
                 if (close_btn) {
                 Serial.println("set handler!");            
                     lv_obj_add_event_cb(close_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void*)0);
@@ -834,38 +863,48 @@ public:
                 {
                     lv_obj_t *parent_obj = dialog;
 
+                    // delete button
+                    del_btn = lv_btn_create(parent_obj);
+                    lv_obj_set_pos(del_btn, 20, 305);
+                    lv_obj_set_size(del_btn, 164, 40);
+                    lv_obj_add_event_cb(del_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
+                    lv_obj_set_style_text_font(del_btn, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_t *del_label = lv_label_create(del_btn);
+                    lv_obj_set_style_align(del_label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_label_set_text(del_label, "delete");
+
                     // minorButton
-                    lv_obj_t *minor_btn = lv_btn_create(parent_obj);
-                    lv_obj_set_pos(minor_btn, 42, 305);
+                    minor_btn = lv_btn_create(parent_obj);
+                    lv_obj_set_pos(minor_btn, 202, 305);
                     lv_obj_set_size(minor_btn, 164, 40);
                     lv_obj_add_event_cb(minor_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
                     lv_obj_set_style_text_font(minor_btn, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-
                     lv_obj_t *minor_label = lv_label_create(minor_btn);
                     lv_obj_set_style_align(minor_label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_label_set_text(minor_label, "minor");
 
                     // majorButton
-                    lv_obj_t *major_btn = lv_btn_create(parent_obj);
-                    lv_obj_set_pos(major_btn, 365, 306);
+                    major_btn = lv_btn_create(parent_obj);
+                    lv_obj_set_pos(major_btn, 385, 305);
                     lv_obj_set_size(major_btn, 164, 40);
                     lv_obj_add_event_cb(major_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
                     lv_obj_set_style_text_font(major_btn, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-
                     lv_obj_t *major_label = lv_label_create(major_btn);
                     lv_obj_set_style_align(major_label, LV_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_label_set_text(major_label, "major");
 
-                    // zoneList_1 (defect list)
-                    lv_obj_t *zone_list = lv_list_create(parent_obj);
-                    lv_obj_set_pos(zone_list, -1, 52);
-                    lv_obj_set_size(zone_list, 250, 227);
-                    lv_obj_clear_flag(zone_list, LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_CHAIN_VER | LV_OBJ_FLAG_SCROLL_ELASTIC);
-                    lv_obj_set_scrollbar_mode(zone_list, LV_SCROLLBAR_MODE_ON);
-                    lv_obj_set_scroll_dir(zone_list, LV_DIR_VER);
-                    lv_obj_set_style_pad_top(zone_list, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_obj_set_style_pad_left(zone_list, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
-                    lv_obj_set_style_pad_right(zone_list, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+                        //----
+
+                    // (defect list)
+                    lv_obj_t *defect_list = lv_list_create(parent_obj);
+                    lv_obj_set_pos(defect_list, -1, 52);
+                    lv_obj_set_size(defect_list, 250, 227);
+                    lv_obj_clear_flag(defect_list, LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_CHAIN_VER | LV_OBJ_FLAG_SCROLL_ELASTIC);
+                    lv_obj_set_scrollbar_mode(defect_list, LV_SCROLLBAR_MODE_ON);
+                    lv_obj_set_scroll_dir(defect_list, LV_DIR_VER);
+                    lv_obj_set_style_pad_top(defect_list, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_pad_left(defect_list, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
+                    lv_obj_set_style_pad_right(defect_list, 4, LV_PART_MAIN | LV_STATE_DEFAULT);
 
                     if (compVec->size() >= 2) {
                         String compName = (*compVec)[1];
@@ -884,7 +923,7 @@ public:
                         for (size_t i = 2; i < compVec->size(); ++i) {
                             String defectName = (*compVec)[i];
 
-                            lv_obj_t* defect_btn = lv_btn_create(zone_list);
+                            lv_obj_t* defect_btn = lv_btn_create(defect_list);
                             lv_obj_set_size(defect_btn, 230, 50);
                             lv_obj_add_event_cb(defect_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void*)&(*compVec)[i]);
 
@@ -892,6 +931,8 @@ public:
                             lv_obj_set_style_text_color(defect_btn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
                             lv_obj_set_style_layout(defect_btn, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
                             lv_obj_set_style_flex_track_place(defect_btn, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+                            lv_obj_add_flag(defect_btn, LV_OBJ_FLAG_CHECKABLE);
 
                             lv_obj_t* label = lv_label_create(defect_btn);
                             lv_obj_set_style_text_font(label, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
