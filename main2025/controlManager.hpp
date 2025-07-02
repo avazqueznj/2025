@@ -633,35 +633,6 @@ public:
         lv_obj_t* parent = lv_obj_get_parent(target);
 
 
-        // =====================================================
-        // On Close defect
-
-        if( close_btn != nullptr ){
-            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
-                lv_msgbox_close_async(dialog);               
-                return;                
-            }
-        }
-
-        if( del_btn != nullptr ){
-            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == del_btn ) {
-                lv_msgbox_close_async(dialog);               
-                return;                
-            }
-        }
-        if( minor_btn != nullptr ){
-            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == minor_btn ) {
-                lv_msgbox_close_async(dialog);               
-                return;                
-            }
-        }
-        if( major_btn != nullptr ){
-            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == major_btn ) {
-                lv_msgbox_close_async(dialog);               
-                return;                
-            }
-        }
-
 
         // =====================================================
         // On ASSET ----
@@ -768,6 +739,8 @@ public:
                     for (const std::vector<String>& compVec : zone->components) {
                         if (compVec.empty()) continue;
 
+                        domainManagerClass* domain = domainManagerClass::getInstance();                        
+
                         String compName = compVec[ 1 ];
 
                         lv_obj_t* cbtn = lv_btn_create(objects.zone_component_list);
@@ -806,7 +779,7 @@ public:
         }     
 
                         
-        // CREATE DEFECT BUTTON!!
+        // Open defect dialog
         if (target == objects.defect_button) {
             Serial.println("create defect click");
 
@@ -831,10 +804,10 @@ public:
             }
 
         }
+
         //----------
 
-
-        // THE DEFECT BUTTON
+        // THE DEFECTO BUTTON reset
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == defect_list ) {
             Serial.println("defecto click");
             
@@ -848,7 +821,64 @@ public:
             return;
         }     
 
+        // =====================================================
+        // DEFECTO dialog ---
 
+        if( close_btn != nullptr ){
+            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
+                lv_msgbox_close_async(dialog);               
+                return;                
+            }
+        }
+
+
+        if (  
+                ( (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) ) 
+                &&  
+                ( target == major_btn || target == minor_btn || target == del_btn )
+            ){
+
+            Serial.println("Defect post...");
+            domainManagerClass* domain = domainManagerClass::getInstance();
+
+            int severity = 1;
+            if( target == major_btn ) severity = 10;
+    
+            String* selected_defect = static_cast<String*>(lv_obj_get_user_data(get_checked_child(defect_list)));
+            if( selected_defect !=  nullptr ){
+
+                // assemble defect object
+                defectClass newDefect(
+                    selected_asset,
+                    selected_zone->tag,
+                    selected_component_name,
+                    selected_defect ? *selected_defect : String(""),
+                    severity,
+                    "<<a note>>"
+                );
+
+                // no dupes
+                std::vector<defectClass>& defects = domain->currentInspection.defects;
+                for (size_t i = 0; i < defects.size(); ) {
+                    if (defects[i].isSameComponent(newDefect)) {
+                        defects.erase(defects.begin() + i);
+                    } else {
+                        ++i;
+                    }
+                }
+
+                // save it, or delete it
+                if( target != del_btn ) domain->currentInspection.defects.push_back( newDefect );                
+
+                lv_msgbox_close_async(dialog);   
+
+                // debugo
+                Serial.println( domain->currentInspection.toString().c_str() );                    
+            }
+        
+            return;                
+        }
+    
 
     }
 
@@ -883,6 +913,16 @@ public:
             selected_component_vec = static_cast<std::vector<String>*>(lv_obj_get_user_data(selected_component_item));
             if (selected_component_vec && selected_component_vec->size() > 1) {
                 selected_component_name = (*selected_component_vec)[1];
+            }
+        }
+
+        domainManagerClass* domain = domainManagerClass::getInstance();
+        defectClass* existingDefect = nullptr;
+
+        for (auto& d : domain->currentInspection.defects) {
+            if (d.asset == selected_asset && d.zoneName == selected_zone->tag && d.componentName == selected_component_name) {
+                existingDefect = &d;
+                break;
             }
         }
 
@@ -967,6 +1007,9 @@ public:
 
                     lv_obj_t* defect_btn = lv_btn_create(defect_list);
                     lv_obj_set_size(defect_btn, 230, 50);
+
+                    lv_obj_set_user_data(defect_btn, (void*)&(*compVec)[i] );
+                    
                     lv_obj_add_event_cb(defect_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void*)&(*compVec)[i]);
 
                     lv_obj_set_style_bg_color(defect_btn, lv_color_hex(0xffdddddd), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -980,7 +1023,12 @@ public:
                     lv_obj_set_style_text_font(label, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_label_set_text(label, defectName.c_str());
 
-                    if( i == 2 ) lv_obj_add_state(defect_btn, LV_STATE_CHECKED);;
+                    if (existingDefect && defectName == existingDefect->defectType) {
+                        lv_obj_add_state(defect_btn, LV_STATE_CHECKED);
+                    }
+                    else if (i == 2 && !existingDefect) {
+                        lv_obj_add_state(defect_btn, LV_STATE_CHECKED);
+                    }
                 }
             }
 
@@ -1003,6 +1051,9 @@ public:
             lv_textarea_set_max_length(notes_textarea, 128);
             lv_textarea_set_one_line(notes_textarea, false);
             lv_textarea_set_password_mode(notes_textarea, false);
+            if (existingDefect) {
+                lv_textarea_set_text(notes_textarea, existingDefect->notes.c_str());
+            }                    
 
             // Keyboard for textarea
             lv_obj_t *kb = lv_keyboard_create(parent_obj);
@@ -1071,6 +1122,8 @@ public:
     }
 
     virtual ~inspectionZonesScreenClass() {
+        domainManagerClass* domain = domainManagerClass::getInstance();
+        domain->currentInspection.defects.clear();
     }
 };
 

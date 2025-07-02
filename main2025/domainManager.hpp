@@ -59,30 +59,39 @@ public:
 
 class defectClass {
 public:
-    assetClass* asset = NULL;  // from inpection!!! not from domain
-    std::string zoneName;
-    std::string componentName;
-    std::string defectType;
+    assetClass* asset = NULL;
+    String zoneName;
+    String componentName;
+    String defectType;
     int severity;
-    std::string notes;
+    String notes;
 
     defectClass(
-                assetClass* assetParam,
-                const std::string& zoneName,
-                const std::string& componentName,
-                const std::string& defectType,
-                int severity,
-                const std::string& notes)
-        : 
-        asset(assetParam),
-        zoneName(zoneName),
-        componentName(componentName),
-        defectType(defectType),
-        severity(severity),
-        notes(notes)
+        assetClass* assetParam,
+        const String& zoneName,
+        const String& componentName,
+        const String& defectType,
+        int severity,
+        const String& notes)
+    : asset(assetParam),
+      zoneName(zoneName),
+      componentName(componentName),
+      defectType(defectType),
+      severity(severity),
+      notes(notes)
     {}
-};
 
+    bool isSameComponent(const defectClass& other) const {
+        bool sameAsset = false;
+        if (asset && other.asset) {
+            sameAsset = (asset->ID == other.asset->ID);
+        }
+        bool sameZone = (zoneName == other.zoneName);
+        bool sameComponent = (componentName == other.componentName);
+        bool result = sameAsset && sameZone && sameComponent;
+        return result;
+    }    
+};
 
 class inspectionClass {
 public:
@@ -98,69 +107,77 @@ public:
         defects.clear();
     }
 
-    std::string toString() const {
-        std::string result = "INSPECTION\n";
+String toString() const {
+    String result = "INSPECTION\n";
 
-        // --- Inspection Type ---
-        if (type != NULL) {
-            result += "Type: ";
-            result += type->name.c_str();
+    // --- Inspection Type ---
+    if (type != NULL) {
+        result += "Type: ";
+        result += type->name;
+        result += "\n";
+
+        result += "Layouts:\n";
+        for (const auto& layout : type->layouts) {
+            result += " - ";
+            result += layout;
             result += "\n";
+        }
 
-            result += "Layouts:\n";
-            for (const auto& layout : type->layouts) {
-                result += " - ";
-                result += layout.c_str();
-                result += "\n";
-            }
-
-            result += "Form Fields:\n";
-            size_t rowIndex = 0;
-            for (const auto& row : type->formFields) {
-                result += "  Row ";
-                result += std::to_string(rowIndex++);
-                result += ": ";
-                for (size_t i = 0; i < row.size(); ++i) {
-                    result += row[i].c_str();
-                    if (i < row.size() - 1) {
-                        result += ", ";
-                    }
+        result += "Form Fields:\n";
+        size_t rowIndex = 0;
+        for (const auto& row : type->formFields) {
+            result += "  Row ";
+            result += String(rowIndex++);
+            result += ": ";
+            for (size_t i = 0; i < row.size(); ++i) {
+                result += row[i];
+                if (i < row.size() - 1) {
+                    result += ", ";
                 }
-                result += "\n";
             }
-
-        } else {
-            result += "Type: NULL\n";
-        }
-
-        // --- Assets ---
-        result += "Assets:\n";
-        for (const auto& asset : assets) {
-            result += " - ID: ";
-            result += asset.ID.c_str();
-            result += ", Layout: ";
-            result += asset.layoutName.c_str();
-            result += ", Tag: ";
-            result += asset.tag.c_str();
-            result += ", ButtonName: ";
-            result += asset.buttonName.c_str();
             result += "\n";
         }
 
-        // --- Defects ---
-        result += "Defects:\n";
-        for (const auto& defect : defects) {
-            result += " - Zone: " + defect.zoneName;
-            result += ", Component: " + defect.componentName;
-            result += ", Type: " + defect.defectType;
-            result += ", Severity: " + std::to_string(defect.severity);
-            result += ", Notes: " + defect.notes;
-            result += "\n";
-        }
-
-        return result;
+    } else {
+        result += "Type: NULL\n";
     }
-    
+
+    // --- Assets ---
+    result += "Assets:\n";
+    for (const auto& asset : assets) {
+        result += " - ID: ";
+        result += asset.ID;
+        result += ", Layout: ";
+        result += asset.layoutName;
+        result += ", Tag: ";
+        result += asset.tag;
+        result += ", ButtonName: ";
+        result += asset.buttonName;
+        result += "\n";
+    }
+
+    result += "\n";
+
+    // --- Defects ---
+    result += "Defects:\n";
+    for (const auto& defect : defects) {
+        result += " - Asset ID: ";
+        if (defect.asset) {
+            result += defect.asset->ID;
+        } else {
+            result += "<null>";
+        }
+        result += ", Zone: " + defect.zoneName;
+        result += ", Component: " + defect.componentName;
+        result += ", Type: " + defect.defectType;
+        result += ", Severity: " + String(defect.severity);
+        result += ", Notes: " + defect.notes;
+        result += "\n";
+    }
+
+    return result;
+}
+        
 };
 
 //-------------------------------------------------
