@@ -898,27 +898,60 @@ public:
     void openDefectDialog( std::vector<String>* compVec ){
 
 
-        lv_obj_t* selected_asset_item = get_checked_child(objects.zone_asset_list);
-        if (selected_asset_item) {
-            selected_asset = static_cast<assetClass*>(lv_obj_get_user_data(selected_asset_item));
-        }
+        //=======================
+        // while i fix the unselect issue
 
-        lv_obj_t* selected_zone_item = get_checked_child(objects.zone_list);
-        if (selected_zone_item) {
-            selected_zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(selected_zone_item));
-        }
+                // Asset selection check
+                lv_obj_t* selected_asset_item = get_checked_child(objects.zone_asset_list);
+                if (!selected_asset_item) {
+                    createDialog("Please select an asset.");
+                    return;
+                }
+                selected_asset = static_cast<assetClass*>(lv_obj_get_user_data(selected_asset_item));
+                if (!selected_asset) {
+                    createDialog("Failed to resolve selected asset.");
+                    return;
+                }
 
-        lv_obj_t* selected_component_item = get_checked_child(objects.zone_component_list);
-        if (selected_component_item) {
-            selected_component_vec = static_cast<std::vector<String>*>(lv_obj_get_user_data(selected_component_item));
-            if (selected_component_vec && selected_component_vec->size() > 1) {
+                // Zone selection check
+                lv_obj_t* selected_zone_item = get_checked_child(objects.zone_list);
+                if (!selected_zone_item) {
+                    createDialog("Please select a zone.");
+                    return;
+                }
+                selected_zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(selected_zone_item));
+                if (!selected_zone) {
+                    createDialog("Failed to resolve selected zone.");
+                    return;
+                }
+
+                // Component selection check
+                lv_obj_t* selected_component_item = get_checked_child(objects.zone_component_list);
+                if (!selected_component_item) {
+                    createDialog("Please select a component.");
+                    return;
+                }
+                selected_component_vec = static_cast<std::vector<String>*>(lv_obj_get_user_data(selected_component_item));
+                if (!selected_component_vec) {
+                    createDialog("Failed to resolve selected component.");
+                    return;
+                }
+                if (selected_component_vec->size() <= 1) {
+                    createDialog("Selected component data is incomplete.");
+                    return;
+                }
                 selected_component_name = (*selected_component_vec)[1];
-            }
-        }
+                if (selected_component_name.isEmpty()) {
+                    createDialog("Selected component name is empty.");
+                    return;
+                }
+
+        //===================
 
         domainManagerClass* domain = domainManagerClass::getInstance();
         defectClass* existingDefect = nullptr;
 
+        // restore if this is an edit ....
         for (auto& d : domain->currentInspection.defects) {
             if (d.asset == selected_asset && d.zoneName == selected_zone->tag && d.componentName == selected_component_name) {
                 existingDefect = &d;
