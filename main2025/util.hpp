@@ -7,6 +7,21 @@
 
 //----------------------------------------------
 
+// yea , really .... no other way in lvgl 8
+lv_obj_t* get_checked_child(lv_obj_t* list) {
+    uint32_t child_count = lv_obj_get_child_cnt(list);
+    for (uint32_t i = 0; i < child_count; ++i) {
+        lv_obj_t* btn = lv_obj_get_child(list, i);
+        if (!lv_obj_check_type(btn, &lv_btn_class)) continue; // only buttons
+        if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+            return btn;
+        }
+    }
+    return nullptr;
+}
+
+//----------------------------------------------
+
 void delayBlink() {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(50);
