@@ -12,8 +12,12 @@ public:
     WiFiClient client;
 
 
-    String ssid = "irazu2G";
-    String pass = "casiocasio";
+    String ssid = "DadyPhone";
+    String pass = "Casiopea1";
+
+//    String ssid = "irazu2G";
+//    String pass = "casiocasio";
+
 
     //String ssid = "irazu5g";
     //String pass = "Casiopea3";

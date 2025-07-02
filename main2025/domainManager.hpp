@@ -151,13 +151,9 @@ String toString() const {
         result += asset.layoutName;
         result += ", Tag: ";
         result += asset.tag;
-        result += ", ButtonName: ";
-        result += asset.buttonName;
         result += "\n";
     }
-
-    result += "\n";
-
+    
     // --- Defects ---
     result += "Defects:\n";
     for (const auto& defect : defects) {
