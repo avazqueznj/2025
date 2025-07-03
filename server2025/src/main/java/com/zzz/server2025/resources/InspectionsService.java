@@ -18,14 +18,12 @@ public class InspectionsService extends HttpServlet {
     
     
     
-    @Override
+   @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Set encoding if you're expecting UTF-8 characters
         request.setCharacterEncoding("UTF-8");
 
-        // Read the entire body
         StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = request.getReader()) {
             String line;
@@ -34,15 +32,14 @@ public class InspectionsService extends HttpServlet {
             }
         }
 
-        // Now you have the full request body
         String requestBody = sb.toString();
 
-        // Example: print or return it in response
+        System.out.println("Received POST:\n" + requestBody);
+
         response.setContentType("text/plain");
-        response.getWriter().write("Received content:\n" + requestBody);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write("Content received.\n" );
     }
-    
-    
-    
+            
 }
 
