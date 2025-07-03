@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
+import java.net.InetAddress;
 import java.util.Iterator;
 
 @WebServlet(name = "inspections", urlPatterns = {"/inspections"})
@@ -22,23 +23,43 @@ public class InspectionsService extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        request.setCharacterEncoding("UTF-8");
+        Logger logger = Logger.getLogger(getClass().getName());
+        logger.info("POST: Start....12");
+        
+        try{
+                    
+            request.setCharacterEncoding("UTF-8");
 
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = request.getReader()) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader reader = request.getReader()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
             }
-        }
 
-        String requestBody = sb.toString();
+            String requestBody = sb.toString();
+            
+            persistentTextClass inspection = new persistentTextClass( "EVIRinspection.txt" );         
+            String[] lines = sb.toString().split("\\r?\\n|\\r");
+            for (String line : lines) {
+                inspection.add(line);
+            }                        
+            inspection.writeToDisk();
 
-        System.out.println("Received POST:\n" + requestBody);
-
-        response.setContentType("text/plain");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write("Content received.\n" );
+            System.out.println("Received POST:\n" + requestBody);
+            response.setContentType("text/plain");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write( 
+                    InetAddress.getLocalHost().getHostName() +
+                    ": Content received @ " + KMetaUtilsClass.timeStamp() 
+            );
+            
+        }catch( Exception error ){
+            logger.severe(                    
+                    KMetaUtilsClass.getStackTrace(error) );            
+        }        
+               
     }
             
 }

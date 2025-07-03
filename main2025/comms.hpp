@@ -1,7 +1,6 @@
 #ifndef COMMS_H
 #define COMMS_H
 
-
 #include <Arduino.h>
 #include <exception>
 #include <WiFi.h>
@@ -191,7 +190,63 @@ public:
         return response;
     }
 
-    
+
+    String postInspection(const String& payload) {
+
+        Serial.println("POST connectiong!!");
+
+        if( connState != ON ){
+            throw std::runtime_error( "Error attempt read when connection is not ON" );
+        }    
+        
+        const char* host = "zzz2025.duckdns.org";
+        const int port = 8080;
+        if (!client.connect(host, port)) {
+            createDialog("Connection failed");
+            throw std::runtime_error("Conn failed"); 
+        }
+
+        String url = "/server2025/inspections";
+
+        // Compose HTTP POST request
+        String request = "";
+        request += "POST " + url + " HTTP/1.1\r\n";
+        request += "Host: " + String(host) + "\r\n";
+        request += "Content-Type: text/plain\r\n";
+        request += "Content-Length: " + String(payload.length()) + "\r\n";
+        request += "Connection: close\r\n";
+        request += "\r\n";
+        request += payload;
+
+        client.print(request);
+
+        // Wait for server response
+        unsigned long timeout = millis();
+        while (client.available() == 0) {
+            if (millis() - timeout > 5000) {
+                createDialog("Client Timeout");
+                client.stop();
+                throw std::runtime_error("Server did not respond!"); 
+            }
+        }
+
+        // Read response
+        String response = "";
+        while (client.available()) {
+            String line = client.readStringUntil('\n');
+            response += line + "\n";
+        }
+
+        client.stop();
+
+        // Extract only body (optional)
+        int bodyIndex = response.indexOf("\r\n\r\n");
+        if (bodyIndex != -1) {
+            response = response.substring(bodyIndex + 4);
+        }
+
+        return response;
+    }
 
 };
 

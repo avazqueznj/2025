@@ -986,6 +986,46 @@ public:
         }
 
 
+        if (target == objects.submit) {
+
+            spinnerStart();
+
+            try{
+
+                domainManagerClass* domain = domainManagerClass::getInstance();
+                
+                domain->comms->up();
+                    
+                    createDialog( domain->comms->postInspection(domain->currentInspection.toString()).c_str() );
+
+                domain->comms->down();
+
+            }catch( const std::runtime_error& error ){
+                spinnerEnd();
+                String chainedError = String( "ERROR: Could not POST: " ) + error.what();            
+            }
+
+            spinnerEnd();       
+
+        }
+
+/*
+        createYesNoDialog(
+            "Send inspection?",
+            [domain]() {
+                if (domain && domain->comms) {
+                    try{
+                        domain->comms->postInspection(domain->currentInspection.toString());
+                    }catch( const std::runtime_error& error ){
+                        Serial.println( error.what() );            
+                        createDialog( error.what() );     
+                    }                    
+                } else {
+                    createDialog("Domain or comms missing");
+                }
+            }
+        );
+*/
         // =====================================================
         // DEFECTO dialog ---
 
