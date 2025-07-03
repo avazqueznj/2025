@@ -632,8 +632,6 @@ public:
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
         lv_obj_t* parent = lv_obj_get_parent(target);
 
-
-
         // =====================================================
         // On ASSET ----
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_asset_list ) {
@@ -645,7 +643,14 @@ public:
                 // reset the asset
                 lv_obj_t* btn = lv_obj_get_child(objects.zone_asset_list, i);
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
-                if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);
+
+                // f%^%k EEZ!
+                if (btn != target) {
+                    lv_obj_clear_state(btn, LV_STATE_CHECKED);
+                } else {
+                    lv_obj_add_state(btn, LV_STATE_CHECKED);
+                }
+                           
                 // build zone list
                 if (btn == target) {  // i know it is unecessary ... now -
 
@@ -691,7 +696,7 @@ public:
                         // Add zone button
                         lv_obj_t* zbtn = lv_btn_create(objects.zone_list);
                         lv_obj_set_size(zbtn, 230, 50);
-                        lv_obj_add_flag(zbtn, LV_OBJ_FLAG_CHECKABLE);
+                        //lv_obj_add_flag(zbtn, LV_OBJ_FLAG_CHECKABLE);
                         lv_obj_set_style_bg_color(zbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                         lv_obj_set_style_text_color(zbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -710,6 +715,8 @@ public:
 
             }
 
+            refreshZoneAndComponentLabels();                
+
             Serial.println("Asset clicked  DONE");
             return;
         }     
@@ -717,6 +724,7 @@ public:
 
         // On ZONE click -->
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_list ) {
+
             Serial.println("Zone click");
             // iterate the zone list and reset
             uint32_t child_count = lv_obj_get_child_cnt(objects.zone_list  ); // ZONE assetrs list
@@ -724,42 +732,65 @@ public:
                 // reset selection
                 lv_obj_t* btn = lv_obj_get_child(objects.zone_list, i);
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
-                if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);   
+
+                if (btn != target) {
+                    lv_obj_clear_state(btn, LV_STATE_CHECKED);
+                } else {
+                    lv_obj_add_state(btn, LV_STATE_CHECKED);
+                }
 
                 if (btn == target) {  // i know it is unecessary ... now -   
-                    // clear
-                    lv_obj_clean(objects.zone_component_list);          
-                    // get the zone
+
+                    lv_obj_clean(objects.zone_component_list);
+
                     layoutZoneClass* zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(target));
+                    if (!zone) {
+                        throw std::runtime_error("Zone user_data is null in ZONE click handler");
+                    }
+                    if (!lastSelectedAsset) {
+                        throw std::runtime_error("lastSelectedAsset is null in ZONE click handler");
+                    }
+
+                    domainManagerClass* domain = domainManagerClass::getInstance();
+                    const std::vector<defectClass>& defects = domain->currentInspection.defects;
 
                     //=================================================
-                    // COMPO RENDER
+                    // COMPO RENDER ====================
+                    for (size_t j = 0; j < zone->components.size(); ++j) {
 
-                    // Add each component inside the zone
-                    for (const std::vector<String>& compVec : zone->components) {
-                        if (compVec.empty()) continue;
+                        const std::vector<String>& compVec = zone->components[j];
+                                    
+                        if (compVec.empty()) {
+                            throw std::runtime_error("Component vector is empty");
+                        }
+                        if (compVec.size() <= 1) {
+                            throw std::runtime_error("Component vector missing name");
+                        }
 
-                        domainManagerClass* domain = domainManagerClass::getInstance();                        
-
-                        String compName = compVec[ 1 ];
+                        String compName = compVec[1];
+                        String labelText = String( " " ) + compName;
 
                         lv_obj_t* cbtn = lv_btn_create(objects.zone_component_list);
                         lv_obj_set_size(cbtn, 280, 50);
-                        lv_obj_add_flag(cbtn, LV_OBJ_FLAG_CHECKABLE);
+                        //lv_obj_add_flag(cbtn, LV_OBJ_FLAG_CHECKABLE);
                         lv_obj_set_style_bg_color(cbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
                         lv_obj_set_style_text_color(cbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
 
+                        lv_obj_set_user_data(cbtn, (void*)&compVec);
                         lv_obj_add_event_cb(cbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
 
                         lv_obj_t* clabel = lv_label_create(cbtn);
                         lv_obj_set_style_text_font(clabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_label_set_text(clabel, compName.c_str());
-                        lv_obj_set_user_data(cbtn, (void*)&compVec);  
+                        lv_label_set_text(clabel, labelText.c_str());
+                        
                     }
 
                 }
             }
             Serial.println("Zone click DONE");
+
+            refreshZoneAndComponentLabels();            
+
             return;
         }     
 
@@ -772,13 +803,22 @@ public:
                 // reset selection
                 lv_obj_t* btn = lv_obj_get_child(objects.zone_component_list, i);
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
-                if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);   
+
+                if (btn != target) {
+                    lv_obj_clear_state(btn, LV_STATE_CHECKED);
+                } else {
+                    lv_obj_add_state(btn, LV_STATE_CHECKED);
+                }
             }
             Serial.println("compo click DONE");
             return;
         }     
 
                         
+
+        // =====================================================
+        // DEFECTO dialog ---
+
         // Open defect dialog
         if (target == objects.defect_button) {
             Serial.println("create defect click");
@@ -802,12 +842,18 @@ public:
                 Serial.println("No component selected!");
                 createDialog("Please select a component.");
             }
-
         }
 
-        //----------
+        // close defecto
+        if( close_btn != nullptr ){
+            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
+                lv_msgbox_close_async(dialog);   
+                refreshZoneAndComponentLabels();
+                return;                
+            }
+        }
 
-        // THE DEFECTO BUTTON reset
+        // defecto reset
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == defect_list ) {
             Serial.println("defecto click");
             
@@ -815,23 +861,19 @@ public:
             for (uint32_t i = 0; i < child_count; ++i) {                
                 lv_obj_t* btn = lv_obj_get_child( defect_list , i);
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
-                if (btn != target) lv_obj_clear_state(btn, LV_STATE_CHECKED);   
+
+                if (btn != target) {
+                    lv_obj_clear_state(btn, LV_STATE_CHECKED);
+                } else {
+                    lv_obj_add_state(btn, LV_STATE_CHECKED);
+                }
+
             }
             Serial.println("defecto click DONE");
             return;
         }     
 
-        // =====================================================
-        // DEFECTO dialog ---
-
-        if( close_btn != nullptr ){
-            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
-                lv_msgbox_close_async(dialog);               
-                return;                
-            }
-        }
-
-
+        // POST DEFECTO
         if (  
                 ( (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) ) 
                 &&  
@@ -872,12 +914,16 @@ public:
 
                 lv_msgbox_close_async(dialog);   
 
+                refreshZoneAndComponentLabels();                
+
                 // debugo
                 Serial.println( domain->currentInspection.toString().c_str() );                    
             }
         
             return;                
         }
+
+        //-------
     
 
     }
@@ -901,6 +947,9 @@ public:
         //=======================
         // while i fix the unselect issue
 
+            lv_obj_t* selected_zone_item = nullptr;
+            lv_obj_t* selected_component_item = nullptr;
+
                 // Asset selection check
                 lv_obj_t* selected_asset_item = get_checked_child(objects.zone_asset_list);
                 if (!selected_asset_item) {
@@ -914,7 +963,7 @@ public:
                 }
 
                 // Zone selection check
-                lv_obj_t* selected_zone_item = get_checked_child(objects.zone_list);
+                selected_zone_item = get_checked_child(objects.zone_list);
                 if (!selected_zone_item) {
                     createDialog("Please select a zone.");
                     return;
@@ -926,7 +975,7 @@ public:
                 }
 
                 // Component selection check
-                lv_obj_t* selected_component_item = get_checked_child(objects.zone_component_list);
+                selected_component_item = get_checked_child(objects.zone_component_list);
                 if (!selected_component_item) {
                     createDialog("Please select a component.");
                     return;
@@ -1050,7 +1099,7 @@ public:
                     lv_obj_set_style_layout(defect_btn, LV_LAYOUT_FLEX, LV_PART_MAIN | LV_STATE_DEFAULT);
                     lv_obj_set_style_flex_track_place(defect_btn, LV_FLEX_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-                    lv_obj_add_flag(defect_btn, LV_OBJ_FLAG_CHECKABLE);
+                    //lv_obj_add_flag(defect_btn, LV_OBJ_FLAG_CHECKABLE);
 
                     lv_obj_t* label = lv_label_create(defect_btn);
                     lv_obj_set_style_text_font(label, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1113,6 +1162,142 @@ public:
 
     }
 
+    //----------
+
+    void refreshZoneAndComponentLabels() {
+
+    Serial.println("Refresh!");
+
+    domainManagerClass* domain = domainManagerClass::getInstance();
+    if (!domain) throw std::runtime_error("domainManagerClass is null");
+    if (!lastSelectedAsset) throw std::runtime_error("lastSelectedAsset is null");
+
+    // Find layout for selected asset
+    layoutClass* layout = nullptr;
+    for (layoutClass& l : domain->layouts) {
+        if (l.name == lastSelectedAsset->layoutName) {
+            layout = &l;
+            break;
+        }
+    }
+    if (!layout) throw std::runtime_error("Layout not found for selected asset");
+
+    // Iterate over all zones shown in the UI
+    uint32_t zone_count = lv_obj_get_child_cnt(objects.zone_list);
+    for (uint32_t z = 0; z < zone_count; ++z) {
+
+        lv_obj_t* zbtn = lv_obj_get_child(objects.zone_list, z);
+        if (!zbtn) continue;
+
+        layoutZoneClass* ui_zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(zbtn));
+        if (!ui_zone) continue;
+
+        // Find this zone in the DB by tag
+        layoutZoneClass* db_zone = nullptr;
+        for (layoutZoneClass& lz : layout->zones) {
+            if (lz.tag == ui_zone->tag) {
+                db_zone = &lz;
+                break;
+            }
+        }
+        if (!db_zone) continue;
+
+        bool allHaveDefects = true;
+        bool allAreSev0 = true;
+        bool hasSev1 = false;
+        bool hasSev10 = false;
+
+        // For each expected component in this zone - find defects
+        for (const std::vector<String>& compVec : db_zone->components) {
+            if (compVec.size() <= 1) continue;
+            String compName = compVec[1];
+            bool found = false;
+            int severity = -1;
+            for (const auto& defect : domain->currentInspection.defects) {
+                if (!defect.asset) continue;
+                if (defect.asset->ID == lastSelectedAsset->ID &&
+                    defect.zoneName == db_zone->tag &&
+                    defect.componentName == compName) {
+                    found = true;
+                    severity = defect.severity;
+                    break;
+                }
+            }
+
+            if (!found) {
+                allHaveDefects = false;
+                allAreSev0 = false;
+            } else {
+                if (severity == 1) hasSev1 = true;
+                if (severity == 10) hasSev10 = true;
+                if (severity != 0) allAreSev0 = false;
+            }
+
+            // ---- ON COMPO --> compVec
+            if (lv_obj_has_state(zbtn, LV_STATE_CHECKED)) {
+
+                uint32_t comp_btn_count = lv_obj_get_child_cnt(objects.zone_component_list); // compo list
+                lv_obj_t* matching_btn = nullptr;
+                for (uint32_t c = 0; c < comp_btn_count; ++c) {
+                    lv_obj_t* cbtn = lv_obj_get_child(objects.zone_component_list, c);
+                    std::vector<String>* uiCompVec = static_cast<std::vector<String>*>(lv_obj_get_user_data(cbtn));
+                    if (uiCompVec && uiCompVec->size() > 1 && (*uiCompVec)[1] == compName) {
+                        matching_btn = cbtn;
+                        break;
+                    }
+                }
+                if (!matching_btn) continue; // skip if not found in UI
+
+                String prefix;
+                if (severity == 10)
+                    prefix = LV_SYMBOL_CLOSE;
+                else if (severity == 1)
+                    prefix = LV_SYMBOL_WARNING;
+                else if (severity == 0)
+                    prefix = LV_SYMBOL_OK;
+                else
+                    prefix = "";
+
+                // Update the label for this COMPO button
+                uint32_t comp_child_count = lv_obj_get_child_cnt(matching_btn);
+                for (uint32_t i = 0; i < comp_child_count; ++i) {
+                    lv_obj_t* child = lv_obj_get_child(matching_btn, i);
+                    if (lv_obj_check_type(child, &lv_label_class)) {
+                        String labelText = (prefix.length() > 0 ? prefix + " " : "") + compName;
+                        lv_label_set_text(child, labelText.c_str());
+                    }
+                }
+            }else{
+
+            }
+        }
+
+        // ---- ZONE LABEL UPDATE ----
+
+        // Decide the symbol for this zone
+        String prefix;
+        if (hasSev10)
+            prefix = LV_SYMBOL_CLOSE;      // Stop (blocker)
+        else if (hasSev1)
+            prefix = LV_SYMBOL_WARNING;    // Warning (minor)
+        else if (allHaveDefects && allAreSev0)
+            prefix = LV_SYMBOL_OK;         // Checked (all 0)
+        else
+            prefix = "";                   // Unmasked
+
+        // Update the label for this zone button
+        uint32_t zone_child_count = lv_obj_get_child_cnt(zbtn);
+        for (uint32_t i = 0; i < zone_child_count; ++i) {
+            lv_obj_t* child = lv_obj_get_child(zbtn, i);
+            if (lv_obj_check_type(child, &lv_label_class)) {
+                String labelText = (prefix.length() > 0 ? prefix + " " : "") + ui_zone->name;
+                lv_label_set_text(child, labelText.c_str());
+            }
+        }
+    }
+}        
+
+//--------
 
     void open() override {
         domainManagerClass* domain = domainManagerClass::getInstance();
@@ -1127,7 +1312,7 @@ public:
 
             lv_obj_set_size(btn, 182, 84);
             lv_obj_add_event_cb(btn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
-            lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
+            //lv_obj_add_flag(btn, LV_OBJ_FLAG_CHECKABLE);
             lv_obj_set_user_data(btn, static_cast<void*>(&asset));
 
             // Style
