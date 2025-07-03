@@ -107,73 +107,93 @@ public:
         defects.clear();
     }
 
-String toString() const {
-    String result = "INSPECTION\n";
+    String toString() const {
+        String result = "INSPECTION\n";
 
-    // --- Inspection Type ---
-    if (type != NULL) {
-        result += "Type: ";
-        result += type->name;
-        result += "\n";
-
-        result += "Layouts:\n";
-        for (const auto& layout : type->layouts) {
-            result += " - ";
-            result += layout;
+        // --- Inspection Type ---
+        if (type != NULL) {
+            result += "Type: ";
+            result += type->name;
             result += "\n";
-        }
 
-        result += "Form Fields:\n";
-        size_t rowIndex = 0;
-        for (const auto& row : type->formFields) {
-            result += "  Row ";
-            result += String(rowIndex++);
-            result += ": ";
-            for (size_t i = 0; i < row.size(); ++i) {
-                result += row[i];
-                if (i < row.size() - 1) {
-                    result += ", ";
-                }
+            result += "Layouts:\n";
+            for (const auto& layout : type->layouts) {
+                result += " - ";
+                result += layout;
+                result += "\n";
             }
+
+            result += "Form Fields:\n";
+            size_t rowIndex = 0;
+            for (const auto& row : type->formFields) {
+                result += "  Row ";
+                result += String(rowIndex++);
+                result += ": ";
+                for (size_t i = 0; i < row.size(); ++i) {
+                    result += row[i];
+                    if (i < row.size() - 1) {
+                        result += ", ";
+                    }
+                }
+                result += "\n";
+            }
+
+        } else {
+            result += "Type: NULL\n";
+        }
+
+        // --- Assets ---
+        result += "Assets:\n";
+        for (const auto& asset : assets) {
+            result += " - ID: ";
+            result += asset.ID;
+            result += ", Layout: ";
+            result += asset.layoutName;
+            result += ", Tag: ";
+            result += asset.tag;
             result += "\n";
         }
 
-    } else {
-        result += "Type: NULL\n";
-    }
-
-    // --- Assets ---
-    result += "Assets:\n";
-    for (const auto& asset : assets) {
-        result += " - ID: ";
-        result += asset.ID;
-        result += ", Layout: ";
-        result += asset.layoutName;
-        result += ", Tag: ";
-        result += asset.tag;
-        result += "\n";
-    }
-    
-    // --- Defects ---
-    result += "Defects:\n";
-    for (const auto& defect : defects) {
-        result += " - Asset ID: ";
-        if (defect.asset) {
-            result += defect.asset->ID;
-        } else {
-            result += "<null>";
+        // --- Defects: severity == 0 first ---
+        result += "Defects (sev == 0):\n";
+        for (const auto& defect : defects) {
+            if (defect.severity == 0) {
+                result += " - Asset ID: ";
+                if (defect.asset) {
+                    result += defect.asset->ID;
+                } else {
+                    result += "<null>";
+                }
+                result += ", Zone: " + defect.zoneName;
+                result += ", Component: " + defect.componentName;
+                result += ", Type: " + defect.defectType;
+                result += ", Severity: " + String(defect.severity);
+                result += ", Notes: " + defect.notes;
+                result += "\n";
+            }
         }
-        result += ", Zone: " + defect.zoneName;
-        result += ", Component: " + defect.componentName;
-        result += ", Type: " + defect.defectType;
-        result += ", Severity: " + String(defect.severity);
-        result += ", Notes: " + defect.notes;
-        result += "\n";
-    }
 
-    return result;
-}
-        
+        // --- Defects: severity > 0 after ---
+        result += "Defects (sev > 0):\n";
+        for (const auto& defect : defects) {
+            if (defect.severity > 0) {
+                result += " - Asset ID: ";
+                if (defect.asset) {
+                    result += defect.asset->ID;
+                } else {
+                    result += "<null>";
+                }
+                result += ", Zone: " + defect.zoneName;
+                result += ", Component: " + defect.componentName;
+                result += ", Type: " + defect.defectType;
+                result += ", Severity: " + String(defect.severity);
+                result += ", Notes: " + defect.notes;
+                result += "\n";
+            }
+        }
+
+        return result;
+    }        
 };
 
 //-------------------------------------------------

@@ -814,7 +814,177 @@ public:
             return;
         }     
 
-                        
+
+        // save 0 sev 
+        if (target == objects.comp_ok_button) {
+            Serial.println("OK defect");
+
+            // Find selected component in zone_component_list (index version)
+            std::vector<String>* compVec = nullptr;
+            uint32_t i = 0;
+            lv_obj_t* btn = lv_obj_get_child(objects.zone_component_list, i);
+            while (btn) {
+                if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                    compVec = (std::vector<String>*) lv_obj_get_user_data(btn);            
+                    break;
+                }
+                ++i;
+                btn = lv_obj_get_child(objects.zone_component_list, i);                
+            }
+
+            if (compVec != nullptr) {
+                // Validate context
+                if (!lastSelectedAsset) {
+                    createDialog("No asset selected.");
+                    return;
+                }
+                lv_obj_t* selected_zone_item = get_checked_child(objects.zone_list);
+                if (!selected_zone_item) {
+                    createDialog("No zone selected.");
+                    return;
+                }
+                layoutZoneClass* selected_zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(selected_zone_item));
+                if (!selected_zone) {
+                    createDialog("Failed to resolve selected zone.");
+                    return;
+                }
+
+                if (compVec->size() <= 1) {
+                    createDialog("Component vector is incomplete.");
+                    return;
+                }
+                String compName = (*compVec)[1];
+                if (compName.isEmpty()) {
+                    createDialog("Component name is empty.");
+                    return;
+                }
+
+                domainManagerClass* domain = domainManagerClass::getInstance();
+                std::vector<defectClass>& defects = domain->currentInspection.defects;
+
+                // Check if a defect already exists for this component
+                bool exists = false;
+                for (const auto& defect : defects) {
+                    if (defect.asset && 
+                        defect.asset->ID == lastSelectedAsset->ID &&
+                        defect.zoneName == selected_zone->tag &&
+                        defect.componentName == compName) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (exists) {
+                    Serial.println("Defect already exists — ignoring OK post.");
+                    return; // Skip adding severity 0 if any defect exists
+                }
+
+                // Make severity 0 defect
+                defectClass newDefect(
+                    lastSelectedAsset,
+                    selected_zone->tag,
+                    compName,
+                    "GOOD",
+                    0,
+                    "<< NOTES >>"
+                );
+
+                defects.push_back(newDefect);
+
+                Serial.println("OK defect saved!");
+                Serial.println(domain->currentInspection.toString().c_str());
+
+                // Optional: refresh labels
+                refreshZoneAndComponentLabels();
+
+            } else {
+                Serial.println("No component selected!");
+                createDialog("Please select a component.");
+            }
+        }
+
+
+        if (target == objects.all_ok_button) {  
+            Serial.println("OK ALL defects for zone");
+
+            if (!lastSelectedAsset) {
+                createDialog("No asset selected.");
+                return;
+            }
+
+            lv_obj_t* selected_zone_item = get_checked_child(objects.zone_list);
+            if (!selected_zone_item) {
+                createDialog("No zone selected.");
+                return;
+            }
+
+            layoutZoneClass* selected_zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(selected_zone_item));
+            if (!selected_zone) {
+                createDialog("Failed to resolve selected zone.");
+                return;
+            }
+
+            domainManagerClass* domain = domainManagerClass::getInstance();
+            std::vector<defectClass>& defects = domain->currentInspection.defects;
+
+            uint32_t comp_btn_count = lv_obj_get_child_cnt(objects.zone_component_list);
+            uint32_t newDefectsCount = 0;
+
+            for (uint32_t c = 0; c < comp_btn_count; ++c) {
+                lv_obj_t* cbtn = lv_obj_get_child(objects.zone_component_list, c);
+                std::vector<String>* uiCompVec = static_cast<std::vector<String>*>(lv_obj_get_user_data(cbtn));
+
+                if (!uiCompVec || uiCompVec->size() <= 1) continue;
+
+                String compName = (*uiCompVec)[1];
+                if (compName.isEmpty()) continue;
+
+                // Check if defect exists
+                bool exists = false;
+                for (const auto& defect : defects) {
+                    if (defect.asset && 
+                        defect.asset->ID == lastSelectedAsset->ID &&
+                        defect.zoneName == selected_zone->tag &&
+                        defect.componentName == compName) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (exists) {
+                    Serial.print("Defect already exists for ");
+                    Serial.println(compName);
+                    continue; // Skip adding
+                }
+
+                // Add severity 0 defect
+                defectClass newDefect(
+                    lastSelectedAsset,
+                    selected_zone->tag,
+                    compName,
+                    "GOOD",
+                    0,
+                    "<< NOTES >>"
+                );
+                defects.push_back(newDefect);
+                ++newDefectsCount;
+
+                Serial.print("OK defect saved for ");
+                Serial.println(compName);
+            }
+
+            if (newDefectsCount == 0) {
+                Serial.println("No new OK defects needed — all already have defects.");
+            } else {
+                Serial.print("Added OK defects for ");
+                Serial.print(newDefectsCount);
+                Serial.println(" components.");
+            }
+
+            Serial.println(domain->currentInspection.toString().c_str());
+            refreshZoneAndComponentLabels();
+        }
+
 
         // =====================================================
         // DEFECTO dialog ---
@@ -915,7 +1085,6 @@ public:
                 lv_msgbox_close_async(dialog);   
 
                 refreshZoneAndComponentLabels();                
-
                 // debugo
                 Serial.println( domain->currentInspection.toString().c_str() );                    
             }
@@ -1108,9 +1277,15 @@ public:
                     if (existingDefect && defectName == existingDefect->defectType) {
                         lv_obj_add_state(defect_btn, LV_STATE_CHECKED);
                     }
-                    else if (i == 2 && !existingDefect) {
+                    else if (i == 2 && !existingDefect) {                     
                         lv_obj_add_state(defect_btn, LV_STATE_CHECKED);
                     }
+                    else if (i == 2 && existingDefect) {
+                        if( existingDefect->defectType == "GOOD" ){ 
+                            lv_obj_add_state(defect_btn, LV_STATE_CHECKED);
+                        }
+                    }
+
                 }
             }
 
