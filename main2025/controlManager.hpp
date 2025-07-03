@@ -1001,7 +1001,6 @@ public:
                 domain->comms->down();
 
             }catch( const std::runtime_error& error ){
-                spinnerEnd();
                 String chainedError = String( "ERROR: Could not POST: " ) + error.what();            
             }
 
@@ -1009,23 +1008,8 @@ public:
 
         }
 
-/*
-        createYesNoDialog(
-            "Send inspection?",
-            [domain]() {
-                if (domain && domain->comms) {
-                    try{
-                        domain->comms->postInspection(domain->currentInspection.toString());
-                    }catch( const std::runtime_error& error ){
-                        Serial.println( error.what() );            
-                        createDialog( error.what() );     
-                    }                    
-                } else {
-                    createDialog("Domain or comms missing");
-                }
-            }
-        );
-*/
+
+
         // =====================================================
         // DEFECTO dialog ---
 

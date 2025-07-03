@@ -30,24 +30,18 @@ public class InspectionsService extends HttpServlet {
                     
             request.setCharacterEncoding("UTF-8");
 
-            StringBuilder sb = new StringBuilder();
+            persistentTextClass inspection = new persistentTextClass( "EVIRinspection.txt" );                     
+            inspection.add( "\n\n========================================================================" );
             try (BufferedReader reader = request.getReader()) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    sb.append(line);
+                    inspection.add( line );
                 }
-            }
+            }                 
+            inspection.writeToDisk( persistentTextClass.WRITEMODE_APPEND_TO_FILE );            
+            inspection.flush();
 
-            String requestBody = sb.toString();
-            
-            persistentTextClass inspection = new persistentTextClass( "EVIRinspection.txt" );         
-            String[] lines = sb.toString().split("\\r?\\n|\\r");
-            for (String line : lines) {
-                inspection.add(line);
-            }                        
-            inspection.writeToDisk();
-
-            System.out.println("Received POST:\n" + requestBody);
+            System.out.println("Received POST:\n" + inspection.toString());
             response.setContentType("text/plain");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write( 
