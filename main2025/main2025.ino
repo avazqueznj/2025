@@ -35,6 +35,13 @@
 #include "state.hpp"
 #include <SDRAM.h>
 
+#include <SPI.h>
+#include <MFRC522.h>
+
+#define SS_PIN 10  // SDA pin on RC522
+#define RST_PIN 9  // RST pin on RC522
+MFRC522 mfrc522(SS_PIN, RST_PIN);
+
 //----------------------------------------------------------
 static void* lvgl_sdram_pool = nullptr;
 extern "C" void* lvgl_get_sdram_pool() {
@@ -66,12 +73,24 @@ void setup() {
     if( serialWait > 5000 ) break;
   } 
 
+  Serial.println("Coming UP----------------->");
+
+  Serial.println("SDRAM");
   SDRAM.begin();         // Must be FIRST
 
+  Serial.println("Disp");
   Display.begin();
   TouchDetector.begin();
   pinMode(LED_BUILTIN, OUTPUT);
-  
+
+  Serial.println("SPI");
+  SPI.begin();            // Uses default SPI bus
+
+  Serial.println("RFID");
+  mfrc522.PCD_Init();
+  mfrc522.PCD_DumpVersionToSerial();
+  Serial.println("Coming UP-----------------> Done!");
+
   create_screens();           
   stateManager = new stateClass();
   stateManager->openScreen( new mainScreenClass() );
@@ -95,6 +114,7 @@ void getInternalHeapFreeBytes() {
 
 
 // paint loop
+int RFIDrefreshCounts = 0;
 int refreshCounts = 0;
 void loop() {
   delayBlink();
@@ -106,6 +126,26 @@ void loop() {
     getInternalHeapFreeBytes();
     refreshCounts = 0;   
   } 
+
+  RFIDrefreshCounts += 1;
+  if( RFIDrefreshCounts == 5 ){  
+   
+    if (mfrc522.PICC_IsNewCardPresent()) {
+      Serial.println("Card detected!");
+      if (mfrc522.PICC_ReadCardSerial()) {
+        Serial.print("Card UID:");
+        for (byte i = 0; i < mfrc522.uid.size; i++) {
+          Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
+          Serial.print(mfrc522.uid.uidByte[i], HEX);
+        }
+        Serial.println();
+        delay(1000);  // Small delay so it doesn't flood the output
+      }
+    }
+
+    RFIDrefreshCounts = 0;   
+  } 
+
 }
 
 
