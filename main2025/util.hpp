@@ -51,6 +51,11 @@ static void btn_event_cb(lv_event_t * e)
 
 void createDialog( const char* message )
 {
+    if (overlay != nullptr) {
+        Serial.println("Dialog already open, ignoring createDialog call.");
+        return;
+    }
+
     static const char * btns[] = { "OK", "" };
 
     // Create overlay

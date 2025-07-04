@@ -28,6 +28,9 @@ public:
         Serial.println("basescreen: event unhandled ...");  
     }
 
+    virtual void rfidEvent( byte *uid, byte length ){
+    }
+
     virtual ~screenClass(){
     }
 
@@ -119,6 +122,91 @@ public:
 
     selectAssetScreenClass(): screenClass( SCREEN_ID_SELECT_ASSET_SCREEN ){}
     virtual ~selectAssetScreenClass(){};    
+
+    //----------------------------------
+
+    virtual void rfidEvent(byte *uid, byte length) override {
+
+        // 1) Convert UID to same tag format
+        String rfidTag = ":";
+        for (byte i = 0; i < length; i++) {
+            rfidTag += ":";
+            rfidTag += String(uid[i]);
+        }
+
+        Serial.print("RFID event tag = ");
+        Serial.println(rfidTag);
+
+        // is this a double read?
+        {
+            uint32_t child_count = lv_obj_get_child_cnt(objects.selected_asset_list);
+            for (uint32_t i = 0; i < child_count; ++i) {
+                lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, i);
+
+                if (lv_obj_check_type(child, &lv_btn_class)) {
+                    assetClass* childAsset = static_cast<assetClass*>(lv_obj_get_user_data(child));
+                    if (childAsset && childAsset->tag == rfidTag) {
+                        Serial.println("RFID asset already in selected list — ignoring event.");
+                        return; // Already selected, skip the rest
+                    }
+                }
+            }        
+        }
+
+        // 2) Find matching asset and button
+        assetClass* matchedAsset = nullptr;
+
+        for (lv_obj_t* btn : listButtons) {
+            assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
+            if (asset && asset->tag == rfidTag) {
+            matchedAsset = asset;
+            selectedButton = btn;
+            break;
+            }
+        }
+
+        if (!matchedAsset) {
+            createDialog("No matching asset found for this tag!");
+            return;
+        }
+
+        // 3) Mark button visually selected, unselect others
+        for (lv_obj_t* btn : listButtons) {
+            if (btn == selectedButton) {
+            lv_obj_add_state(btn, LV_STATE_CHECKED);
+            } else {
+            lv_obj_clear_state(btn, LV_STATE_CHECKED);
+            }
+        }
+
+        Serial.print("RFID matched asset ID: ");
+        Serial.println(matchedAsset->ID);
+
+        // 4) Does asset already exist in selected_asset_list?
+        uint32_t child_count = lv_obj_get_child_cnt(objects.selected_asset_list);
+        for (uint32_t i = 0; i < child_count; ++i) {
+            lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, i);
+
+            if (lv_obj_check_type(child, &lv_btn_class)) {
+                assetClass* childAsset = static_cast<assetClass*>(lv_obj_get_user_data(child));
+                if (childAsset && childAsset == matchedAsset) {
+                    Serial.println("Asset already in selected list.");
+                    return; // Already added
+                }
+            }
+        }
+
+        // 5) Check inspection type
+        if (!hasCommonInspectionType(matchedAsset)) {
+            createDialog("Error: The assets selected do not have a common inspection type!");
+            return;
+        }
+
+        // 6) Add it
+        addAssetToList(objects.selected_asset_list, matchedAsset, false);
+
+        Serial.println("RFID asset added to selected list!");
+    }
 
     //----------------------------------
 
@@ -618,6 +706,16 @@ public:
 //-------------------------------------------------
 //_+_+_+
 
+/*
+
+zone tags, thanks kyle sparks for having to hardcode this
+
+zone1 ::4:98:28:2:177:115:128
+zone2 ::4:59:59:2:177:115:128
+zone3 ::4:249:13:2:177:115:128
+zone4 ::4:63:37:2:177:115:129
+.. and i have no more tags
+*/
                 
 class inspectionZonesScreenClass : public screenClass {
 public:
@@ -626,6 +724,69 @@ public:
 
     inspectionZonesScreenClass() : screenClass(SCREEN_ID_INSPECTION_ZONES) {
     }
+
+    //-------------------------------------------------
+
+    virtual void rfidEvent(byte *uid, byte length) override {
+
+        // Build tag string in your style
+        String rfidTag = ":";
+        for (byte i = 0; i < length; i++) {
+            rfidTag += ":";
+            rfidTag += String(uid[i]);
+        }
+
+        Serial.print("RFID event tag = ");
+        Serial.println(rfidTag);
+
+        // Match to your 4 known tags → map to zone tag
+        String targetZoneTag;
+        if (rfidTag == "::4:98:28:2:177:115:128") {
+            targetZoneTag = "1";
+        } else if (rfidTag == "::4:59:59:2:177:115:128") {
+            targetZoneTag = "2";
+        } else if (rfidTag == "::4:249:13:2:177:115:128") {
+            targetZoneTag = "3";
+        } else if (rfidTag == "::4:63:37:2:177:115:129") {
+            targetZoneTag = "4";
+        } else {
+            createDialog("Unknown tag read");
+            return;
+        }
+
+        Serial.print("Matched to zone tag: ");
+        Serial.println(targetZoneTag);
+
+        // Find zone button in UI and select it
+        uint32_t zone_count = lv_obj_get_child_cnt(objects.zone_list);
+        lv_obj_t* matchingZoneButton = nullptr;
+
+        for (uint32_t i = 0; i < zone_count; ++i) {
+            lv_obj_t* zbtn = lv_obj_get_child(objects.zone_list, i);
+            layoutZoneClass* zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(zbtn));
+            if (!zone) continue;
+
+            if (zone->tag == targetZoneTag) {
+                lv_obj_add_state(zbtn, LV_STATE_CHECKED);
+                matchingZoneButton = zbtn;   // Save the match
+            } else {
+                lv_obj_clear_state(zbtn, LV_STATE_CHECKED);
+            }
+        }
+
+        if (!matchingZoneButton) {
+            createDialog("Read zone tag, but zone was not found or no asset selected.");
+            return;
+        }
+
+        Serial.println("Zone selected by RFID OK.");
+
+        lv_event_t fakeEvent;
+        fakeEvent.target = matchingZoneButton;
+        fakeEvent.code = LV_EVENT_PRESSED;
+        handleEvents(&fakeEvent);
+    }
+
 
     void handleEvents(lv_event_t* e) override {
         
@@ -987,27 +1148,18 @@ public:
 
 
         if (target == objects.submit) {
-
             spinnerStart();
-
             try{
-
-                domainManagerClass* domain = domainManagerClass::getInstance();
-                
-                domain->comms->up();
-                    
+                domainManagerClass* domain = domainManagerClass::getInstance(); 
+                domain->comms->up();                
                     createDialog( domain->comms->postInspection(domain->currentInspection.toString()).c_str() );
-
                 domain->comms->down();
 
             }catch( const std::runtime_error& error ){
                 String chainedError = String( "ERROR: Could not POST: " ) + error.what();            
             }
-
             spinnerEnd();       
-
         }
-
 
 
         // =====================================================
@@ -1117,10 +1269,8 @@ public:
         }
 
         //-------
-    
 
     }
-
 
 
     lv_obj_t *dialog = nullptr;    

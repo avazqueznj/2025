@@ -17,6 +17,18 @@ public:
 
   // BASE DISPATCH ----------------------------------------
 
+  virtual void rfidEvent( byte *uid, byte length ){
+    try{
+      if( currentScreenState !=  NULL ){
+        Serial.println( "*** RFID event ***" );                    
+        currentScreenState->rfidEvent( uid, length );
+      }
+    }catch( const std::runtime_error& error ){
+      Serial.println( "*** ERROR while handling RFID event ***" );                    
+      Serial.println( error.what() );                    
+    }          
+  }
+
   void handleEvents( lv_event_t* e ){
 
       try{

@@ -112,6 +112,8 @@ void getInternalHeapFreeBytes() {
     Serial.println( heap_free );
 }
 
+byte currentCardUID[10];     // Global buffer for UID
+byte currentCardLength = 0;  // Global length
 
 // paint loop
 int RFIDrefreshCounts = 0;
@@ -131,15 +133,23 @@ void loop() {
   if( RFIDrefreshCounts == 5 ){  
    
     if (mfrc522.PICC_IsNewCardPresent()) {
-      Serial.println("Card detected!");
       if (mfrc522.PICC_ReadCardSerial()) {
+        currentCardLength = mfrc522.uid.size;  // Save length
+        for (byte i = 0; i < currentCardLength; i++) {
+          currentCardUID[i] = mfrc522.uid.uidByte[i];  // Save bytes
+        }
+
         Serial.print("Card UID:");
-        for (byte i = 0; i < mfrc522.uid.size; i++) {
-          Serial.print(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-          Serial.print(mfrc522.uid.uidByte[i], HEX);
+        for (byte i = 0; i < currentCardLength; i++) {
+          Serial.print(":");
+          Serial.print(currentCardUID[i]);
         }
         Serial.println();
-        delay(1000);  // Small delay so it doesn't flood the output
+
+        mfrc522.PICC_HaltA();
+        mfrc522.PCD_StopCrypto1();
+
+        stateManager->rfidEvent( currentCardUID, currentCardLength );
       }
     }
 
