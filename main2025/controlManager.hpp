@@ -294,6 +294,7 @@ public:
         // sync with current inspection
         for (assetClass& asset : domain->assets) {
             bool inInspection = false;
+            listButtons.push_back(addAssetToList(objects.asset_list, &asset, true));
 
             for (assetClass& selected : domain->currentInspection.assets) {
                 if (asset.ID == selected.ID) {
@@ -301,10 +302,6 @@ public:
                     inInspection = true;
                     break;
                 }
-            }
-
-            if (!inInspection) {
-                listButtons.push_back(addAssetToList(objects.asset_list, &asset, true));
             }
         }
         
