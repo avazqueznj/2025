@@ -159,6 +159,14 @@ public:
 
   // SCREEN NAVIGATION
 
+  // Note: if open() throws, we deliberately do NOT delete the screen here.
+  // Rationale:
+  //   - If open() fails, the object may be partially initialized.
+  //   - Deleting a partially initialized object risks undefined behavior.
+  //   - Small leak is safer than a risky destructor call.
+  // In normal flow, open() should never fail — but this pattern ensures
+  // fail-safe behavior if something unexpected happens.  
+
   void openScreen( screenClass* screen ){        
     try{
 
@@ -170,6 +178,7 @@ public:
       currentScreenState = screen;
 
     }catch( const std::runtime_error& error ){
+        // no delete here, as designed, leak it, i dont care.
         Serial.println( error.what() );            
         createDialog( error.what() );  
     }

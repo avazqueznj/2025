@@ -7,7 +7,7 @@
 
 #include <NTPClient.h>
 #include "RTClib.h"
-extern RTC_DS1307 rtc;
+extern RTC_DS1307* rtc;
 
 class commsClass{
 public:
@@ -276,7 +276,7 @@ public:
         unsigned long epochTime = timeClient.getEpochTime();
         DateTime ntpTime(epochTime);
 
-        rtc.adjust(ntpTime);  // Uses the global rtc
+        rtc->adjust(ntpTime);  // Uses the global rtc
 
         Serial.println("RTC synced!");
     }
