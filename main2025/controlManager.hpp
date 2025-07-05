@@ -571,6 +571,7 @@ public:
         void open() override {
             domainManagerClass* domain = domainManagerClass::getInstance();
             inspectionTypeClass* currentType = domain->currentInspection.type;
+            inspectionClass* currentInspection = &domain->currentInspection;
 
             if (currentType == NULL) {
                 throw std::runtime_error("Error: No inspection type selected!");
@@ -582,7 +583,7 @@ public:
             // Clear old textarea handles
             textareas.clear();
 
-            // Use your EEZ-generated list container
+            // Use  EEZ-generated list container
             lv_obj_t* parent_obj = objects.inspection_types_1;
             lv_obj_clean(parent_obj);
 
@@ -608,10 +609,10 @@ public:
 
                 String fieldName = row[0];
                 String fieldType = row[1];
-                String fieldMax = row.size() >= 3 ? row[2] : "128";
+                String fieldMax = row.size() >= 3 ? row[2] : "30";
 
                 int maxLength = fieldMax.toInt();
-                if (maxLength <= 0) maxLength = 128;
+                if (maxLength <= 0) maxLength = 30;
 
                 // === Flex container ===
                 lv_obj_t* rowContainer = lv_obj_create(parent_obj);
@@ -639,8 +640,8 @@ public:
 
                 // If there’s a previous value, restore it
                 String prefill = "";
-                if (i < currentType->formFieldValues.size()) {
-                    prefill = currentType->formFieldValues[i];
+                if (i < currentInspection->inspectionFormFieldValues.size()) {
+                    prefill = currentInspection->inspectionFormFieldValues[i];
                 }
                 lv_textarea_set_text(textarea, prefill.c_str());
 
@@ -675,26 +676,27 @@ public:
 
         void syncToInspection() {
             domainManagerClass* domain = domainManagerClass::getInstance();
-            inspectionTypeClass* currentType = domain->currentInspection.type;
+            inspectionClass* currentInspection = &domain->currentInspection; // FIXED
+            inspectionTypeClass* currentType = currentInspection->type;
 
             if (currentType == NULL) {
                 Serial.println("syncToInspection: No inspection type selected!");
                 return;
             }
 
-            currentType->formFieldValues.clear();
+            currentInspection->inspectionFormFieldValues.clear(); // FIXED
 
             for (lv_obj_t* ta : textareas) {
                 const char* input = lv_textarea_get_text(ta);
-                currentType->formFieldValues.push_back(String(input));
+                currentInspection->inspectionFormFieldValues.push_back(String(input)); // FIXED
             }
 
             Serial.println("syncToInspection: Form field values saved:");
-            for (size_t i = 0; i < currentType->formFieldValues.size(); ++i) {
+            for (size_t i = 0; i < currentInspection->inspectionFormFieldValues.size(); ++i) {
                 Serial.print("  [");
                 Serial.print(i);
                 Serial.print("] ");
-                Serial.println(currentType->formFieldValues[i]);
+                Serial.println(currentInspection->inspectionFormFieldValues[i]);
             }
         }
 

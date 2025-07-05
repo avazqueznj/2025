@@ -50,7 +50,6 @@ public:
     String name;
     std::vector<  String  > layouts;    
     std::vector<  std::vector<String>  > formFields;    
-    std::vector<  String  > formFieldValues;    
     inspectionTypeClass(String nameParam):name(nameParam){}
     virtual ~inspectionTypeClass(){}    
 };
@@ -99,6 +98,7 @@ public:
     std::vector<assetClass> assets;    
     std::vector<defectClass> defects;
     String submitTime;
+    std::vector<  String  > inspectionFormFieldValues; 
 
     inspectionClass(){}
 
@@ -106,6 +106,8 @@ public:
         type = NULL;
         assets.clear();
         defects.clear();
+        inspectionFormFieldValues.clear();
+        submitTime = "";
     }
 
     String toString() const {
@@ -128,7 +130,7 @@ public:
             size_t rowIndex = 0;
             for (const auto& row : type->formFields) {
                 result += "  Row ";
-                result += String(rowIndex++);
+                result += String(rowIndex);
                 result += ": ";
                 for (size_t i = 0; i < row.size(); ++i) {
                     result += row[i];
@@ -136,7 +138,15 @@ public:
                         result += ", ";
                     }
                 }
+                // Add the value if it exists
+                if (rowIndex < inspectionFormFieldValues.size()) {
+                    result += " => ";
+                    result += inspectionFormFieldValues[rowIndex];
+                } else {
+                    result += " => <unset>";
+                }
                 result += "\n";
+                ++rowIndex;
             }
 
         } else {
