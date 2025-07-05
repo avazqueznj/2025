@@ -4333,7 +4333,7 @@
                       "text": "123",
                       "textType": "literal",
                       "placeholder": "",
-                      "oneLineMode": false,
+                      "oneLineMode": true,
                       "passwordMode": false,
                       "acceptedCharacters": "",
                       "maxTextLength": 128

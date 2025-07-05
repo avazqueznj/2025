@@ -645,7 +645,7 @@ public:
                 }
                 lv_textarea_set_text(textarea, prefill.c_str());
 
-                lv_textarea_set_one_line(textarea, false);
+                lv_textarea_set_one_line(textarea, true);
                 lv_textarea_set_password_mode(textarea, false);
                 lv_obj_clear_flag(textarea,
                     LV_OBJ_FLAG_SCROLLABLE |
