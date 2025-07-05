@@ -88,6 +88,8 @@ void setup() {
   Serial.println("SDRAM");
   SDRAM.begin();         // Must be FIRST!
 
+  delay( 100 );
+
   Serial.println("Disp");
   Display = new Arduino_H7_Video(800, 480, GigaDisplayShield);  // AFTER SDRAM ready
   Display->begin();
