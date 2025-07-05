@@ -5,6 +5,9 @@
 #include <exception>
 #include <WiFi.h>
 
+#include <NTPClient.h>
+#include "RTClib.h"
+extern RTC_DS1307 rtc;
 
 class commsClass{
 public:
@@ -246,6 +249,36 @@ public:
         }
 
         return response;
+    }
+
+    void syncClockWithNTP() {
+
+        if (connState != ON) {
+            throw std::runtime_error("WiFi must be ON to sync clock");
+        }
+
+        WiFiUDP ntpUDP;
+        NTPClient timeClient(ntpUDP, "pool.ntp.org", 0, 60000);
+
+        Serial.println("Starting NTP sync...");
+        timeClient.begin();
+
+        int tries = 0;
+        while (!timeClient.update()) {
+            timeClient.forceUpdate();
+            delay(500);
+            tries++;
+            if (tries > 10) {
+                throw std::runtime_error("NTP sync failed: timeout");
+            }
+        }
+
+        unsigned long epochTime = timeClient.getEpochTime();
+        DateTime ntpTime(epochTime);
+
+        rtc.adjust(ntpTime);  // Uses the global rtc
+
+        Serial.println("RTC synced!");
     }
 
 };

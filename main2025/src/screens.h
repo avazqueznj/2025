@@ -15,6 +15,7 @@ typedef struct _objects_t {
     lv_obj_t *inspection_form;
     lv_obj_t *inspection_zones;
     lv_obj_t *obj0;
+    lv_obj_t *clock;
     lv_obj_t *logo1;
     lv_obj_t *do_settings;
     lv_obj_t *do_inspect_button;
@@ -61,6 +62,7 @@ typedef struct _objects_t {
     lv_obj_t *obj8;
     lv_obj_t *inspection_type_name;
     lv_obj_t *obj9;
+    lv_obj_t *clock_insp;
     lv_obj_t *logo1_5;
     lv_obj_t *help2_4;
     lv_obj_t *submit;

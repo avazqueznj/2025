@@ -31,6 +31,9 @@ public:
     virtual void rfidEvent( byte *uid, byte length ){
     }
 
+    virtual void clockTic( String time ){
+    }
+
     virtual ~screenClass(){
     }
 
@@ -70,6 +73,10 @@ class mainScreenClass:public screenClass{
 public:
 
     mainScreenClass(): screenClass( SCREEN_ID_MAIN ){            
+    }
+
+    void clockTic( String time ) override {
+        lv_label_set_text( objects.clock, time.c_str());
     }
 
     void handleEvents( lv_event_t* e ) override{
@@ -711,6 +718,7 @@ zone1 ::4:98:28:2:177:115:128
 zone2 ::4:59:59:2:177:115:128
 zone3 ::4:249:13:2:177:115:128
 zone4 ::4:63:37:2:177:115:129
+zone5 ::233:112:67:194
 .. and i have no more tags
 */
                 
@@ -724,7 +732,11 @@ public:
 
     //-------------------------------------------------
 
-    virtual void rfidEvent(byte *uid, byte length) override {
+    void clockTic ( String time ) override {
+        lv_label_set_text( objects.clock_insp, time.c_str());
+    }
+
+    void rfidEvent(byte *uid, byte length) override {
 
         // Build tag string in your style
         String rfidTag = ":";
@@ -736,16 +748,25 @@ public:
         Serial.print("RFID event tag = ");
         Serial.println(rfidTag);
 
-        // Match to your 4 known tags → map to zone tag
+        // Match to the 4 known zone tags → map to zone tag
+        // are all zone tags the same ? idk
         String targetZoneTag;
-        if (rfidTag == "::4:98:28:2:177:115:128") {
+
+        if (rfidTag == "::4:98:28:2:177:115:128") {  //conti
             targetZoneTag = "1";
-        } else if (rfidTag == "::4:59:59:2:177:115:128") {
+
+        } else if (rfidTag == "::4:59:59:2:177:115:128") {  //conti
             targetZoneTag = "2";
-        } else if (rfidTag == "::4:249:13:2:177:115:128") {
+
+        } else if (rfidTag == "::4:249:13:2:177:115:128") {  //conti
             targetZoneTag = "3";
-        } else if (rfidTag == "::4:63:37:2:177:115:129") {
+
+        } else if (rfidTag == "::4:63:37:2:177:115:129") {  //conti
             targetZoneTag = "4";
+
+        } else if (rfidTag == "::233:112:67:194") { // kfob
+            targetZoneTag = "5";
+
         } else {
             createDialog("Unknown tag read");
             return;
@@ -1148,10 +1169,18 @@ public:
             spinnerStart();
             try{
                 domainManagerClass* domain = domainManagerClass::getInstance(); 
-                domain->comms->up();                
-                    createDialog( domain->comms->postInspection(domain->currentInspection.toString()).c_str() );
-                domain->comms->down();
 
+                // Check if there are any defects BEFORE submitting
+                if (domain->currentInspection.defects.size() == 0) {
+                    spinnerEnd(); 
+                    createDialog("ERROR: Cannot submit empty inspection.");
+                } else {
+                    domain->comms->up();   
+                    domain->currentInspection.submitTime = String(lv_label_get_text(objects.clock_insp));
+                    createDialog(domain->comms->postInspection(domain->currentInspection.toString()).c_str());
+                    domain->comms->down();
+                }                
+                
             }catch( const std::runtime_error& error ){
                 String chainedError = String( "ERROR: Could not POST: " ) + error.what();            
             }

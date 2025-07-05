@@ -17,7 +17,7 @@ public:
 
   // BASE DISPATCH ----------------------------------------
 
-  virtual void rfidEvent( byte *uid, byte length ){
+   void rfidEvent( byte *uid, byte length ){
     try{
       if( currentScreenState !=  NULL ){
         Serial.println( "*** RFID event ***" );                    
@@ -28,6 +28,17 @@ public:
       Serial.println( error.what() );                    
     }          
   }
+
+  void clockTic( String time ){
+    try{
+      if( currentScreenState !=  NULL ){
+        currentScreenState->clockTic(  time );
+      }
+    }catch( const std::runtime_error& error ){
+      Serial.println( "*** ERROR while handling clock event ***" );                    
+      Serial.println( error.what() );                    
+    }         
+  }  
 
   void handleEvents( lv_event_t* e ){
 

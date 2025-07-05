@@ -42,6 +42,11 @@
 #define RST_PIN 9  // RST pin on RC522
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
+// clock
+#include <Wire.h>
+#include "RTClib.h"
+RTC_DS1307 rtc;
+
 //----------------------------------------------------------
 static void* lvgl_sdram_pool = nullptr;
 extern "C" void* lvgl_get_sdram_pool() {
@@ -89,6 +94,15 @@ void setup() {
   Serial.println("RFID");
   mfrc522.PCD_Init();
   mfrc522.PCD_DumpVersionToSerial();
+
+  if (!rtc.begin()) {
+    Serial.println("Couldn't find RTC clock!!!!");
+  }
+  if (!rtc.isrunning()) {
+    Serial.println("RTC is NOT running, default time ....");
+    rtc.adjust(DateTime(2025, 7, 4, 12, 0, 0)); // YYYY, MM, DD, HH, MM, SS    
+  }
+
   Serial.println("Coming UP-----------------> Done!");
 
   create_screens();           
@@ -119,6 +133,7 @@ byte currentCardLength = 0;  // Global length
 int RFIDrefreshCounts = 0;
 int refreshCounts = 0;
 void loop() {
+
   delayBlink();
   lv_timer_handler(); 
   ui_tick();       
@@ -132,6 +147,7 @@ void loop() {
   RFIDrefreshCounts += 1;
   if( RFIDrefreshCounts == 5 ){  
    
+    // rfid
     if (mfrc522.PICC_IsNewCardPresent()) {
       if (mfrc522.PICC_ReadCardSerial()) {
         currentCardLength = mfrc522.uid.size;  // Save length
@@ -151,7 +167,22 @@ void loop() {
 
         stateManager->rfidEvent( currentCardUID, currentCardLength );
       }
-    }
+    } // rfid logic
+
+    {
+      // clock
+      DateTime now = rtc.now();
+      char buffer[20];
+      sprintf(buffer, "%04d-%02d-%02d %02d:%02d:%02d",
+              now.year(),
+              now.month(),
+              now.day(),
+              now.hour(),
+              now.minute(),
+              now.second());
+      String time = String(buffer);
+      stateManager->clockTic( time ); 
+    }   
 
     RFIDrefreshCounts = 0;   
   } 

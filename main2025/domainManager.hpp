@@ -98,6 +98,7 @@ public:
     inspectionTypeClass* type = NULL;
     std::vector<assetClass> assets;    
     std::vector<defectClass> defects;
+    String submitTime;
 
     inspectionClass(){}
 
@@ -141,6 +142,10 @@ public:
         } else {
             result += "Type: NULL\n";
         }
+
+        result += "Submit time: ";
+        result += submitTime;
+        result += "\n";        
 
         // --- Assets ---
         result += "Assets:\n";
@@ -248,6 +253,9 @@ public:
             emptyAll();
             parse( &config );
             saveConfigToKVStore( &config );
+
+            comms->syncClockWithNTP();
+
             comms->down();
 
         }catch( const std::runtime_error& error ){
