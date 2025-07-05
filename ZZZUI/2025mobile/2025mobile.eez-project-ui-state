@@ -1,6 +1,6 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[2025mobile.eez-project]:/userPages/4",
+    "selectedUserPageObject": "[2025mobile.eez-project]:/userPages/5",
     "selectedActionObject": "[2025mobile.eez-project]:/actions/0",
     "selectedBitmapObject": "[2025mobile.eez-project]:/bitmaps/1",
     "subnavigationSelectedItems": {}
@@ -208,10 +208,10 @@
                 {
                   "type": "tab",
                   "id": "#ec09bf70-9562-442f-bfbb-d42b5510c6cf",
-                  "name": "inspectionForm",
+                  "name": "inspectionZones",
                   "component": "editor",
                   "config": {
-                    "objectPath": "[2025mobile.eez-project]:/userPages/4",
+                    "objectPath": "[2025mobile.eez-project]:/userPages/5",
                     "permanent": false
                   },
                   "icon": "svg:page"
@@ -1161,15 +1161,14 @@
       "selection": {
         "0": {
           "3": {},
-          "4": {
-            "$selected": true
-          },
-          "5": {},
-          "6": {
+          "4": {},
+          "5": {
             "0": {
-              "0": {},
-              "2": {}
+              "$selected": true
             }
+          },
+          "6": {
+            "0": {}
           }
         }
       },

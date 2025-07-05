@@ -4825,6 +4825,7 @@
                   },
                   "timeline": [],
                   "eventHandlers": [],
+                  "identifier": "submitLabel",
                   "leftUnit": "px",
                   "topUnit": "px",
                   "widthUnit": "content",

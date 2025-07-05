@@ -1672,6 +1672,106 @@ public:
             }
         }
     }
+
+    //--
+
+    // =============================
+    // NEW: check ALL assets and prefix.
+    bool allAssetsFullyDone = true; // Will turn false if any gap found
+
+    uint32_t asset_btn_count = lv_obj_get_child_cnt(objects.zone_asset_list);
+    for (uint32_t a = 0; a < asset_btn_count; ++a) {
+        lv_obj_t* asset_btn = lv_obj_get_child(objects.zone_asset_list, a);
+        assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(asset_btn));
+        if (!asset) continue;
+
+        // Find layout for this asset
+        layoutClass* layout = nullptr;
+        for (layoutClass& l : domain->layouts) {
+            if (l.name == asset->layoutName) {
+                layout = &l;
+                break;
+            }
+        }
+        if (!layout) {
+            allAssetsFullyDone = false; // Cannot check if no layout
+            continue;
+        }
+
+        bool allComponentsDone = true;
+        bool allSev0 = true;
+        bool hasSev1 = false;
+        bool hasSev10 = false;
+
+        // Check all zones and components for this asset
+        for (layoutZoneClass& zone : layout->zones) {
+            for (const std::vector<String>& compVec : zone.components) {
+                if (compVec.size() <= 1) continue;
+                String compName = compVec[1];
+
+                bool found = false;
+                int severity = -1;
+
+                for (const defectClass& defect : domain->currentInspection.defects) {
+                    if (defect.asset && defect.asset->ID == asset->ID &&
+                        defect.zoneName == zone.tag &&
+                        defect.componentName == compName) {
+                        found = true;
+                        severity = defect.severity;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    allComponentsDone = false;
+                    allSev0 = false; // Missing = not all sev 0 either
+                    break;
+                } else {
+                    if (severity == 1) hasSev1 = true;
+                    if (severity == 10) hasSev10 = true;
+                    if (severity != 0) allSev0 = false;
+                }
+            }
+            if (!allComponentsDone) break;
+        }
+
+        // Decide prefix for this asset
+        String prefix;
+        if (hasSev10) {
+            prefix = LV_SYMBOL_CLOSE; // Major
+        } else if (hasSev1) {
+            prefix = LV_SYMBOL_WARNING; // Minor
+        } else if (allComponentsDone && allSev0) {
+            prefix = LV_SYMBOL_OK; // All sev 0 and covered
+        } else {
+            prefix = ""; // Incomplete or mixed → no prefix
+        }
+
+        // If any component missing → inspection not fully ready
+        if (!allComponentsDone) {
+            allAssetsFullyDone = false;
+        }
+
+        // Update this asset button label, clearing any old prefix
+        uint32_t child_count = lv_obj_get_child_cnt(asset_btn);
+        for (uint32_t i = 0; i < child_count; ++i) {
+            lv_obj_t* child = lv_obj_get_child(asset_btn, i);
+            if (lv_obj_check_type(child, &lv_label_class)) {
+                String labelText = (prefix.isEmpty() ? "" : prefix + " ") + asset->ID;
+                lv_label_set_text(child, labelText.c_str());
+            }
+        }
+    }
+
+    // =============================
+    // Mark SUBMIT button label 
+    if (objects.submit_label) {
+        String submitLabel = "submit \uF0E7";
+        if (allAssetsFullyDone) {
+            submitLabel = LV_SYMBOL_OK + String("submit \uF0E7");
+        }
+        lv_label_set_text(objects.submit_label, submitLabel.c_str());
+    }
 }        
 
 //--------

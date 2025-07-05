@@ -66,6 +66,7 @@ typedef struct _objects_t {
     lv_obj_t *logo1_5;
     lv_obj_t *help2_4;
     lv_obj_t *submit;
+    lv_obj_t *submit_label;
     lv_obj_t *back_from_form_zones;
     lv_obj_t *back_from_form_1;
     lv_obj_t *read_zone;
