@@ -40,6 +40,17 @@ public:
     }         
   }  
 
+  void keyboardEvent( String input ){
+    try{
+      if( currentScreenState !=  NULL ){
+        currentScreenState->keyboardEvent( input );
+      }
+    }catch( const std::runtime_error& error ){
+      Serial.println( "*** ERROR while handling keyboard event ***" );                    
+      Serial.println( error.what() );                    
+    }  
+  }
+
   void handleEvents( lv_event_t* e ){
 
       try{

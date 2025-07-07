@@ -44,7 +44,7 @@ extern "C" void* lvgl_get_sdram_pool() {
     lvgl_sdram_pool = SDRAM.malloc(3U * 1024U * 1024U);
     if (!lvgl_sdram_pool) {
       Serial.println("SDRAM.malloc failed!");
-      while (true);  // Halt safely
+      while (true);  // abort
     } else {
       Serial.print("LVGL pool at 0x");
       Serial.println((uintptr_t)lvgl_sdram_pool, HEX);
@@ -207,14 +207,14 @@ void loop() {
   lv_timer_handler(); 
   ui_tick();   
 
-
-
+  // monitor memory
   refreshCounts += 1;
   if (refreshCounts == 200) {  
     getInternalHeapFreeBytes();
     refreshCounts = 0;   
   } 
 
+  // monitor card scanner
   RFIDrefreshCounts += 1;
   if (RFIDrefreshCounts == 50) {  
     if (mfrc522 && mfrc522->PICC_IsNewCardPresent()) {
@@ -238,6 +238,7 @@ void loop() {
       }
     }
 
+    // update time
     if (rtcUp && rtc) {
       DateTime now = rtc->now();
       char buffer[20];
@@ -252,12 +253,14 @@ void loop() {
       stateManager->clockTic(time); 
     }   
 
+    // monitor keyboard
     if( keypad ){
       char key = keypad->getKey();
       if (key) {
         Serial.print("Key:");
         Serial.println(key);
-      }
+        stateManager->keyboardEvent( String( key ) );
+      }      
     }
 
     RFIDrefreshCounts = 0;   

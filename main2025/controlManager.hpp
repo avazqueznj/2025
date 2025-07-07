@@ -34,6 +34,9 @@ public:
     virtual void clockTic( String time ){
     }
 
+    virtual void keyboardEvent( String input ){
+    }
+
     virtual ~screenClass(){
     }
 
