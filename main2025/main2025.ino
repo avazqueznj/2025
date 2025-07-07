@@ -82,6 +82,7 @@ char keys[ROWS][COLS] = {
 byte rowPins[ROWS] = {22, 24, 26, 28};
 byte colPins[COLS] = {30, 32, 34, 36};
 Keypad* keypad = nullptr;
+
 void my_keypad_read_cb(lv_indev_drv_t * drv, lv_indev_data_t * data) {
   char key = keypad->getKey();
   uint32_t lvgl_key = 0;
@@ -156,11 +157,13 @@ void setup() {
       pinMode(colPins[i], INPUT_PULLUP);
     }
 
+    /*
     lv_indev_drv_t indev_drv;
     lv_indev_drv_init(&indev_drv);
     indev_drv.type = LV_INDEV_TYPE_KEYPAD;
     indev_drv.read_cb = my_keypad_read_cb;  // Your read callback
     lv_indev_t * indev_keypad = lv_indev_drv_register(&indev_drv);
+    */
   }
 
   startedUp = true;
