@@ -7,19 +7,19 @@
 
 #include <NTPClient.h>
 #include "RTClib.h"
-extern RTC_DS1307* rtc;
+extern RTC_DS3231* rtc;
 
 class commsClass{
 public:
     WiFiClient client;
 
     // daday phone
-    //String ssid = "DadyPhone";
-    //String pass = "Casiopea1";
+    String ssid = "DadyPhone";
+    String pass = "Casiopea1";
 
     // house
-    String ssid = "irazu2G";
-    String pass = "casiocasio";
+    //String ssid = "irazu2G";
+    //String pass = "casiocasio";
 
     // hot spot
     //String ssid = "irazu5g";

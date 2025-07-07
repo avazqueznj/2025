@@ -1,6 +1,6 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[2025mobile.eez-project]:/userPages/5",
+    "selectedUserPageObject": "[2025mobile.eez-project]:/userPages/0",
     "selectedActionObject": "[2025mobile.eez-project]:/actions/0",
     "selectedBitmapObject": "[2025mobile.eez-project]:/bitmaps/1",
     "subnavigationSelectedItems": {}
@@ -189,7 +189,7 @@
               "type": "tabset",
               "id": "EDITORS",
               "weight": 45.128036521560354,
-              "selected": 1,
+              "selected": 2,
               "enableDeleteWhenEmpty": false,
               "enableClose": false,
               "children": [
@@ -227,7 +227,8 @@
                   },
                   "icon": "svg:page"
                 }
-              ]
+              ],
+              "active": true
             },
             {
               "type": "tabset",
@@ -242,8 +243,7 @@
                   "enableClose": false,
                   "icon": "svg:properties"
                 }
-              ],
-              "active": true
+              ]
             },
             {
               "type": "tabset",
@@ -991,12 +991,12 @@
     "[2025mobile.eez-project]:/userPages/0[flow-state]": {
       "selection": {
         "0": {
-          "2": {},
+          "2": {
+            "$selected": true
+          },
           "3": {},
           "4": {
-            "0": {
-              "$selected": true
-            }
+            "0": {}
           },
           "5": {
             "0": {}

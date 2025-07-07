@@ -3,22 +3,15 @@
  * CONFIDENTIAL AND PROPRIETARY
  * 
  * 2025 
- * Zonar systems
  * v1 (2025) Alejandro Vazquez 
  * 
- * This source code is the confidential and proprietary information of [Zonar Systems]
+ * This source code is the confidential and proprietary information of [Alejandro Vazquez]
  * ("Confidential Information"). You shall not disclose such Confidential Information and
  * shall use it only in accordance with the terms of the license agreement you entered into
  * with [Zonar Systems].
  * 
- * © [2025] [Zonar Systems]. All rights reserved.
+ * © [2025] [Alejandro Vazquez]. All rights reserved.
  * 
- * NOTICE: All information contained herein is, and remains the property of [Zonar Systems]
- * and its suppliers, if any. The intellectual and technical concepts contained herein are
- * proprietary to [Zonar Systems] and its suppliers and may be covered by U.S. and Foreign
- * Patents, patents in process, and are protected by trade secret or copyright law.
- * Dissemination of this information or reproduction of this material is strictly forbidden
- * unless prior written permission is obtained from [Zonar Systems].
  ********************************************************************************************/
 
 #include "mbed.h"
@@ -59,17 +52,56 @@ extern "C" void* lvgl_get_sdram_pool() {
   }
   return lvgl_sdram_pool;
 }
+
+
+
 //----------------------------------------------------------
+
 
 // All peripherals as pointers to ensure any malloc after sdram is setup
 Arduino_H7_Video* Display = nullptr;
 Arduino_GigaDisplayTouch* TouchDetector = nullptr;
-RTC_DS1307* rtc = nullptr;
+RTC_DS3231* rtc = nullptr;
 MFRC522* mfrc522 = nullptr;
 
 stateClass* stateManager = nullptr;  
 bool rtcUp = false;
 bool startedUp = false;
+
+#include <Keypad.h>
+
+// Keypad matrix
+const byte ROWS = 4;
+const byte COLS = 4;
+char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+byte rowPins[ROWS] = {22, 24, 26, 28};
+byte colPins[COLS] = {30, 32, 34, 36};
+Keypad* keypad = nullptr;
+void my_keypad_read_cb(lv_indev_drv_t * drv, lv_indev_data_t * data) {
+  char key = keypad->getKey();
+  uint32_t lvgl_key = 0;
+
+  if (key) {
+    switch (key) {
+      case 'A': lvgl_key = LV_KEY_UP; break;
+      case 'B': lvgl_key = LV_KEY_DOWN; break;
+      case 'C': lvgl_key = LV_KEY_LEFT; break;
+      case 'D': lvgl_key = LV_KEY_RIGHT; break;
+      case '#': lvgl_key = LV_KEY_ENTER; break;
+      case '*': lvgl_key = LV_KEY_ESC; break;
+      default: lvgl_key = 0; break; // Numbers handled elsewhere
+    }
+    data->state = LV_INDEV_STATE_PR;
+    data->key = lvgl_key;
+  } else {
+    data->state = LV_INDEV_STATE_REL;
+  }
+}
 
 //----------------------------------------------------------
 
@@ -107,15 +139,28 @@ void setup() {
   mfrc522->PCD_DumpVersionToSerial();
 
   Serial.println("RTC");
-  rtc = new RTC_DS1307();
+  rtc = new RTC_DS3231();
   if (!rtc->begin()) {
     Serial.println("Couldn't find RTC clock!!!!");
   } else {
-    if (!rtc->isrunning()) {
-      Serial.println("RTC is NOT running, default time ....");
-      rtc->adjust(DateTime(2025, 7, 4, 12, 0, 0)); // YYYY, MM, DD, HH, MM, SS
+    if (rtc->lostPower()) {
+      Serial.println("RTC lost power, setting default time ...");
+      rtc->adjust(DateTime(2025, 7, 4, 12, 0, 0));
     }
     rtcUp = true;
+  }
+
+  keypad = new Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+  if( keypad ){
+    for (byte i = 0; i < COLS; i++) {
+      pinMode(colPins[i], INPUT_PULLUP);
+    }
+
+    lv_indev_drv_t indev_drv;
+    lv_indev_drv_init(&indev_drv);
+    indev_drv.type = LV_INDEV_TYPE_KEYPAD;
+    indev_drv.read_cb = my_keypad_read_cb;  // Your read callback
+    lv_indev_t * indev_keypad = lv_indev_drv_register(&indev_drv);
   }
 
   startedUp = true;
@@ -128,6 +173,8 @@ void setup() {
   stateManager->openScreen(new mainScreenClass());
   Serial.println("Start screens / 2025 init .... DONE!");
 }
+
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 //-----------------
 // Memory info helper
@@ -150,6 +197,7 @@ int RFIDrefreshCounts = 0;
 int refreshCounts = 0;
 
 void loop() {
+
   if (!startedUp) {
     delay(100);
     return;
@@ -157,16 +205,18 @@ void loop() {
 
   delayBlink();
   lv_timer_handler(); 
-  ui_tick();       
+  ui_tick();   
+
+
 
   refreshCounts += 1;
-  if (refreshCounts == 50) {  
-    // getInternalHeapFreeBytes();
+  if (refreshCounts == 200) {  
+    getInternalHeapFreeBytes();
     refreshCounts = 0;   
   } 
 
   RFIDrefreshCounts += 1;
-  if (RFIDrefreshCounts == 5) {  
+  if (RFIDrefreshCounts == 50) {  
     if (mfrc522 && mfrc522->PICC_IsNewCardPresent()) {
       if (mfrc522->PICC_ReadCardSerial()) {
         currentCardLength = mfrc522->uid.size;
@@ -201,6 +251,14 @@ void loop() {
       String time = String(buffer);
       stateManager->clockTic(time); 
     }   
+
+    if( keypad ){
+      char key = keypad->getKey();
+      if (key) {
+        Serial.print("Key:");
+        Serial.println(key);
+      }
+    }
 
     RFIDrefreshCounts = 0;   
   } 
