@@ -440,7 +440,14 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "521c225c-3a8f-4832-c6fd-75b97f2d2def"
+                "objID": "521c225c-3a8f-4832-c6fd-75b97f2d2def",
+                "definition": {
+                  "MAIN": {
+                    "FOCUSED": {
+                      "bg_color": "#ff0000"
+                    }
+                  }
+                }
               },
               "group": "",
               "groupIndex": 0
@@ -539,7 +546,14 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "e3b0556e-5083-4260-ea62-42dfa32a9e3b"
+                "objID": "e3b0556e-5083-4260-ea62-42dfa32a9e3b",
+                "definition": {
+                  "MAIN": {
+                    "FOCUSED": {
+                      "bg_color": "#ff0000"
+                    }
+                  }
+                }
               },
               "group": "",
               "groupIndex": 0
@@ -638,7 +652,14 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "cbe50886-23ba-4710-bcba-e02e3f84a753"
+                "objID": "cbe50886-23ba-4710-bcba-e02e3f84a753",
+                "definition": {
+                  "MAIN": {
+                    "FOCUSED": {
+                      "bg_color": "#ff0000"
+                    }
+                  }
+                }
               },
               "group": "",
               "groupIndex": 0
@@ -2926,7 +2947,7 @@
                   "userData": 0
                 }
               ],
-              "identifier": "deSelectAsset_1",
+              "identifier": "searchAssets",
               "leftUnit": "px",
               "topUnit": "px",
               "widthUnit": "px",

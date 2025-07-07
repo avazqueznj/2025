@@ -44,7 +44,7 @@ typedef struct _objects_t {
     lv_obj_t *read_asset_tag;
     lv_obj_t *help2;
     lv_obj_t *temp_asset;
-    lv_obj_t *de_select_asset_1;
+    lv_obj_t *search_assets;
     lv_obj_t *obj5;
     lv_obj_t *logo1_3;
     lv_obj_t *do_inspection_form;

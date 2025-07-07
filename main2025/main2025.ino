@@ -25,14 +25,13 @@
 
 #include "util.hpp"
 #include "state.hpp"
-#include <SDRAM.h>
 
 #include <SPI.h>
 #include <MFRC522.h>
 
 // RFID Pins
 #define SS_PIN 10  // SDA pin on RC522
-#define RST_PIN 9  // ✅ Back to D9 for RST
+#define RST_PIN 9  // Back to D9 for RST
 
 //----------------------------------------------------------
 // LVGL pool guard
@@ -78,15 +77,11 @@ char hexaKeys[ROWS][COLS] = {
 byte rowPins[ROWS] = {A0, A1, A2, A3};
 byte colPins[COLS] = {A4, A5, A6, A7};
 
-const int ANALOG_THRESHOLD = 750;
+const int ANALOG_THRESHOLD = 900;
 const int DEBOUNCE_MS = 300;
 unsigned long lastPressTime = 0;
 
 void setup() {
-
-delay( 1000);
-SDRAM.begin();  // TEST -------------------
-delay( 1000);
 
   Serial.begin(9600);
   int serialWait = 0;
@@ -98,12 +93,10 @@ delay( 1000);
 
   Serial.println("Coming UP----------------->");
 
-  
-// from here ---------------
-
-
   Serial.println("SDRAM");
-
+  delay( 1000);
+  SDRAM.begin();  // TEST -------------------
+  delay( 1000);
   
   pinMode(LED_BUILTIN, OUTPUT);   
   Serial.println("Disp");

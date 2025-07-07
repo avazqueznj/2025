@@ -14,10 +14,13 @@
 
 class screenClass{
 public:
+    lv_group_t* inputGroup = nullptr;
     ScreensEnum screenId;
 
     screenClass( ScreensEnum screenIdParam ): 
         screenId{screenIdParam}{
+
+        inputGroup = lv_group_create();
     }
 
     virtual void open(){
@@ -34,12 +37,111 @@ public:
     virtual void clockTic( String time ){
     }
 
-    virtual void keyboardEvent( String input ){
+    //---
+
+    lv_obj_t* get_prev_sibling(lv_obj_t* obj) {
+        if (!obj) return nullptr;
+        lv_obj_t* parent = lv_obj_get_parent(obj);
+        if (!parent) return nullptr;
+
+        lv_obj_t* prev = nullptr;
+        uint32_t count = lv_obj_get_child_cnt(parent);
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* child = lv_obj_get_child(parent, i);
+            if (child == obj) {
+                return prev;
+            }
+            prev = child;
+        }
+        return nullptr;
     }
+
+    lv_obj_t* get_next_sibling(lv_obj_t* obj) {
+        if (!obj) return nullptr;
+        lv_obj_t* parent = lv_obj_get_parent(obj);
+        if (!parent) return nullptr;
+
+        bool found = false;
+        uint32_t count = lv_obj_get_child_cnt(parent);
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* child = lv_obj_get_child(parent, i);
+            if (found) {
+                return child;
+            }
+            if (child == obj) {
+                found = true;
+            }
+        }
+        return nullptr;
+    }
+
+    virtual void keyboardEvent(String key) {
+        Serial.print("Key: ");
+        Serial.println(key);
+
+        lv_obj_t* focused = lv_group_get_focused(inputGroup);
+        if (focused && lv_obj_check_type(focused, &lv_list_class)) {
+            lv_obj_t* list = focused;
+
+            // Fallback: find selected button
+            lv_obj_t* selected = nullptr;
+            uint32_t count = lv_obj_get_child_cnt(list);
+            for (uint32_t i = 0; i < count; ++i) {
+                lv_obj_t* btn = lv_obj_get_child(list, i);
+                if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                    selected = btn;
+                    break;
+                }
+            }
+
+            if (key == "A" || key == "B") {
+                if (!selected) {
+                    lv_obj_t* first = lv_obj_get_child(list, 0);
+                    if (first) {
+                        lv_obj_add_state(first, LV_STATE_CHECKED);
+                        lv_obj_scroll_to_view(first, LV_ANIM_ON);
+                        Serial.println("No item selected — selected first.");
+                    }
+                } else {
+                    lv_obj_t* next = nullptr;
+                    if (key == "A") {
+                        next = get_prev_sibling(selected);
+                    } else if (key == "B") {
+                        next = get_next_sibling(selected);
+                    }
+                    if (next) {
+                        lv_obj_clear_state(selected, LV_STATE_CHECKED);
+                        lv_obj_add_state(next, LV_STATE_CHECKED);
+                        lv_obj_scroll_to_view(next, LV_ANIM_ON);
+                    }
+                }
+                return;
+            }
+        } 
+        
+        if (key == "C") {
+            lv_group_focus_prev(inputGroup);
+        } else if (key == "D") {
+            lv_group_focus_next(inputGroup);
+        } else if (key == "#") {
+            if (focused) {
+                lv_event_send(focused, LV_EVENT_PRESSED, NULL);
+                lv_event_send(focused, LV_EVENT_CLICKED, NULL);
+            }
+        } else if (key == "*") {
+            lv_group_send_data(inputGroup, LV_KEY_ESC);
+        }
+    }
+
+//---
 
     virtual ~screenClass(){
+        if (inputGroup) {
+            lv_group_del(inputGroup);
+            inputGroup = nullptr;
+            Serial.println("mainScreenClass: inputGroup destroyed");
+        }        
     }
-
 };
 
 
@@ -74,8 +176,7 @@ public:
 
 class mainScreenClass:public screenClass{
 public:
-
-    lv_group_t* inputGroup = nullptr;
+    
 
     mainScreenClass(): screenClass( SCREEN_ID_MAIN ){            
     }
@@ -84,25 +185,8 @@ public:
         lv_label_set_text( objects.clock, time.c_str());
     }
 
-    void keyboardEvent(String key) override {
-
-        Serial.print("Key: ");
-        Serial.println(key);
-
-        if (key == "C") {
-            lv_group_focus_prev(inputGroup);
-        } else if (key == "D") {
-            lv_group_focus_next(inputGroup);
-
-        } else if (key == "#") {
-            lv_obj_t *focused = lv_group_get_focused(inputGroup);
-            if (focused) {
-                lv_event_send(focused, LV_EVENT_PRESSED, NULL);
-            }
-        } else if (key == "*") {
-            lv_group_send_data(inputGroup, LV_KEY_ESC);
-        }
-        
+    void keyboardEvent(String key) override {        
+        screenClass::keyboardEvent( key );
     }
 
     void handleEvents( lv_event_t* e ) override{
@@ -141,22 +225,17 @@ public:
     void open() override {
 
         // Create fresh group or reuse existing
-        if (!inputGroup) {
-            inputGroup = lv_group_create();
-        } else {
-            lv_group_remove_all_objs(inputGroup);
+        {
+            //-------------------------------------
+            // Add focusable widgets
+
+            // default
+            lv_group_add_obj(inputGroup, objects.do_inspect_button  );
+            //lv_group_focus_obj(objects.do_inspect_button);
+            // de rest
+            lv_group_add_obj(inputGroup, objects.do_sync);
+            lv_group_add_obj(inputGroup, objects.do_settings);
         }
-
-        //-------------------------------------
-        // Add focusable widgets
-
-        // default
-        lv_group_add_obj(inputGroup, objects.do_inspect_button  );
-        lv_group_focus_obj(objects.do_inspect_button);
-        // de rest
-        lv_group_add_obj(inputGroup, objects.do_sync);
-        lv_group_add_obj(inputGroup, objects.do_settings);
-        
     
         // Add focusable widgets
         //-------------------------------------
@@ -165,11 +244,6 @@ public:
     }
 
     virtual ~mainScreenClass(){
-        if (inputGroup) {
-            lv_group_del(inputGroup);
-            inputGroup = nullptr;
-            Serial.println("mainScreenClass: inputGroup destroyed");
-        }        
     };
 };
 
@@ -185,7 +259,35 @@ public:
     //----------------------------------
 
     selectAssetScreenClass(): screenClass( SCREEN_ID_SELECT_ASSET_SCREEN ){}
+
     virtual ~selectAssetScreenClass(){};    
+
+    //----------------------------------
+
+    void keyboardEvent(String key) override {
+
+        //>>>>>>
+        screenClass::keyboardEvent(key);
+
+        // update if the selected item changed
+        lv_obj_t* list = objects.asset_list;
+        if (!list) return;
+        selectedButton = nullptr;  // Reset
+        uint32_t count = lv_obj_get_child_cnt(list);
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* btn = lv_obj_get_child(list, i);
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                selectedButton = btn;
+                Serial.println("Updated selectedButton from CHECKED state.");
+                break;
+            }
+        }
+        if (!selectedButton) {
+            Serial.println("No CHECKED button found in list.");
+        }
+
+
+    }
 
     //----------------------------------
 
@@ -367,6 +469,18 @@ public:
                     break;
                 }
             }
+        }
+
+
+                // Create fresh group or reuse existing
+        {
+            //-------------------------------------
+            // Add focusable widgets
+
+            // default
+            lv_group_add_obj(inputGroup, objects.asset_list  );
+            lv_group_add_obj(inputGroup, objects.select_asset);
+            lv_group_add_obj(inputGroup, objects.de_select_asset);
         }
         
         screenClass::open(); // always last, only if no issues
