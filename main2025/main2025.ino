@@ -83,7 +83,11 @@ const int DEBOUNCE_MS = 300;
 unsigned long lastPressTime = 0;
 
 void setup() {
-     
+
+delay( 1000);
+SDRAM.begin();  // TEST -------------------
+delay( 1000);
+
   Serial.begin(9600);
   int serialWait = 0;
   while (!Serial) {    
@@ -94,10 +98,12 @@ void setup() {
 
   Serial.println("Coming UP----------------->");
 
-  delay( 1000 ); // give  more  time for the sdram to come up
+  
+// from here ---------------
+
 
   Serial.println("SDRAM");
-  SDRAM.begin();
+
   
   pinMode(LED_BUILTIN, OUTPUT);   
   Serial.println("Disp");
