@@ -1,4 +1,3 @@
-
 /********************************************************************************************
  * CONFIDENTIAL AND PROPRIETARY
  * 
@@ -33,7 +32,7 @@
 
 // RFID Pins
 #define SS_PIN 10  // SDA pin on RC522
-#define RST_PIN 9  // RST pin on RC522
+#define RST_PIN 9  // ✅ Back to D9 for RST
 
 //----------------------------------------------------------
 // LVGL pool guard
@@ -53,12 +52,8 @@ extern "C" void* lvgl_get_sdram_pool() {
   return lvgl_sdram_pool;
 }
 
-
-
 //----------------------------------------------------------
 
-
-// All peripherals as pointers to ensure any malloc after sdram is setup
 Arduino_H7_Video* Display = nullptr;
 Arduino_GigaDisplayTouch* TouchDetector = nullptr;
 RTC_DS3231* rtc = nullptr;
@@ -68,46 +63,27 @@ stateClass* stateManager = nullptr;
 bool rtcUp = false;
 bool startedUp = false;
 
-#include <Keypad.h>
-
-// Keypad matrix
+// === FIXED KEYPAD ===
 const byte ROWS = 4;
 const byte COLS = 4;
-char keys[ROWS][COLS] = {
+
+char hexaKeys[ROWS][COLS] = {
   {'1','2','3','A'},
   {'4','5','6','B'},
   {'7','8','9','C'},
   {'*','0','#','D'}
 };
-byte rowPins[ROWS] = {22, 24, 26, 28};
-byte colPins[COLS] = {30, 32, 34, 36};
-Keypad* keypad = nullptr;
 
-void my_keypad_read_cb(lv_indev_drv_t * drv, lv_indev_data_t * data) {
-  char key = keypad->getKey();
-  uint32_t lvgl_key = 0;
+// Using A0–A7 for keypad
+byte rowPins[ROWS] = {A0, A1, A2, A3};
+byte colPins[COLS] = {A4, A5, A6, A7};
 
-  if (key) {
-    switch (key) {
-      case 'A': lvgl_key = LV_KEY_UP; break;
-      case 'B': lvgl_key = LV_KEY_DOWN; break;
-      case 'C': lvgl_key = LV_KEY_LEFT; break;
-      case 'D': lvgl_key = LV_KEY_RIGHT; break;
-      case '#': lvgl_key = LV_KEY_ENTER; break;
-      case '*': lvgl_key = LV_KEY_ESC; break;
-      default: lvgl_key = 0; break; // Numbers handled elsewhere
-    }
-    data->state = LV_INDEV_STATE_PR;
-    data->key = lvgl_key;
-  } else {
-    data->state = LV_INDEV_STATE_REL;
-  }
-}
-
-//----------------------------------------------------------
+const int ANALOG_THRESHOLD = 750;
+const int DEBOUNCE_MS = 300;
+unsigned long lastPressTime = 0;
 
 void setup() {
-  pinMode(LED_BUILTIN, OUTPUT);    
+     
 
   Serial.begin(9600);
   int serialWait = 0;
@@ -119,23 +95,23 @@ void setup() {
   Serial.println("Coming UP----------------->");
 
   Serial.println("SDRAM");
-  SDRAM.begin();         // Must be FIRST!
+  SDRAM.begin();
+  delay(200);
 
-  delay( 100 );
-
+  pinMode(LED_BUILTIN, OUTPUT);   
   Serial.println("Disp");
-  Display = new Arduino_H7_Video(800, 480, GigaDisplayShield);  // AFTER SDRAM ready
+  Display = new Arduino_H7_Video(800, 480, GigaDisplayShield);
   Display->begin();
 
   Serial.println("Touch");
-  TouchDetector = new Arduino_GigaDisplayTouch();               // AFTER SDRAM ready
+  TouchDetector = new Arduino_GigaDisplayTouch();
   TouchDetector->begin();
 
   Serial.println("SPI");
-  SPI.begin();            // Uses default SPI bus
+  SPI.begin();
 
   Serial.println("RFID");
-  mfrc522 = new MFRC522(SS_PIN, RST_PIN);  // AFTER SPI ready
+  mfrc522 = new MFRC522(SS_PIN, RST_PIN);
   mfrc522->PCD_Init();
   mfrc522->PCD_DumpVersionToSerial();
 
@@ -151,19 +127,13 @@ void setup() {
     rtcUp = true;
   }
 
-  keypad = new Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
-  if( keypad ){
-    for (byte i = 0; i < COLS; i++) {
-      pinMode(colPins[i], INPUT_PULLUP);
-    }
-
-    /*
-    lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_KEYPAD;
-    indev_drv.read_cb = my_keypad_read_cb;  // Your read callback
-    lv_indev_t * indev_keypad = lv_indev_drv_register(&indev_drv);
-    */
+  // Init keypad pins
+  for (byte i = 0; i < ROWS; i++) {
+    pinMode(rowPins[i], OUTPUT);
+    digitalWrite(rowPins[i], LOW);
+  }
+  for (byte i = 0; i < COLS; i++) {
+    pinMode(colPins[i], INPUT);
   }
 
   startedUp = true;
@@ -177,10 +147,8 @@ void setup() {
   Serial.println("Start screens / 2025 init .... DONE!");
 }
 
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// -----------------------------
 
-//-----------------
-// Memory info helper
 void getInternalHeapFreeBytes() {
   mbed_stats_heap_t heap_stats;
   mbed_stats_heap_get(&heap_stats);    
@@ -192,15 +160,13 @@ void getInternalHeapFreeBytes() {
   Serial.println(heap_free);
 }
 
-byte currentCardUID[10];     // Global buffer for UID
-byte currentCardLength = 0;  // Global length
+byte currentCardUID[10];
+byte currentCardLength = 0;
 
-// Main loop
 int RFIDrefreshCounts = 0;
 int refreshCounts = 0;
 
 void loop() {
-
   if (!startedUp) {
     delay(100);
     return;
@@ -210,16 +176,14 @@ void loop() {
   lv_timer_handler(); 
   ui_tick();   
 
-  // monitor memory
   refreshCounts += 1;
   if (refreshCounts == 200) {  
     getInternalHeapFreeBytes();
     refreshCounts = 0;   
-  } 
+  }
 
-  // monitor card scanner
   RFIDrefreshCounts += 1;
-  if (RFIDrefreshCounts == 50) {  
+  if (RFIDrefreshCounts == 25) {
     if (mfrc522 && mfrc522->PICC_IsNewCardPresent()) {
       if (mfrc522->PICC_ReadCardSerial()) {
         currentCardLength = mfrc522->uid.size;
@@ -241,7 +205,6 @@ void loop() {
       }
     }
 
-    // update time
     if (rtcUp && rtc) {
       DateTime now = rtc->now();
       char buffer[20];
@@ -254,32 +217,29 @@ void loop() {
               now.second());
       String time = String(buffer);
       stateManager->clockTic(time); 
-    }   
+    }
 
-    // monitor keyboard
-    if( keypad ){
-      char key = keypad->getKey();
-      if (key) {
-        Serial.print("Key:");
-        Serial.println(key);
-        stateManager->keyboardEvent( String( key ) );
-      }      
+    // === Analog keypad scan ===
+    for (byte row = 0; row < ROWS; row++) {
+      digitalWrite(rowPins[row], HIGH);
+
+      for (byte col = 0; col < COLS; col++) {
+        int val = analogRead(colPins[col]);
+        if (val > ANALOG_THRESHOLD) {
+          unsigned long now = millis();
+          if (now - lastPressTime > DEBOUNCE_MS) {
+            char key = hexaKeys[row][col];
+            Serial.print("Key: ");
+            Serial.println(key);
+            stateManager->keyboardEvent(String(key));
+            lastPressTime = now;
+          }
+        }
+      }
+
+      digitalWrite(rowPins[row], LOW);
     }
 
     RFIDrefreshCounts = 0;   
-  } 
+  }
 }
-
-
-//----------------------------------------------------------
-//----------------------------------------------------------
-
-
-// setup eez
-// in eez peoject override location of lvgl heder -> "lvglInclude": "lvgl.h"
-// in sketch add folder src, and copy the code
-// set code output to sketch path, so it makes a src folder with all the files
-// in ino, include ui.h
-// lv_conf in C:\Users\alejandro.vazquez\AppData\Local\Arduino15\packages\arduino\hardware\mbed_giga\4.3.1\libraries\Arduino_H7_Video\src
-
-

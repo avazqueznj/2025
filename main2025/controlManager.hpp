@@ -1187,7 +1187,9 @@ public:
                 }                
                 
             }catch( const std::runtime_error& error ){
-                String chainedError = String( "ERROR: Could not POST: " ) + error.what();            
+                spinnerEnd();       
+                String chainedError = String( "ERROR: Could not POST: " ) + error.what();           
+                createDialog( chainedError.c_str() );
             }
             spinnerEnd();       
         }
