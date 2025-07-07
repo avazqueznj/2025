@@ -75,11 +75,34 @@ public:
 class mainScreenClass:public screenClass{
 public:
 
+    lv_group_t* inputGroup = nullptr;
+
     mainScreenClass(): screenClass( SCREEN_ID_MAIN ){            
     }
 
     void clockTic( String time ) override {
         lv_label_set_text( objects.clock, time.c_str());
+    }
+
+    void keyboardEvent(String key) override {
+
+        Serial.print("Key: ");
+        Serial.println(key);
+
+        if (key == "C") {
+            lv_group_focus_prev(inputGroup);
+        } else if (key == "D") {
+            lv_group_focus_next(inputGroup);
+
+        } else if (key == "#") {
+            lv_obj_t *focused = lv_group_get_focused(inputGroup);
+            if (focused) {
+                lv_event_send(focused, LV_EVENT_PRESSED, NULL);
+            }
+        } else if (key == "*") {
+            lv_group_send_data(inputGroup, LV_KEY_ESC);
+        }
+        
     }
 
     void handleEvents( lv_event_t* e ) override{
@@ -115,7 +138,38 @@ public:
         }
     }
 
+    void open() override {
+
+        // Create fresh group or reuse existing
+        if (!inputGroup) {
+            inputGroup = lv_group_create();
+        } else {
+            lv_group_remove_all_objs(inputGroup);
+        }
+
+        //-------------------------------------
+        // Add focusable widgets
+
+        // default
+        lv_group_add_obj(inputGroup, objects.do_inspect_button  );
+        lv_group_focus_obj(objects.do_inspect_button);
+        // de rest
+        lv_group_add_obj(inputGroup, objects.do_sync);
+        lv_group_add_obj(inputGroup, objects.do_settings);
+        
+    
+        // Add focusable widgets
+        //-------------------------------------
+
+        screenClass::open();
+    }
+
     virtual ~mainScreenClass(){
+        if (inputGroup) {
+            lv_group_del(inputGroup);
+            inputGroup = nullptr;
+            Serial.println("mainScreenClass: inputGroup destroyed");
+        }        
     };
 };
 

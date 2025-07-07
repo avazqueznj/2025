@@ -73,6 +73,7 @@ public:
         if( connState != OFF ){
             throw std::runtime_error( "Error attempt connect when connection is not OFF or ON" );
         }    
+        
         if (WiFi.status() == WL_NO_SHIELD) {
             throw std::runtime_error("Fatal WL_NO_SHIELD" );
         }
@@ -193,14 +194,12 @@ public:
         return response;
     }
 
-
+    // redo all this in domain
     String postInspection(const String& payload) {
 
         Serial.println("POST connectiong!!");
 
-        if( connState != ON ){
-            throw std::runtime_error( "Error attempt read when connection is not ON" );
-        }    
+        up();
         
         const char* host = "zzz2025.duckdns.org";
         const int port = 8080;

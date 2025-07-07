@@ -84,20 +84,21 @@ unsigned long lastPressTime = 0;
 
 void setup() {
      
-
   Serial.begin(9600);
   int serialWait = 0;
   while (!Serial) {    
     serialWait += 100;
-    if (serialWait > 5000) break;
+    if (serialWait > 10) break;
+    delay( 100 );
   } 
 
   Serial.println("Coming UP----------------->");
 
+  delay( 1000 ); // give  more  time for the sdram to come up
+
   Serial.println("SDRAM");
   SDRAM.begin();
-  delay(200);
-
+  
   pinMode(LED_BUILTIN, OUTPUT);   
   Serial.println("Disp");
   Display = new Arduino_H7_Video(800, 480, GigaDisplayShield);
@@ -229,8 +230,6 @@ void loop() {
           unsigned long now = millis();
           if (now - lastPressTime > DEBOUNCE_MS) {
             char key = hexaKeys[row][col];
-            Serial.print("Key: ");
-            Serial.println(key);
             stateManager->keyboardEvent(String(key));
             lastPressTime = now;
           }
@@ -243,3 +242,17 @@ void loop() {
     RFIDrefreshCounts = 0;   
   }
 }
+
+
+//----------------------------------------------------------
+//----------------------------------------------------------
+
+
+// setup eez
+// in eez peoject override location of lvgl heder -> "lvglInclude": "lvgl.h"
+// in sketch add folder src, and copy the code
+// set code output to sketch path, so it makes a src folder with all the files
+// in ino, include ui.h
+// lv_conf in C:\Users\alejandro.vazquez\AppData\Local\Arduino15\packages\arduino\hardware\mbed_giga\4.3.1\libraries\Arduino_H7_Video\src
+
+
