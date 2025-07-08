@@ -34,22 +34,13 @@
 #define RST_PIN 9  // Back to D9 for RST
 
 //----------------------------------------------------------
-// LVGL pool guard
+// LVGL pool guard (global)
 static void* lvgl_sdram_pool = nullptr;
+
 extern "C" void* lvgl_get_sdram_pool() {
-  if (!lvgl_sdram_pool) {
-    Serial.println("[POOL] Alloc requested...");
-    lvgl_sdram_pool = SDRAM.malloc(3U * 1024U * 1024U);
-    if (!lvgl_sdram_pool) {
-      Serial.println("SDRAM.malloc failed!");
-      while (true);  // abort
-    } else {
-      Serial.print("LVGL pool at 0x");
-      Serial.println((uintptr_t)lvgl_sdram_pool, HEX);
-    }
-  }
-  return lvgl_sdram_pool;
+  return lvgl_sdram_pool;  // Return whatever we reserved at setup
 }
+//----------------------------------------------------------
 
 //----------------------------------------------------------
 
@@ -93,11 +84,48 @@ void setup() {
 
   Serial.println("Coming UP----------------->");
 
-  Serial.println("SDRAM");
-  delay( 1000);
-  SDRAM.begin();  // TEST -------------------
-  delay( 1000);
+// SDRAM -----------------------------
+
+  //----------------------------------------------------------
+  // SDRAM INIT + LVGL POOL alloc
+
+  Serial.println("SDRAM: begin...");
+  bool sdram_ok = SDRAM.begin();
+  Serial.print("SDRAM.begin() = ");
+  Serial.println(sdram_ok ? "OK" : "FAIL");
+
+  if (!sdram_ok) {
+    Serial.println("SDRAM init failed! Will halt.");
+    sosBlink();
+  }
+
+  // Let SDRAM settle
+  delay(500);
+
+  // Try to allocate big pool
+  const size_t POOL_SIZE = 3U * 1024U * 1024U; // 3 MB
+  Serial.print("Allocating LVGL pool of ");
+  Serial.print(POOL_SIZE);
+  Serial.println(" bytes...");
+
+  for (int tries = 0; tries < 3; ++tries) {
+    lvgl_sdram_pool = SDRAM.malloc(POOL_SIZE);
+    if (lvgl_sdram_pool) break;
+    Serial.println("SDRAM.malloc failed, retrying...");
+    delay(100);
+  }
+
+  if (!lvgl_sdram_pool) {
+    Serial.println("SDRAM.malloc failed after retries! HALT.");
+    sosBlink();
+  }
+
+  Serial.print("LVGL pool at 0x");
+  Serial.println((uintptr_t)lvgl_sdram_pool, HEX);
+  //----------------------------------------------------------
   
+// /SDRAM -----------------------------
+
   pinMode(LED_BUILTIN, OUTPUT);   
   Serial.println("Disp");
   Display = new Arduino_H7_Video(800, 480, GigaDisplayShield);
