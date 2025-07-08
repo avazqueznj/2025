@@ -2227,9 +2227,16 @@
               "scrollSnapY": "",
               "checkedStateType": "literal",
               "disabledStateType": "literal",
-              "states": "",
+              "states": "FOCUSED",
               "localStyles": {
-                "objID": "90e50a59-b481-4d92-a5ef-f025972b3cae"
+                "objID": "90e50a59-b481-4d92-a5ef-f025972b3cae",
+                "definition": {
+                  "MAIN": {
+                    "FOCUSED": {
+                      "border_color": "#ff0000"
+                    }
+                  }
+                }
               },
               "group": "",
               "groupIndex": 0
@@ -2469,7 +2476,14 @@
               "disabledStateType": "literal",
               "states": "",
               "localStyles": {
-                "objID": "365999c2-9bfd-464b-a8b0-3c4a627cfabd"
+                "objID": "365999c2-9bfd-464b-a8b0-3c4a627cfabd",
+                "definition": {
+                  "MAIN": {
+                    "FOCUSED": {
+                      "bg_color": "#ff0000"
+                    }
+                  }
+                }
               },
               "group": "",
               "groupIndex": 0
@@ -2572,6 +2586,9 @@
                   "MAIN": {
                     "DEFAULT": {
                       "text_font": "MONTSERRAT_28"
+                    },
+                    "FOCUSED": {
+                      "bg_color": "#ff0000"
                     }
                   }
                 }

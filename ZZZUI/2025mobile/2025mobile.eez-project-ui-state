@@ -1,6 +1,6 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[2025mobile.eez-project]:/userPages/0",
+    "selectedUserPageObject": "[2025mobile.eez-project]:/userPages/2",
     "selectedActionObject": "[2025mobile.eez-project]:/actions/0",
     "selectedBitmapObject": "[2025mobile.eez-project]:/bitmaps/1",
     "subnavigationSelectedItems": {}
@@ -118,7 +118,7 @@
             {
               "type": "row",
               "id": "#b7529d2d-75ab-402b-aee9-c0a4d81a65fd",
-              "weight": 15.133957903235693,
+              "weight": 21.154016987046102,
               "children": [
                 {
                   "type": "tabset",
@@ -188,8 +188,8 @@
             {
               "type": "tabset",
               "id": "EDITORS",
-              "weight": 45.128036521560354,
-              "selected": 2,
+              "weight": 41.93677543655959,
+              "selected": 1,
               "enableDeleteWhenEmpty": false,
               "enableClose": false,
               "children": [
@@ -208,10 +208,10 @@
                 {
                   "type": "tab",
                   "id": "#ec09bf70-9562-442f-bfbb-d42b5510c6cf",
-                  "name": "inspectionZones",
+                  "name": "selectAssetScreen",
                   "component": "editor",
                   "config": {
-                    "objectPath": "[2025mobile.eez-project]:/userPages/5",
+                    "objectPath": "[2025mobile.eez-project]:/userPages/2",
                     "permanent": false
                   },
                   "icon": "svg:page"
@@ -233,7 +233,7 @@
             {
               "type": "tabset",
               "id": "#cdf4dea9-5043-49e7-8ec6-80f7c45964f4",
-              "weight": 15.812781852833435,
+              "weight": 19.56117291538159,
               "children": [
                 {
                   "type": "tab",
@@ -248,7 +248,7 @@
             {
               "type": "tabset",
               "id": "#fdb128fe-7768-4431-b35c-99915c2cc9d3",
-              "weight": 8.866791998018249,
+              "weight": 2.2896029366604407,
               "children": [
                 {
                   "type": "tab",
@@ -991,24 +991,16 @@
     "[2025mobile.eez-project]:/userPages/0[flow-state]": {
       "selection": {
         "0": {
-          "2": {
+          "2": {},
+          "3": {
             "$selected": true
-          },
-          "3": {},
-          "4": {
-            "0": {}
-          },
-          "5": {
-            "0": {}
-          },
-          "6": {},
-          "7": {}
+          }
         }
       },
       "transform": {
         "translate": {
           "x": -400,
-          "y": -240
+          "y": -306.66666412353516
         },
         "scale": 1
       },
@@ -1051,15 +1043,10 @@
       "selection": {
         "0": {
           "0": {},
-          "3": {},
-          "4": {},
           "5": {
             "$selected": true
           },
-          "8": {},
-          "10": {},
-          "12": {},
-          "13": {}
+          "8": {}
         }
       },
       "transform": {
@@ -1222,13 +1209,11 @@
   "logsPanelFilter": "all",
   "selectedStylePropertyName": "",
   "lvglPart": "MAIN",
-  "lvglState": "DEFAULT",
+  "lvglState": "FOCUSED",
   "lvglExpandedPropertiesGroup": [
-    "LAYOUT",
-    "PADDING",
-    "MISCELLANEOUS",
     "BACKGROUND",
-    "TEXT"
+    "MARGIN",
+    "BORDER"
   ],
   "showInactiveFlowsInDebugger": true,
   "globalFlowZoom": true,
