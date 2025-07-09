@@ -35,8 +35,6 @@ extern "C" void* lvgl_get_sdram_pool() {
 }
 //----------------------------------------------------------
 
-//----------------------------------------------------------
-
 Arduino_H7_Video* Display = nullptr;
 Arduino_GigaDisplayTouch* TouchDetector = nullptr;
 RTC_DS3231* rtc = nullptr;

@@ -1,3 +1,10 @@
+/********************************************************************************************
+ * CONFIDENTIAL AND PROPRIETARY
+ * 
+ * ZZZ2025 
+ * © [2025] [Alejandro Vazquez]. All rights reserved.
+ * 
+ ********************************************************************************************/
 
 
 #ifndef COMMS_H
@@ -9,6 +16,7 @@
 
 #include <NTPClient.h>
 #include "RTClib.h"
+
 extern RTC_DS3231* rtc;
 
 class commsClass{

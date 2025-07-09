@@ -6,11 +6,10 @@
  * 
  ********************************************************************************************/
 
-
-#include "misc/lv_color.h"
 #ifndef UTIL_H
 #define UTIL_H
 
+#include "misc/lv_color.h"
 #include <Arduino.h>
 #include "lvgl.h"
 #include <functional>
