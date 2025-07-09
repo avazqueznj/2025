@@ -1,3 +1,12 @@
+/********************************************************************************************
+ * CONFIDENTIAL AND PROPRIETARY
+ * 
+ * ZZZ2025 
+ * © [2025] [Alejandro Vazquez]. All rights reserved.
+ * 
+ ********************************************************************************************/
+
+
 #include "misc/lv_color.h"
 #ifndef UTIL_H
 #define UTIL_H

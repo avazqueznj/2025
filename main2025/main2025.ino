@@ -1,14 +1,7 @@
 /********************************************************************************************
  * CONFIDENTIAL AND PROPRIETARY
  * 
- * 2025 
- * v1 (2025) Alejandro Vazquez 
- * 
- * This source code is the confidential and proprietary information of [Alejandro Vazquez]
- * ("Confidential Information"). You shall not disclose such Confidential Information and
- * shall use it only in accordance with the terms of the license agreement you entered into
- * with [Zonar Systems].
- * 
+ * ZZZ2025 
  * © [2025] [Alejandro Vazquez]. All rights reserved.
  * 
  ********************************************************************************************/
