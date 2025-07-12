@@ -48,6 +48,18 @@ public:
 
     //---
 
+    lv_obj_t* getFocusedButton() {
+        if (!inputGroup) return nullptr;
+
+        lv_obj_t* focused = lv_group_get_focused(inputGroup);
+        if (!focused) return nullptr;
+
+        const lv_obj_class_t* obj_class = lv_obj_get_class(focused);
+        if (!obj_class) return nullptr;
+
+        return (obj_class == &lv_btn_class) ? focused : nullptr;
+    }
+
     lv_obj_t* get_prev_sibling(lv_obj_t* obj) {
         if (!obj) return nullptr;
         lv_obj_t* parent = lv_obj_get_parent(obj);
@@ -85,15 +97,16 @@ public:
     }
 
     virtual void keyboardEvent(String key) {
-        Serial.print("Key: ");
-        Serial.println(key);
 
+        // get the focused thing
         lv_obj_t* focused = lv_group_get_focused(inputGroup);
+
+        // is it a list, is it scrolling ...
         if (focused && lv_obj_check_type(focused, &lv_list_class)) {
             lv_obj_t* list = focused;
-
-            // Fallback: find selected button
             lv_obj_t* selected = nullptr;
+
+            // find current selection in the list
             uint32_t count = lv_obj_get_child_cnt(list);
             for (uint32_t i = 0; i < count; ++i) {
                 lv_obj_t* btn = lv_obj_get_child(list, i);
@@ -102,7 +115,7 @@ public:
                     break;
                 }
             }
-
+            // start scrolling...
             if (key == "A" || key == "B") {
                 if (!selected) {
                     lv_obj_t* first = lv_obj_get_child(list, 0);
@@ -128,18 +141,26 @@ public:
             }
         } 
         
+        // no scrolling, then are we navigating ?
         if (key == "C") {
             lv_group_focus_prev(inputGroup);
         } else if (key == "D") {
             lv_group_focus_next(inputGroup);
+
+        // else are we clicking ENTER ... ?            
         } else if (key == "#") {
             if (focused) {
                 lv_event_send(focused, LV_EVENT_PRESSED, NULL);  // not ideal - figure
                 lv_event_send(focused, LV_EVENT_CLICKED, NULL);
             }
+
+        // else esc ... which i do not know what for :) 
         } else if (key == "*") {
             lv_group_send_data(inputGroup, LV_KEY_ESC);
         }
+
+        // else ignore
+
     }
 
 //---

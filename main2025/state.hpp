@@ -49,17 +49,45 @@ public:
     }         
   }  
 
+  // key events -- ENTRY
   void keyboardEvent( String input ){
     try{
+
+      Serial.print("Key: ");
+      Serial.println(input);
+
+      // are we under a modal? , dont pass events
+      if ( overlay != nullptr ) {    
+        Serial.println( "Modal showing -> dismiss." );
+        if (input == "#" ) {    
+          Serial.println("Keyboard # -> closing dialog");
+          lv_obj_t * mbox = lv_obj_get_child(overlay, 0);  // If overlay only has the mbox.
+          lv_msgbox_close(mbox);
+          lv_obj_del(overlay);
+          overlay = nullptr;\
+        }
+        return; // eat the events, simulate modal
+      }
+
+      // are we navigating ?
+      if( currentScreenState !=  NULL && input == "#" ){
+        if( lv_obj_t* target = currentScreenState->getFocusedButton() ){
+          if( handleNavClicks( target ) ) return; // eat it
+        }
+      }
+
+      // no, well then pass the event to the current screen
       if( currentScreenState !=  NULL ){
         currentScreenState->keyboardEvent( input );
       }
+
     }catch( const std::runtime_error& error ){
       Serial.println( "*** ERROR while handling keyboard event ***" );                    
       Serial.println( error.what() );                    
     }  
   }
 
+  // handle touch events
   void handleEvents( lv_event_t* e ){
 
       try{
@@ -67,11 +95,33 @@ public:
         Serial.println("state: Event ...");    
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
 
+        // navigation
+        handleNavClicks( target );
+
+        // windows
+        if( currentScreenState != NULL ){ 
+          Serial.println("state: ? Forwarding ...");    
+          currentScreenState->handleEvents( e );          
+        }
+
+      }catch( const std::runtime_error& error ){
+        Serial.println( "*** ERROR while handling event ***" );                    
+        Serial.println( error.what() );                    
+      }      
+  }
+
+
+  bool handleNavClicks( lv_obj_t *target ){
+
+      bool handeled = false;
+
+      try{
 
         // MAIN -> open settings
         if(target == objects.do_settings ){
           Serial.println("state: Open settingsScreenClass..");            
           openScreen( new settingsScreenClass() );
+          handeled = true;
         }else        
 
 
@@ -79,6 +129,7 @@ public:
         if(target == objects.do_inspect_button ){
           Serial.println("state: Open selectAssetScreenClass..");    
           openScreen( new selectAssetScreenClass() );
+          handeled = true;
         }else        
 
 
@@ -87,32 +138,36 @@ public:
 
           Serial.println("state: Open select inspe ..");            
 
-          // sync the assets
-          if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_ASSET_SCREEN) {          
-              static_cast<selectAssetScreenClass*>(currentScreenState)->syncToInspection();
-              if (domainManagerClass::getInstance()->currentInspection.assets.size() == 0) {
-                  createDialog("Error: No assets selected!");
-                  return;  
-              }
-          } else {
-              Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
-          }
+                // sync the assets
+                if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_ASSET_SCREEN) {          
+                    static_cast<selectAssetScreenClass*>(currentScreenState)->syncToInspection();
+                    if (domainManagerClass::getInstance()->currentInspection.assets.size() == 0) {
+                        createDialog("Error: No assets selected!");
+                        handeled = true;
+                        return handeled;  
+                    }
+                } else {
+                    Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+                }
 
           openScreen( new selectInspectionTypeScreenClass() );
+          handeled = true;
+
         }else        
 
 
-        // INSPE -> open form
+        // INSPE -> open form fields
         if(target == objects.do_inspection_form ){
           Serial.println("state: Open FF ..");            
 
-          // sync the inspe type
-          if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_INSPECTION_TYPE) {          
-              static_cast<selectInspectionTypeScreenClass*>(currentScreenState)->syncToInspection();
-          } else {
-              Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
-          }
+                // sync the inspe type
+                if (currentScreenState && currentScreenState->screenId == SCREEN_ID_SELECT_INSPECTION_TYPE) {          
+                    static_cast<selectInspectionTypeScreenClass*>(currentScreenState)->syncToInspection();
+                } else {
+                    Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+                }
 
+          handeled = true;
           openScreen( new formFieldsScreenClass() );
 
         }else        
@@ -122,13 +177,14 @@ public:
         if(target == objects.do_zones ){
           Serial.println("state: Open Zones ..");            
 
-          // sync the inspe type
-          if (currentScreenState && currentScreenState->screenId == SCREEN_ID_INSPECTION_FORM) {          
-              static_cast<formFieldsScreenClass*>(currentScreenState)->syncToInspection();
-          } else {
-              Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
-          }
+              // sync the inspe type
+              if (currentScreenState && currentScreenState->screenId == SCREEN_ID_INSPECTION_FORM) {          
+                  static_cast<formFieldsScreenClass*>(currentScreenState)->syncToInspection();
+              } else {
+                  Serial.println("Current screen is NOT selectAssetScreenClass, skipping sync.");
+              }
 
+          handeled = true;
           openScreen( new inspectionZonesScreenClass() );
 
         }else        
@@ -140,36 +196,33 @@ public:
 
         //  back from asset or settings -> to main
         if( target == objects.back_from_select_asset || target == objects.back_from_settings ){
-          Serial.println("state: Open mainScreenClass..");            
+          Serial.println("state: Open mainScreenClass..");     
+          handeled = true;                 
           openScreen( new mainScreenClass() );        
         }else
 
         // back from select inspe
         if( target == objects.back_from_select_insp  ){
           Serial.println("state: Open select asset..");      
+          handeled = true;                           
           openScreen( new selectAssetScreenClass() );        
         }else
 
         // back from FF
         if( target == objects.back_from_form_fields  ){
-          Serial.println("state: Open select inspe..");      
+          Serial.println("state: Open select inspe..");  
+          handeled = true;                               
           openScreen( new selectInspectionTypeScreenClass() );        
         }else
-
 
         // back from ZONES
         if( target == objects.back_from_form_zones  ){
           Serial.println("state: Open form ");      
+          handeled = true;                           
           openScreen( new formFieldsScreenClass() );        
-        }else
-
-
-        // -------------------------------------------------------
-        // else pass the event to the active screen
-        if( currentScreenState != NULL ){ 
-          Serial.println("state: ? Forwarding ...");    
-          currentScreenState->handleEvents( e );          
         }
+
+        return handeled;
 
       }catch( const std::runtime_error& error ){
         Serial.println( "*** ERROR while handling event ***" );                    

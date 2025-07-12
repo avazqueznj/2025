@@ -81,15 +81,14 @@ public:
 
         // Create fresh group or reuse existing
         {
-            //-------------------------------------
-            // Add focusable widgets
+            //-------------------------------------            
+            // Add focusable widgets (  lv_group_focus_obj(objects.do_inspect_button);             )
 
-            // default
+
             lv_group_add_obj(inputGroup, objects.do_inspect_button  );
-            //lv_group_focus_obj(objects.do_inspect_button);
-            // de rest
             lv_group_add_obj(inputGroup, objects.do_sync);
             lv_group_add_obj(inputGroup, objects.do_settings);
+            
         }
     
         // Add focusable widgets
@@ -101,4 +100,7 @@ public:
     virtual ~mainScreenClass(){
     };
 };
+
+
+
 

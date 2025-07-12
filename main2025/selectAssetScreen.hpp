@@ -24,7 +24,7 @@ public:
         //>>>>>>
         screenClass::keyboardEvent(key);
 
-        // update if the selected item changed
+        // update if the selected item changed  -- DO I STILL NEED THIS WITH THE CHECKFIX
         lv_obj_t* list = objects.asset_list;
         if (!list) return;
         selectedButton = nullptr;  // Reset
@@ -236,6 +236,11 @@ public:
             lv_group_add_obj(inputGroup, objects.asset_list  );
             lv_group_add_obj(inputGroup, objects.select_asset);
             lv_group_add_obj(inputGroup, objects.de_select_asset);
+
+            // nav bar
+            lv_group_add_obj(inputGroup, objects.do_select_inspection_type);            
+            lv_group_add_obj(inputGroup, objects.back_from_select_asset);            
+
         }
         
         screenClass::open(); // always last, only if no issues

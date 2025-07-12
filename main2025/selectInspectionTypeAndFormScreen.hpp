@@ -146,8 +146,6 @@ public:
         }
 
         void handleEvents(lv_event_t* e) override {
-            // lv_obj_t* target = lv_event_get_target(e);
-            // For now, no extra event handling
         }
 
         void open() override {

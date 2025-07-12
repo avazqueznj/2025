@@ -20,7 +20,6 @@ typedef struct _objects_t {
     lv_obj_t *do_inspect_button;
     lv_obj_t *do_sync;
     lv_obj_t *do_settings;
-    lv_obj_t *do_power;
     lv_obj_t *help1;
     lv_obj_t *obj1;
     lv_obj_t *logo1_2;
