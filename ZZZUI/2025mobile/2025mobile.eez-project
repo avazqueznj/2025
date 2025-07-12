@@ -4314,6 +4314,9 @@
                             "DEFAULT": {
                               "text_font": "MONTSERRAT_28",
                               "text_color": "#7095c8"
+                            },
+                            "FOCUSED": {
+                              "border_color": "#ff0000"
                             }
                           }
                         }
@@ -4360,7 +4363,7 @@
               "hiddenFlagType": "literal",
               "clickableFlag": true,
               "clickableFlagType": "literal",
-              "flagScrollbarMode": "on",
+              "flagScrollbarMode": "auto",
               "flagScrollDirection": "ver",
               "scrollSnapX": "",
               "scrollSnapY": "",

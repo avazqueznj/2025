@@ -139,7 +139,8 @@ public:
                         lv_obj_scroll_to_view(next, LV_ANIM_ON);
                     }
                 }
-                //return; // test
+                
+                return;
             }
 
             // no enter # or * on selected item as it might not be what we want
@@ -148,22 +149,60 @@ public:
         
         // no scrolling, then are we navigating ?
         if (key == "C") {
+
             lv_group_focus_prev(inputGroup);
+            checkTextAreaInView();
+            return;
+
         } else if (key == "D") {
+
             lv_group_focus_next(inputGroup);
+            checkTextAreaInView();
+            return;
 
         // else are we clicking ENTER ... ?            
         } else if (key == "#") {
+
             if (focused) {
                 lv_event_send(focused, LV_EVENT_PRESSED, NULL);  
             }
 
+            return;
+
         // else esc ... 
         } else if (key == "*") {
+
             lv_group_send_data(inputGroup, LV_KEY_ESC);
+            return;
         }
 
         // else we are done, child class could do something special to the screen
+    }
+
+    // lvgl should have done this ...
+    virtual void checkTextAreaInView(  ){
+
+            // roll into view
+            if (inputGroup != nullptr) {
+                lv_obj_t* ta = lv_group_get_focused(inputGroup);
+
+                if (ta != nullptr && lv_obj_check_type(ta, &lv_textarea_class)) {
+
+                    Serial.println("scroll");
+
+                    // Ensure layout is valid before scrolling
+                    lv_obj_update_layout(objects.form_fields);
+
+                    // Get parent row of textarea
+                    lv_obj_t* row = lv_obj_get_parent(ta);
+                    if (row != nullptr) {
+                        // Get Y offset of row inside form_fields
+                        lv_coord_t y = lv_obj_get_y(row);
+                        // Scroll to exact Y offset — brute force
+                        lv_obj_scroll_to_y(objects.form_fields, y, LV_ANIM_OFF);
+                    }
+                }
+            }
     }
 
 //---
@@ -175,6 +214,8 @@ public:
             Serial.println("mainScreenClass: inputGroup destroyed");
         }        
     }
+
+
 };
 
 //-------------------------------------------------

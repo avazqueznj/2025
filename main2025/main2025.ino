@@ -211,6 +211,9 @@ void loop() {
 
   RFIDrefreshCounts += 1;
   if (RFIDrefreshCounts == 25) {
+
+    //---------------------------------------------------------
+    // rfid
     if (mfrc522 && mfrc522->PICC_IsNewCardPresent()) {
       if (mfrc522->PICC_ReadCardSerial()) {
         currentCardLength = mfrc522->uid.size;
@@ -232,6 +235,8 @@ void loop() {
       }
     }
 
+    //---------------------------------------------------------
+    // rtc
     if (rtcUp && rtc) {
       DateTime now = rtc->now();
       char buffer[20];
@@ -246,10 +251,10 @@ void loop() {
       stateManager->clockTic(time); 
     }
 
-    // === Analog keypad scan ===
+    //---------------------------------------------------------
+    // keypad voltage check
     for (byte row = 0; row < ROWS; row++) {
       digitalWrite(rowPins[row], HIGH);
-
       for (byte col = 0; col < COLS; col++) {
         int val = analogRead(colPins[col]);
         if (val > ANALOG_THRESHOLD) {
@@ -265,9 +270,28 @@ void loop() {
       digitalWrite(rowPins[row], LOW);
     }
 
+    //-----------------------------------------------
+
+    // LVGL should do this!!
+    if (stateManager != nullptr && stateManager->currentScreenState != nullptr) {
+        // get screen
+        screenClass* screen = stateManager->currentScreenState;
+
+        // is kb open
+        formFieldsScreenClass* ff = static_cast<formFieldsScreenClass*>(screen);
+        if (ff != nullptr && ff->kb != nullptr && !lv_obj_has_flag(ff->kb, LV_OBJ_FLAG_HIDDEN)) {
+            screen->checkTextAreaInView(); // check that lvgl did not overlap the entry area with the kb
+        }
+    }
+
+  //------------------------------------------
+
     RFIDrefreshCounts = 0;   
   }
-}
+
+
+
+} //<< END
 
 
 //----------------------------------------------------------

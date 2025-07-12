@@ -257,6 +257,9 @@ public:
             response = response.substring(bodyIndex + 4);
         }
 
+        Serial.println( "Success response ->" );
+        Serial.println( response );
+
         return response;
     }
 

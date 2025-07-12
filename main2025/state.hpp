@@ -49,6 +49,29 @@ public:
     }         
   }  
 
+  // handle touch events
+  void handleEvents( lv_event_t* e ){
+
+      try{
+
+        Serial.println("state: Event ...");    
+        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
+
+        // navigation
+        handleNavClicks( target, "" );
+
+        // windows
+        if( currentScreenState != NULL ){ 
+          Serial.println("state: ? Forwarding ...");    
+          currentScreenState->handleEvents( e );          
+        }
+
+      }catch( const std::runtime_error& error ){
+        Serial.println( "*** ERROR while handling event ***" );                    
+        Serial.println( error.what() );                    
+      }      
+  }
+
   // key events -- ENTRY
   void keyboardEvent( String key ){
     try{
@@ -77,8 +100,14 @@ public:
       }
 
 
-      // tab is too complicated , better find the < > wherever and use & and 9 to navigate
-      if (key == "7" || key == "9") {
+      // SCREEN NAVI button shortcuts
+      if (
+          (key == "7" || key == "9") &&
+          !(currentScreenState && 
+            lv_group_get_focused(currentScreenState->inputGroup) && 
+            lv_obj_check_type(lv_group_get_focused(currentScreenState->inputGroup), &lv_textarea_class))
+      ) {
+        
           const char* target_text = NULL;
           if (key == "7") {
               target_text = "\xEF\x81\x93"; 
@@ -144,28 +173,7 @@ public:
     }  
   }
 
-  // handle touch events
-  void handleEvents( lv_event_t* e ){
 
-      try{
-
-        Serial.println("state: Event ...");    
-        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
-
-        // navigation
-        handleNavClicks( target, "" );
-
-        // windows
-        if( currentScreenState != NULL ){ 
-          Serial.println("state: ? Forwarding ...");    
-          currentScreenState->handleEvents( e );          
-        }
-
-      }catch( const std::runtime_error& error ){
-        Serial.println( "*** ERROR while handling event ***" );                    
-        Serial.println( error.what() );                    
-      }      
-  }
 
 
   bool handleNavClicks( lv_obj_t *target, String key){
@@ -363,6 +371,7 @@ extern "C" void action_main_event_dispatcher(lv_event_t *e) {
 }
 
 //------------------------------------------------------
+
 
 #endif
 

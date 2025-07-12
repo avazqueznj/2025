@@ -1,3 +1,4 @@
+#include "core/lv_event.h"
 /********************************************************************************************
  * CONFIDENTIAL AND PROPRIETARY
  * 
@@ -158,6 +159,17 @@ public:
         formFieldsScreenClass() : screenClass(SCREEN_ID_INSPECTION_FORM) {
         }
 
+        void keyboardEvent(String key) override {        
+            screenClass::keyboardEvent( key );
+
+            if( key != "A" && key != "B" && key != "C" && key != "D" && key != "*" && key != "#"  ){
+                lv_obj_t* focused = lv_group_get_focused(inputGroup);
+                if (focused && lv_obj_check_type(focused, &lv_textarea_class)) {
+                    lv_textarea_add_text(focused, key.c_str());                    
+                }
+            }
+        }
+
         void handleEvents(lv_event_t* e) override {
         }
 
@@ -226,51 +238,68 @@ public:
                 lv_obj_set_style_pad_top(label, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
                 lv_label_set_text(label, fieldName.c_str());
 
-                // === Textarea ===
-                lv_obj_t* textarea = lv_textarea_create(rowContainer);
-                lv_obj_set_size(textarea, 388, 54);
-                lv_textarea_set_max_length(textarea, maxLength);
+                        // === Textarea ===
+                        lv_obj_t* textarea = lv_textarea_create(rowContainer);
+                        lv_obj_set_size(textarea, 388, 54);
+                        lv_textarea_set_max_length(textarea, maxLength);
 
-                // If there’s a previous value, restore it
-                String prefill = "";
-                if (i < currentInspection->inspectionFormFieldValues.size()) {
-                    prefill = currentInspection->inspectionFormFieldValues[i];
-                }
-                lv_textarea_set_text(textarea, prefill.c_str());
+                        // If there’s a previous value, restore it
+                        String prefill = "";
+                        if (i < currentInspection->inspectionFormFieldValues.size()) {
+                            prefill = currentInspection->inspectionFormFieldValues[i];
+                        }
+                        lv_textarea_set_text(textarea, prefill.c_str());
 
-                lv_textarea_set_one_line(textarea, true);
-                lv_textarea_set_password_mode(textarea, false);
-                lv_obj_clear_flag(textarea,
-                    LV_OBJ_FLAG_SCROLLABLE |
-                    LV_OBJ_FLAG_SCROLL_CHAIN_HOR |
-                    LV_OBJ_FLAG_SCROLL_CHAIN_VER |
-                    LV_OBJ_FLAG_SCROLL_ELASTIC |
-                    LV_OBJ_FLAG_SCROLL_MOMENTUM |
-                    LV_OBJ_FLAG_SCROLL_ON_FOCUS |
-                    LV_OBJ_FLAG_SCROLL_WITH_ARROW);
-                lv_obj_set_style_text_font(textarea, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_obj_set_style_text_color(textarea, lv_color_hex(0xff7095c8), LV_PART_MAIN | LV_STATE_DEFAULT);
+                        lv_textarea_set_one_line(textarea, true);
+                        lv_textarea_set_password_mode(textarea, false);
+                        lv_obj_clear_flag(textarea,
+                            LV_OBJ_FLAG_SCROLLABLE |
+                            LV_OBJ_FLAG_SCROLL_CHAIN_HOR |
+                            LV_OBJ_FLAG_SCROLL_CHAIN_VER |
+                            LV_OBJ_FLAG_SCROLL_ELASTIC |
+                            LV_OBJ_FLAG_SCROLL_MOMENTUM |
+                            LV_OBJ_FLAG_SCROLL_ON_FOCUS |
+                            LV_OBJ_FLAG_SCROLL_WITH_ARROW);
+                        lv_obj_set_style_text_font(textarea, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                        lv_obj_set_style_text_color(textarea, lv_color_hex(0xff7095c8), LV_PART_MAIN | LV_STATE_DEFAULT);
+                        lv_obj_set_style_border_color(textarea, lv_color_hex(0xffff0000), LV_PART_MAIN | LV_STATE_FOCUSED);                        
 
-                // Save handle for sync
-                textareas.push_back(textarea);
+                        // Save handle for sync
+                        textareas.push_back(textarea);
+                        lv_group_add_obj(inputGroup, textarea );
 
-                // Hook: show keyboard on focus
-                lv_obj_add_event_cb(textarea, [](lv_event_t* e) {
-                    lv_obj_t* ta = lv_event_get_target(e);
-                    formFieldsScreenClass* self = static_cast<formFieldsScreenClass*>(lv_event_get_user_data(e));
-                    lv_obj_clear_flag(self->kb, LV_OBJ_FLAG_HIDDEN);
-                    lv_keyboard_set_textarea(self->kb, ta);
-                    Serial.println("Keyboard opened for textarea.");
-                }, LV_EVENT_FOCUSED, this);
+                        // Hook: show keyboard on focus
+                        lv_obj_add_event_cb(textarea, 
+                        
+                            [](lv_event_t* e) { 
+
+                                // get the form field
+                                lv_obj_t* ta = lv_event_get_target(e);
+                                formFieldsScreenClass* self = static_cast<formFieldsScreenClass*>(lv_event_get_user_data(e));
+
+                                // unhide kb
+                                lv_obj_clear_flag(self->kb, LV_OBJ_FLAG_HIDDEN);
+                                lv_keyboard_set_textarea(self->kb, ta);                                
+
+                                Serial.println("Keyboard opened for textarea.");
+                            }
+
+                        , LV_EVENT_PRESSED, this);
             }
+
+            // keyboard spacer ============
+            lv_obj_t* spacer = lv_obj_create( objects.form_fields );  
+            lv_obj_set_size(spacer, LV_PCT(100), LV_PCT(50));  
+            lv_obj_clear_flag(spacer, LV_OBJ_FLAG_SCROLLABLE); 
+            lv_obj_set_style_bg_opa(spacer, LV_OPA_TRANSP, 0);                 
 
             {
                 // default
-                lv_group_add_obj(inputGroup, objects.form_fields  );
+                //lv_group_add_obj(inputGroup, objects.form_fields  );
 
                 // nav bar
-                //lv_group_add_obj(inputGroup, objects.do_zones );            
-                //lv_group_add_obj(inputGroup, objects.back_from_form_fields);       
+                lv_group_add_obj(inputGroup, objects.do_zones );            
+                lv_group_add_obj(inputGroup, objects.back_from_form_fields);       
             }
 
             screenClass::open();
