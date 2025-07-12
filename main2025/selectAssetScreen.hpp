@@ -17,32 +17,7 @@ public:
 
     virtual ~selectAssetScreenClass(){};    
 
-    //----------------------------------
 
-    void keyboardEvent(String key) override {
-
-        //>>>>>>
-        screenClass::keyboardEvent(key);
-
-        // update if the selected item changed  -- DO I STILL NEED THIS WITH THE CHECKFIX
-        lv_obj_t* list = objects.asset_list;
-        if (!list) return;
-        selectedButton = nullptr;  // Reset
-        uint32_t count = lv_obj_get_child_cnt(list);
-        for (uint32_t i = 0; i < count; ++i) {
-            lv_obj_t* btn = lv_obj_get_child(list, i);
-            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
-                selectedButton = btn;
-                Serial.println("Updated selectedButton from CHECKED state.");
-                break;
-            }
-        }
-        if (!selectedButton) {
-            Serial.println("No CHECKED button found in list.");
-        }
-
-
-    }
 
     //----------------------------------
 
@@ -127,6 +102,50 @@ public:
         addAssetToList(objects.selected_asset_list, matchedAsset, false);
 
         Serial.println("RFID asset added to selected list!");
+    }
+
+
+    //----------------------------------
+
+    void keyboardEvent(String key) override {
+
+        //>>>>>>
+        screenClass::keyboardEvent(key);
+
+        // update if the selected item changed  -- DO I STILL NEED THIS WITH THE CHECKFIX
+        lv_obj_t* list = objects.asset_list;
+        if (!list) return;
+        selectedButton = nullptr;  // Reset
+        uint32_t count = lv_obj_get_child_cnt(list);
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* btn = lv_obj_get_child(list, i);
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                selectedButton = btn;
+                Serial.println("Updated selectedButton from CHECKED state.");
+                break;
+            }
+        }
+        if (!selectedButton) {
+            Serial.println("No CHECKED button found in list.");
+        }
+
+        // special short cut to add remove assets        
+        if( key == "#" || key == "*" ){            
+            lv_obj_t* focused = lv_group_get_focused(inputGroup);
+            // is it the asset list
+            if (focused && lv_obj_check_type(focused, &lv_list_class)){
+                if( key == "#" ){
+                    // clicked # enter ? then add assset short cut
+                    lv_event_send( objects.select_asset, LV_EVENT_PRESSED, NULL);  
+                }
+                if(  key == "*" ){
+                    // clicked # enter ? then add assset short cut
+                    lv_event_send( objects.de_select_asset, LV_EVENT_PRESSED, NULL);                      
+                }
+            }
+        }
+
+
     }
 
     //----------------------------------

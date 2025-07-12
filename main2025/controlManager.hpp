@@ -96,6 +96,7 @@ public:
         return nullptr;
     }
 
+    // screenClass >>>>>>>>>>>>>>>>>>>
     virtual void keyboardEvent(String key) {
 
         // get the focused thing
@@ -115,6 +116,7 @@ public:
                     break;
                 }
             }
+
             // start scrolling...
             if (key == "A" || key == "B") {
                 if (!selected) {
@@ -150,17 +152,15 @@ public:
         // else are we clicking ENTER ... ?            
         } else if (key == "#") {
             if (focused) {
-                lv_event_send(focused, LV_EVENT_PRESSED, NULL);  // not ideal - figure
-                lv_event_send(focused, LV_EVENT_CLICKED, NULL);
+                lv_event_send(focused, LV_EVENT_PRESSED, NULL);  
             }
 
-        // else esc ... which i do not know what for :) 
+        // else esc ... 
         } else if (key == "*") {
             lv_group_send_data(inputGroup, LV_KEY_ESC);
         }
 
-        // else ignore
-
+        // else we are done, child class could do something special to the screen
     }
 
 //---
