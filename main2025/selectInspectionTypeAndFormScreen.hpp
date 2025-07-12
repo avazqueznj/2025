@@ -103,8 +103,8 @@ public:
             lv_group_add_obj(inputGroup, objects.inspection_types  );
 
             // nav bar
-            lv_group_add_obj(inputGroup, objects.do_inspection_form);            
-            lv_group_add_obj(inputGroup, objects.back_from_select_insp);            
+            //lv_group_add_obj(inputGroup, objects.do_inspection_form);            
+            //lv_group_add_obj(inputGroup, objects.back_from_select_insp);            
 
         }
 
@@ -269,8 +269,8 @@ public:
                 lv_group_add_obj(inputGroup, objects.form_fields  );
 
                 // nav bar
-                lv_group_add_obj(inputGroup, objects.do_zones );            
-                lv_group_add_obj(inputGroup, objects.back_from_form_fields);       
+                //lv_group_add_obj(inputGroup, objects.do_zones );            
+                //lv_group_add_obj(inputGroup, objects.back_from_form_fields);       
             }
 
             screenClass::open();

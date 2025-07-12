@@ -1003,9 +1003,9 @@ public:
             //lv_group_add_obj(inputGroup, objects.comp_ok_button  );            
             //lv_group_add_obj(inputGroup, objects.defect_button  );            
 
-            // nav bar
-            lv_group_add_obj(inputGroup, objects.back_from_form_zones );            
-            lv_group_add_obj(inputGroup, objects.submit);       
+            // nav bar -- also too complicated, use numbers this will never work
+            //lv_group_add_obj(inputGroup, objects.back_from_form_zones );            
+            //lv_group_add_obj(inputGroup, objects.submit);       
         }
 
         screenClass::open();

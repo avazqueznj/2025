@@ -46,35 +46,8 @@ public:
 
     void handleEvents( lv_event_t* e ) override{
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
-        if(target == objects.do_sync ){
-            try{
 
-                Serial.println("main: sync ...");  
-                domainManagerClass::getInstance()->sync();
-
-                String syncMessage = "Sync successful. \n";
-                syncMessage += "Loaded: \n";
-
-                syncMessage += domainManagerClass::getInstance()->assets.size();
-                syncMessage += " assets \n";
-
-
-                syncMessage += domainManagerClass::getInstance()->layouts.size();
-                syncMessage += " layouts \n";
-
-
-                syncMessage += domainManagerClass::getInstance()->inspectionTypes.size();
-                syncMessage += " Inspection types \n";
-
-                createDialog( syncMessage.c_str() );   
-
-            }catch( const std::runtime_error& error ){
-                Serial.println( error.what() );            
-                createDialog( error.what() );     
-            }
-        }else{
-            Serial.println("main: unkown event ?");  
-        }
+        
     }
 
     void open() override {
