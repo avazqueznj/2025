@@ -46,10 +46,10 @@ typedef struct _objects_t {
     lv_obj_t *search_assets;
     lv_obj_t *obj5;
     lv_obj_t *logo1_3;
-    lv_obj_t *do_inspection_form;
-    lv_obj_t *back_from_select_insp;
     lv_obj_t *inspection_types;
     lv_obj_t *obj6;
+    lv_obj_t *do_inspection_form;
+    lv_obj_t *back_from_select_insp;
     lv_obj_t *help2_2;
     lv_obj_t *obj7;
     lv_obj_t *logo1_4;
@@ -57,7 +57,7 @@ typedef struct _objects_t {
     lv_obj_t *do_zones;
     lv_obj_t *back_from_form_fields;
     lv_obj_t *back_from_form;
-    lv_obj_t *inspection_types_1;
+    lv_obj_t *form_fields;
     lv_obj_t *obj8;
     lv_obj_t *inspection_type_name;
     lv_obj_t *obj9;

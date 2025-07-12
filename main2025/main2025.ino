@@ -4,6 +4,14 @@
  * ZZZ2025 
  * © [2025] [Alejandro Vazquez]. All rights reserved.
  * 
+ * Portions of this software are based on LVGL (https://lvgl.io),
+ * which is licensed under the MIT License:
+ *
+ * MIT License
+ * Copyright (c) 2021 LVGL LLC
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction...
  ********************************************************************************************/
 
 #include "mbed.h"

@@ -245,8 +245,6 @@ public:
             }
         }
 
-
-                // Create fresh group or reuse existing
         {
             //-------------------------------------
             // Add focusable widgets

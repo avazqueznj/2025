@@ -95,6 +95,19 @@ public:
             }
         }
 
+        {
+            //-------------------------------------
+            // Add focusable widgets
+
+            // default
+            lv_group_add_obj(inputGroup, objects.inspection_types  );
+
+            // nav bar
+            lv_group_add_obj(inputGroup, objects.do_inspection_form);            
+            lv_group_add_obj(inputGroup, objects.back_from_select_insp);            
+
+        }
+
         screenClass::open(); 
     }
 
@@ -164,7 +177,7 @@ public:
             textareas.clear();
 
             // Use  EEZ-generated list container
-            lv_obj_t* parent_obj = objects.inspection_types_1;
+            lv_obj_t* parent_obj = objects.form_fields;
             lv_obj_clean(parent_obj);
 
             // Create keyboard if needed
@@ -249,6 +262,15 @@ public:
                     lv_keyboard_set_textarea(self->kb, ta);
                     Serial.println("Keyboard opened for textarea.");
                 }, LV_EVENT_FOCUSED, this);
+            }
+
+            {
+                // default
+                lv_group_add_obj(inputGroup, objects.form_fields  );
+
+                // nav bar
+                lv_group_add_obj(inputGroup, objects.do_zones );            
+                lv_group_add_obj(inputGroup, objects.back_from_form_fields);       
             }
 
             screenClass::open();

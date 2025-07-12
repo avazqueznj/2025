@@ -139,8 +139,11 @@ public:
                         lv_obj_scroll_to_view(next, LV_ANIM_ON);
                     }
                 }
-                return;
+                //return; // test
             }
+
+            // no enter # or * on selected item as it might not be what we want
+            // let the child choose what to do on list enter
         } 
         
         // no scrolling, then are we navigating ?
