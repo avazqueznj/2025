@@ -1504,8 +1504,8 @@
             {
               "objID": "d42b2787-a220-4e76-8506-09ac622cb5fa",
               "type": "LVGLLabelWidget",
-              "left": 32,
-              "top": 190,
+              "left": 31,
+              "top": 249,
               "width": 114,
               "height": 30,
               "customInputs": [],
@@ -1553,8 +1553,8 @@
             {
               "objID": "6d5b455b-0c89-47d0-f4fd-dd4b2d55feb3",
               "type": "LVGLTextareaWidget",
-              "left": 33,
-              "top": 224,
+              "left": 32,
+              "top": 283,
               "width": 252,
               "height": 50,
               "customInputs": [],

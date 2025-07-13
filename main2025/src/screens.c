@@ -286,7 +286,7 @@ void create_screen_settings() {
         }
         {
             lv_obj_t *obj = lv_label_create(parent_obj);
-            lv_obj_set_pos(obj, 32, 190);
+            lv_obj_set_pos(obj, 31, 249);
             lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
             lv_obj_set_style_text_font(obj, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_label_set_text(obj, "Division");
@@ -295,7 +295,7 @@ void create_screen_settings() {
             // setting_division
             lv_obj_t *obj = lv_textarea_create(parent_obj);
             objects.setting_division = obj;
-            lv_obj_set_pos(obj, 33, 224);
+            lv_obj_set_pos(obj, 32, 283);
             lv_obj_set_size(obj, 252, 50);
             lv_textarea_set_max_length(obj, 128);
             lv_textarea_set_one_line(obj, false);
