@@ -168,6 +168,25 @@ public:
                     lv_textarea_add_text(focused, key.c_str());                    
                 }
             }
+
+            if (key == "*") {
+                lv_obj_t* focused = lv_group_get_focused(inputGroup);
+                if (focused && lv_obj_check_type(focused, &lv_textarea_class)) {
+                    String txt = lv_textarea_get_text(focused);  // copy the text
+                    int len = txt.length();
+                    if (len > 0) {
+                        txt = txt.substring(0, len - 1);  // remove last character
+                        //lv_textarea_set_text(focused, txt.c_str());
+                        //lv_textarea_add_text(focused, "*" );   
+
+                        // lvgl bug ??
+                        // One for the ghost, one for the real char
+                        lv_textarea_del_char( focused );
+                        lv_textarea_del_char( focused );                                         
+                    }
+                }
+            }
+
         }
 
         void handleEvents(lv_event_t* e) override {

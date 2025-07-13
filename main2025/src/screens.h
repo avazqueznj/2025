@@ -60,6 +60,7 @@ typedef struct _objects_t {
     lv_obj_t *form_fields;
     lv_obj_t *obj8;
     lv_obj_t *inspection_type_name;
+    lv_obj_t *forms_info_label;
     lv_obj_t *obj9;
     lv_obj_t *clock_insp;
     lv_obj_t *logo1_5;

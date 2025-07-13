@@ -897,6 +897,14 @@ void create_screen_inspection_form() {
             lv_obj_set_style_text_color(obj, lv_color_hex(0xfff90505), LV_PART_MAIN | LV_STATE_DEFAULT);
             lv_label_set_text(obj, "Inspection type");
         }
+        {
+            // formsInfoLabel
+            lv_obj_t *obj = lv_label_create(parent_obj);
+            objects.forms_info_label = obj;
+            lv_obj_set_pos(obj, 392, 97);
+            lv_obj_set_size(obj, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+            lv_label_set_text(obj, "Use  * to delete,  Use C and D to  move around fields.");
+        }
     }
     
     tick_screen_inspection_form();
