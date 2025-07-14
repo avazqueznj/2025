@@ -23,7 +23,7 @@ public:
 	*/
 
 
-    assetClass* lastSelectedAsset = nullptr;
+    assetClass* lastSelectedAsset = nullptr; // its the current asset not last!!
 
     inspectionZonesScreenClass() : screenClass(SCREEN_ID_INSPECTION_ZONES) {
     }
@@ -97,14 +97,87 @@ public:
 
         Serial.println("Zone selected by RFID OK.");
 
-        lv_event_t fakeEvent;
-        fakeEvent.target = matchingZoneButton;
-        fakeEvent.code = LV_EVENT_PRESSED;
-        handleEvents(&fakeEvent);
+        // render
+        renderComponents();
+        refreshZoneAndComponentFlags();                        
 
         lv_group_focus_obj(objects.zone_component_list);             
     }
 
+
+    //----------------
+
+
+    void handleModalkeyboardEvent( String key ){
+
+        lv_obj_t* list = defect_list;
+        lv_obj_t* selected = nullptr;
+
+        // prepare defect list
+        uint32_t count = lv_obj_get_child_cnt(list);
+        if( count == 0 ) return;
+
+        // find current selection in the defect list
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* btn = lv_obj_get_child(list, i);
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                selected = btn;
+                break;
+            }        
+        }
+
+        // nothing then default to first
+        if(!selected) {
+            lv_obj_t* selected = lv_obj_get_child(list, 0);
+            if (selected) {
+                lv_obj_add_state(selected, LV_STATE_CHECKED);
+                lv_obj_scroll_to_view(selected, LV_ANIM_ON);
+            }    
+        }    
+
+        if( !selected ){
+            return;
+        }
+
+        if (key == "A" || key == "B") {            
+            lv_obj_t* next = nullptr;
+            if (key == "A") {
+                next = get_prev_sibling(selected);
+            } else if (key == "B") {
+                next = get_next_sibling(selected);
+            }
+            if (next) {
+                lv_obj_clear_state(selected, LV_STATE_CHECKED);
+                lv_obj_add_state(next, LV_STATE_CHECKED);
+                lv_obj_scroll_to_view(next, LV_ANIM_ON);
+            }
+
+               return;  
+        }
+
+
+        if( key == "1" ){
+            saveDefect( -1 );
+            refreshZoneAndComponentFlags();
+            return;  
+        }
+        if( key == "2" ){
+            saveDefect( 1 );
+            refreshZoneAndComponentFlags();
+            return;              
+        }
+        if( key == "3" ){
+            saveDefect( 10 );
+            refreshZoneAndComponentFlags();  
+            return;                        
+        }
+        if( key == "*" ){
+            lv_msgbox_close_async(dialog);   
+            refreshZoneAndComponentFlags();
+            return;                
+        }
+
+    }
 
     //----------------------------------
 
@@ -113,75 +186,12 @@ public:
 
         // are we under defecto modal? 
         if (dialog != nullptr && lv_obj_is_valid(dialog)) {
-
-            lv_obj_t* list = defect_list;
-            lv_obj_t* selected = nullptr;
-
-            // find current selection in the list
-            uint32_t count = lv_obj_get_child_cnt(list);
-            for (uint32_t i = 0; i < count; ++i) {
-                lv_obj_t* btn = lv_obj_get_child(list, i);
-                if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
-                    selected = btn;
-                    break;
-                }
-            }
-
-            // start scrolling...
-            if (key == "A" || key == "B") {
-                if (!selected) {
-                    lv_obj_t* first = lv_obj_get_child(list, 0);
-                    if (first) {
-                        lv_obj_add_state(first, LV_STATE_CHECKED);
-                        lv_obj_scroll_to_view(first, LV_ANIM_ON);
-                        Serial.println("No item selected — selected first.");
-                    }
-                } else {
-                    lv_obj_t* next = nullptr;
-                    if (key == "A") {
-                        next = get_prev_sibling(selected);
-                    } else if (key == "B") {
-                        next = get_next_sibling(selected);
-                    }
-                    if (next) {
-                        lv_obj_clear_state(selected, LV_STATE_CHECKED);
-                        lv_obj_add_state(next, LV_STATE_CHECKED);
-                        lv_obj_scroll_to_view(next, LV_ANIM_ON);
-                    }
-                }
-            }    
-
-            if( key == "1" ){
-                lv_event_t fakeEvent;
-                fakeEvent.target = del_btn;
-                fakeEvent.code = LV_EVENT_CLICKED;
-                handleEvents(&fakeEvent);   
-            }
-            if( key == "2" ){
-                 lv_event_t fakeEvent;
-                fakeEvent.target = minor_btn;
-                fakeEvent.code = LV_EVENT_CLICKED;
-                handleEvents(&fakeEvent);                  
-            }
-            if( key == "3" ){
-                  lv_event_t fakeEvent;
-                fakeEvent.target = major_btn;
-                fakeEvent.code = LV_EVENT_CLICKED;
-                handleEvents(&fakeEvent);                 
-            }
-            if( key == "*" ){
-                 lv_event_t fakeEvent;
-                fakeEvent.target = close_btn;
-                fakeEvent.code = LV_EVENT_CLICKED;
-                handleEvents(&fakeEvent);                  
-            }
-
+            handleModalkeyboardEvent( key );
             return; // simulate modal, eat events
         }     
 
         screenClass::keyboardEvent(key);
 
-    // ad hoc shorcuts
 
         // auto select the items as we scroll
         if (key == "A" || key == "B") {
@@ -189,35 +199,35 @@ public:
             if (focused && lv_obj_check_type(focused, &lv_list_class)) {
                 lv_obj_t* selected = get_checked_child(focused);
                 if (selected) {
-                    lv_event_send(selected, LV_EVENT_PRESSED, NULL);
+                    // ok one exception to the dont do this list
+                    lv_event_t fakeEvent;
+                    fakeEvent.target = selected;
+                    fakeEvent.code = LV_EVENT_PRESSED;
+                    handleEvents(&fakeEvent);
+                    return;
                 }
             }
         }
 
         
         if (key == "1") {
-            lv_event_t fakeEvent;
-            fakeEvent.target = objects.all_ok_button;
-            fakeEvent.code = LV_EVENT_PRESSED;
-            handleEvents(&fakeEvent);   
+            allokDefectClick();
+            refreshZoneAndComponentFlags();
+            return;              
         }
         if (key == "2") {
-            lv_event_t fakeEvent;
-            fakeEvent.target = objects.comp_ok_button;
-            fakeEvent.code = LV_EVENT_PRESSED;
-            handleEvents(&fakeEvent);   
+            okDefectClick();
+            refreshZoneAndComponentFlags();
+            return;              
         }
         if (key == "3") {
-            lv_event_t fakeEvent;
-            fakeEvent.target = objects.defect_button;
-            fakeEvent.code = LV_EVENT_PRESSED;
-            handleEvents(&fakeEvent);   
+            defectClick();
+            refreshZoneAndComponentFlags();
+            return;              
         }
         if (key == "4") {
-            lv_event_t fakeEvent;
-            fakeEvent.target = objects.submit;
-            fakeEvent.code = LV_EVENT_PRESSED;
-            handleEvents(&fakeEvent);   
+            submitInspection();
+            return;              
         }
 
 
@@ -225,97 +235,182 @@ public:
 
     //----------------
 
+    void renderAssetZones(){
+
+        Serial.println("Render asset zones...");
+            
+        domainManagerClass* domain = domainManagerClass::getInstance();
+
+        // reset zones and compos
+        lv_obj_clean(objects.zone_list);
+        lv_obj_clean(objects.zone_component_list);
+
+        // Find the layout for the asset
+        layoutClass* layout = nullptr;
+        for (layoutClass& l : domain->layouts) {
+            if (l.name == lastSelectedAsset->layoutName) {
+                layout = &l;
+                break;
+            }
+        }
+        if (!layout) {
+            throw std::runtime_error("inspectionZonesScreenClass: layout not found" );
+        }
+
+        //=================================================
+        // ZONE RENDER
+
+        // read the zones from the layout
+        bool foundZone = false;
+        for (layoutZoneClass& zone : layout->zones) {
+            foundZone = true;
+
+            // Add zone button
+            lv_obj_t* zbtn = lv_btn_create(objects.zone_list);
+            lv_obj_set_size(zbtn, 230, 50);
+            //lv_obj_add_flag(zbtn, LV_OBJ_FLAG_CHECKABLE);
+            lv_obj_set_style_bg_color(zbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(zbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_add_event_cb(zbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
+
+                lv_obj_t* zlabel = lv_label_create(zbtn);
+                lv_obj_set_style_text_font(zlabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_label_set_text(zlabel, zone.name.c_str());
+                lv_obj_set_user_data(zbtn, (void*)&zone);    
+        }
+
+        if (!foundZone) {
+            throw std::runtime_error("inspectionZonesScreenClass: no zones found in layout: " );
+        }
+    
+                
+        Serial.println("Render asset zones...done!");
+        return;
+    }   
+
+    void renderComponents(){  
+
+        Serial.println("Render components ...");
+
+        lv_obj_t* btn = NULL;
+
+        // find the selected zone btn
+        uint32_t child_count = lv_obj_get_child_cnt(objects.zone_list);
+        if (child_count == 0) return;
+        for (uint32_t i = 0; i < child_count; ++i) {
+            lv_obj_t* b = lv_obj_get_child(objects.zone_list, i);
+            if (!lv_obj_check_type(b, &lv_btn_class)) continue;
+
+            if (lv_obj_has_state(b, LV_STATE_CHECKED)) {
+                btn = b;
+                break;
+            }
+        }    
+
+        if(!btn) return;
+
+        // clean compos
+        lv_obj_clean(objects.zone_component_list);
+
+        // get the zone
+        layoutZoneClass* zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(btn));
+        if (!zone) {
+            throw std::runtime_error("Zone user_data is null in ZONE click handler");
+        }
+        if (!lastSelectedAsset) {
+            throw std::runtime_error("lastSelectedAsset is null in ZONE click handler");
+        }
+
+        domainManagerClass* domain = domainManagerClass::getInstance();
+        const std::vector<defectClass>& defects = domain->currentInspection.defects;
+
+
+        // COMPO RENDER ====================
+        for (size_t j = 0; j < zone->components.size(); ++j) {
+
+            const std::vector<String>& compVec = zone->components[j];
+                        
+            if (compVec.empty()) {
+                throw std::runtime_error("Component vector is empty");
+            }
+            if (compVec.size() <= 1) {
+                throw std::runtime_error("Component vector missing name");
+            }
+
+            String compName = compVec[1];
+            String labelText = String( " " ) + compName;
+
+            lv_obj_t* cbtn = lv_btn_create(objects.zone_component_list);
+            lv_obj_set_size(cbtn, 280, 50);
+            //lv_obj_add_flag(cbtn, LV_OBJ_FLAG_CHECKABLE);
+            lv_obj_set_style_bg_color(cbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(cbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_set_user_data(cbtn, (void*)&compVec);
+            lv_obj_add_event_cb(cbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
+
+            lv_obj_t* clabel = lv_label_create(cbtn);
+            lv_obj_set_style_text_font(clabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(clabel, labelText.c_str());
+            
+            
+        }
+    
+        Serial.println("Render components ...done!");
+
+        return;
+
+    }  
+
     void handleEvents(lv_event_t* e) override {
         
-        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
+        lv_obj_t* target = lv_event_get_target(e);  // The object that triggered the event
         lv_obj_t* parent = lv_obj_get_parent(target);
 
         // =====================================================
-        // On ASSET ----
+        // CLICK ASSET ----
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_asset_list ) {
             Serial.println("Asset clicked...");
 
-            // iterate the list and reset
+            // manual highlight
+            bool render = false;
             uint32_t child_count = lv_obj_get_child_cnt(objects.zone_asset_list  ); // ZONE assetrs list
             for (uint32_t i = 0; i < child_count; ++i) {
-                // reset the asset
+
+                // next child
                 lv_obj_t* btn = lv_obj_get_child(objects.zone_asset_list, i);
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
 
-                // f%^%k EEZ!
+                // clear select
                 if (btn != target) {
                     lv_obj_clear_state(btn, LV_STATE_CHECKED);
                 } else {
+                    // set select
                     lv_obj_add_state(btn, LV_STATE_CHECKED);
                 }
-                           
-                // build zone list
-                if (btn == target) {  // i know it is unecessary ... now -
+                            
+                // get the domain asset in the asset button
+                assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
+                if (!asset) {
+                    throw std::runtime_error("inspectionZonesScreenClass: asset in button is null ?");
+                }
 
-                    assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
-                    if (!asset) {
-                        throw std::runtime_error("inspectionZonesScreenClass: asset is null");
-                    }
-
-                    if (asset == lastSelectedAsset) {
-                        return; // nothing to do
-                    }else{
-                        lastSelectedAsset = asset;                    
-                    }
-                    
-                    domainManagerClass* domain = domainManagerClass::getInstance();
-                    if (!domain) {
-                        throw std::runtime_error("inspectionZonesScreenClass: domainManagerClass is null");
-                    }
-
-                    lv_obj_clean(objects.zone_list);
-                    lv_obj_clean(objects.zone_component_list);
-
-                    // Find the layout for the asset
-                    layoutClass* layout = nullptr;
-                    for (layoutClass& l : domain->layouts) {
-                        if (l.name == asset->layoutName) {
-                            layout = &l;
-                            break;
-                        }
-                    }
-                    if (!layout) {
-                        throw std::runtime_error("inspectionZonesScreenClass: layout not found" );
-                    }
-
-                    //=================================================
-                    // ZONE RENDER
-
-                    // read the zones from the layout
-                    bool foundZone = false;
-                    for (layoutZoneClass& zone : layout->zones) {
-                        foundZone = true;
-
-                        // Add zone button
-                        lv_obj_t* zbtn = lv_btn_create(objects.zone_list);
-                        lv_obj_set_size(zbtn, 230, 50);
-                        //lv_obj_add_flag(zbtn, LV_OBJ_FLAG_CHECKABLE);
-                        lv_obj_set_style_bg_color(zbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_obj_set_style_text_color(zbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                        lv_obj_add_event_cb(zbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
-
-                            lv_obj_t* zlabel = lv_label_create(zbtn);
-                            lv_obj_set_style_text_font(zlabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                            lv_label_set_text(zlabel, zone.name.c_str());
-                            lv_obj_set_user_data(zbtn, (void*)&zone);    
-                    }
-
-                    if (!foundZone) {
-                        throw std::runtime_error("inspectionZonesScreenClass: no zones found in layout: " );
-                    }
+                // has the asset changed ?
+                if (asset == lastSelectedAsset) {
+                    return; // nothing to do
+                }else{
+                    lastSelectedAsset = asset;  // new selection         
+                    render = true;    
                 }
 
             }
 
-            refreshZoneAndComponentLabels();                
+            if( render ){
+                renderAssetZones();
+                refreshZoneAndComponentFlags();                
+            }
 
-            Serial.println("Asset clicked  DONE");
             return;
         }     
 
@@ -323,72 +418,25 @@ public:
         // On ZONE click -->
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_list ) {
 
-            Serial.println("Zone click");
-            // iterate the zone list and reset
+            Serial.println("Zone clicked...");
+
+            // go over zones
             uint32_t child_count = lv_obj_get_child_cnt(objects.zone_list  ); // ZONE assetrs list
+            if( child_count == 0 ) return;
+
             for (uint32_t i = 0; i < child_count; ++i) {
                 // reset selection
                 lv_obj_t* btn = lv_obj_get_child(objects.zone_list, i);
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
-
                 if (btn != target) {
                     lv_obj_clear_state(btn, LV_STATE_CHECKED);
                 } else {
                     lv_obj_add_state(btn, LV_STATE_CHECKED);
-                }
+                } 
+            }           
 
-                if (btn == target) {  // i know it is unecessary ... now -   
-
-                    lv_obj_clean(objects.zone_component_list);
-
-                    layoutZoneClass* zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(target));
-                    if (!zone) {
-                        throw std::runtime_error("Zone user_data is null in ZONE click handler");
-                    }
-                    if (!lastSelectedAsset) {
-                        throw std::runtime_error("lastSelectedAsset is null in ZONE click handler");
-                    }
-
-                    domainManagerClass* domain = domainManagerClass::getInstance();
-                    const std::vector<defectClass>& defects = domain->currentInspection.defects;
-
-                    //=================================================
-                    // COMPO RENDER ====================
-                    for (size_t j = 0; j < zone->components.size(); ++j) {
-
-                        const std::vector<String>& compVec = zone->components[j];
-                                    
-                        if (compVec.empty()) {
-                            throw std::runtime_error("Component vector is empty");
-                        }
-                        if (compVec.size() <= 1) {
-                            throw std::runtime_error("Component vector missing name");
-                        }
-
-                        String compName = compVec[1];
-                        String labelText = String( " " ) + compName;
-
-                        lv_obj_t* cbtn = lv_btn_create(objects.zone_component_list);
-                        lv_obj_set_size(cbtn, 280, 50);
-                        //lv_obj_add_flag(cbtn, LV_OBJ_FLAG_CHECKABLE);
-                        lv_obj_set_style_bg_color(cbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_obj_set_style_text_color(cbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-
-                        lv_obj_set_user_data(cbtn, (void*)&compVec);
-                        lv_obj_add_event_cb(cbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
-
-                        lv_obj_t* clabel = lv_label_create(cbtn);
-                        lv_obj_set_style_text_font(clabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                        lv_label_set_text(clabel, labelText.c_str());
-                        
-                    }
-
-                }
-            }
-            Serial.println("Zone click DONE");
-
-            refreshZoneAndComponentLabels();            
-
+            renderComponents();
+            refreshZoneAndComponentFlags();                        
             return;
         }     
 
@@ -413,96 +461,192 @@ public:
         }     
 
 
+        //  top bar---------------------------------------------------------------------------------------------------
+
         // save 0 sev 
         if (target == objects.comp_ok_button) {
-            Serial.println("OK defect");
-
-            // Find selected component in zone_component_list (index version)
-            std::vector<String>* compVec = nullptr;
-            uint32_t i = 0;
-            lv_obj_t* btn = lv_obj_get_child(objects.zone_component_list, i);
-            while (btn) {
-                if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
-                    compVec = (std::vector<String>*) lv_obj_get_user_data(btn);            
-                    break;
-                }
-                ++i;
-                btn = lv_obj_get_child(objects.zone_component_list, i);                
-            }
-
-            if (compVec != nullptr) {
-                // Validate context
-                if (!lastSelectedAsset) {
-                    createDialog("No asset selected.");
-                    return;
-                }
-                lv_obj_t* selected_zone_item = get_checked_child(objects.zone_list);
-                if (!selected_zone_item) {
-                    createDialog("No zone selected.");
-                    return;
-                }
-                layoutZoneClass* selected_zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(selected_zone_item));
-                if (!selected_zone) {
-                    createDialog("Failed to resolve selected zone.");
-                    return;
-                }
-
-                if (compVec->size() <= 1) {
-                    createDialog("Component vector is incomplete.");
-                    return;
-                }
-                String compName = (*compVec)[1];
-                if (compName.isEmpty()) {
-                    createDialog("Component name is empty.");
-                    return;
-                }
-
-                domainManagerClass* domain = domainManagerClass::getInstance();
-                std::vector<defectClass>& defects = domain->currentInspection.defects;
-
-                // Check if a defect already exists for this component
-                bool exists = false;
-                for (const auto& defect : defects) {
-                    if (defect.asset && 
-                        defect.asset->ID == lastSelectedAsset->ID &&
-                        defect.zoneName == selected_zone->tag &&
-                        defect.componentName == compName) {
-                        exists = true;
-                        break;
-                    }
-                }
-
-                if (exists) {
-                    Serial.println("Defect already exists — ignoring OK post.");
-                    return; // Skip adding severity 0 if any defect exists
-                }
-
-                // Make severity 0 defect
-                defectClass newDefect(
-                    lastSelectedAsset,
-                    selected_zone->tag,
-                    compName,
-                    "GOOD",
-                    0,
-                    "<< NOTES >>"
-                );
-
-                defects.push_back(newDefect);
-
-                Serial.println("OK defect saved!");
-                Serial.println(domain->currentInspection.toString().c_str());
-
-                // Optional: refresh labels
-                refreshZoneAndComponentLabels();
-
-            } else {
-                Serial.println("No component selected!");
-                createDialog("Please select a component.");
-            }
+            okDefectClick();
+            refreshZoneAndComponentFlags();
+            return;
         }
 
 
         if (target == objects.all_ok_button) {  
+            allokDefectClick();
+            refreshZoneAndComponentFlags();
+            return;
+        }
+
+        // =====================================================
+        // DEFECTO dialog ---
+
+        // defect list scroll reset 
+        if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == defect_list ) {
+            Serial.println("defecto click");
+            
+            uint32_t child_count = lv_obj_get_child_cnt( defect_list ); 
+            for (uint32_t i = 0; i < child_count; ++i) {                
+                lv_obj_t* btn = lv_obj_get_child( defect_list , i);
+                if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
+
+                if (btn != target) {
+                    lv_obj_clear_state(btn, LV_STATE_CHECKED);
+                } else {
+                    lv_obj_add_state(btn, LV_STATE_CHECKED);
+                }
+
+            }
+            Serial.println("defecto click DONE");
+            return;
+        }   
+
+
+        // Buttons        
+
+        if (target == objects.defect_button) {  
+            defectClick();
+            refreshZoneAndComponentFlags();
+            return;
+        }
+
+        // close defecto dialog <-- just call close below
+        if( close_btn != nullptr ){
+            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
+                lv_msgbox_close_async(dialog);   
+                refreshZoneAndComponentFlags();
+                return;                
+            }
+        }
+
+  
+        if (  
+                ( (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) ) 
+                &&  
+                ( target == major_btn || target == minor_btn || target == del_btn )
+            ){
+
+            int severity = 0;
+            if( target == major_btn ) severity = 10;
+            if( target == minor_btn ) severity = 1;
+            if( target == del_btn ) severity = -1;
+
+            saveDefect( severity );
+            refreshZoneAndComponentFlags();
+
+            return;                
+        }
+
+        //-------
+
+        if (target == objects.submit) {
+            submitInspection();
+            return;  
+        }
+
+    }
+
+
+
+//==================================================================================================================================
+//==================================================================================================================================
+//==================================================================================================================================
+
+    void okDefectClick(){
+
+        Serial.println("OK defect");
+
+        // Find selected component in zone_component_list (index version)
+        std::vector<String>* compVec = nullptr;
+        uint32_t i = 0;
+        lv_obj_t* btn = lv_obj_get_child(objects.zone_component_list, i);
+        while (btn) {
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                compVec = (std::vector<String>*) lv_obj_get_user_data(btn);            
+                break;
+            }
+            ++i;
+            btn = lv_obj_get_child(objects.zone_component_list, i);                
+        }
+
+        if (compVec != nullptr) {
+
+            // Validate caset
+            if (!lastSelectedAsset) {
+                createDialog("No asset selected.");
+                return;
+            }
+
+            // zone
+            lv_obj_t* selected_zone_item = get_checked_child(objects.zone_list);
+            if (!selected_zone_item) {
+                createDialog("No zone selected.");
+                return;
+            }
+
+            // layout
+            layoutZoneClass* selected_zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(selected_zone_item));
+            if (!selected_zone) {
+                createDialog("Failed to resolve selected zone.");
+                return;
+            }
+
+            if (compVec->size() <= 1) {
+                createDialog("Component vector is incomplete.");
+                return;
+            }
+
+            // compo
+            String compName = (*compVec)[1];
+            if (compName.isEmpty()) {
+                createDialog("Component name is empty.");
+                return;
+            }
+
+            domainManagerClass* domain = domainManagerClass::getInstance();
+            std::vector<defectClass>& defects = domain->currentInspection.defects;
+
+            // Check if a defect already exists for this component
+            bool exists = false;
+            for (const auto& defect : defects) {
+                if (defect.asset && 
+                    defect.asset->ID == lastSelectedAsset->ID &&
+                    defect.zoneName == selected_zone->tag &&
+                    defect.componentName == compName) {
+                    exists = true;
+                    break;
+                }
+            }
+
+            if (exists) {
+                Serial.println("Defect already exists — ignoring OK post.");
+                return; // Skip adding severity 0 if any defect exists
+            }
+
+            // Make severity 0 defect
+            defectClass newDefect(
+                lastSelectedAsset,
+                selected_zone->tag,
+                compName,
+                "GOOD",
+                0,
+                "<< NOTES >>"
+            );
+
+            defects.push_back(newDefect);
+
+            Serial.println("OK defect saved!");
+            Serial.println(domain->currentInspection.toString().c_str());
+
+        } else {
+            Serial.println("No component selected!");
+            createDialog("Please select a component.");
+        }
+
+    }
+
+
+    void allokDefectClick(){
+
             Serial.println("OK ALL defects for zone");
 
             if (!lastSelectedAsset) {
@@ -580,320 +724,164 @@ public:
             }
 
             Serial.println(domain->currentInspection.toString().c_str());
-            refreshZoneAndComponentLabels();
-        }
-
-
-        // =====================================================
-        // DEFECTO dialog ---
-
-        // Open defect dialog
-        if (target == objects.defect_button) {
-            Serial.println("create defect click");
-
-            // Find selected component in zone_component_list (index version)
-            std::vector<String>* compVec = nullptr;
-            uint32_t i = 0;
-            lv_obj_t* btn = lv_obj_get_child(objects.zone_component_list, i);
-            while (btn) {
-                if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
-                    compVec = (std::vector<String>*) lv_obj_get_user_data(btn);            
-                    break;
-                }
-                ++i;
-                btn = lv_obj_get_child(objects.zone_component_list, i);                
-            }
-
-            if (compVec != nullptr) {
-                openDefectDialog( compVec );
-            }else{
-                Serial.println("No component selected!");
-                createDialog("Please select a component.");
-            }
-        }
-
-        // close defecto
-        if( close_btn != nullptr ){
-            if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
-                lv_msgbox_close_async(dialog);   
-                refreshZoneAndComponentLabels();
-                return;                
-            }
-        }
-
-        // defecto button reset
-        if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == defect_list ) {
-            Serial.println("defecto click");
-            
-            uint32_t child_count = lv_obj_get_child_cnt( defect_list ); 
-            for (uint32_t i = 0; i < child_count; ++i) {                
-                lv_obj_t* btn = lv_obj_get_child( defect_list , i);
-                if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
-
-                if (btn != target) {
-                    lv_obj_clear_state(btn, LV_STATE_CHECKED);
-                } else {
-                    lv_obj_add_state(btn, LV_STATE_CHECKED);
-                }
-
-            }
-            Serial.println("defecto click DONE");
-            return;
-        }     
-
-        // POST DEFECTO
-        if (  
-                ( (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) ) 
-                &&  
-                ( target == major_btn || target == minor_btn || target == del_btn )
-            ){
-
-            Serial.println("Defect post...");
-            domainManagerClass* domain = domainManagerClass::getInstance();
-
-            int severity = 1;
-            if( target == major_btn ) severity = 10;
-    
-            String* selected_defect = static_cast<String*>(lv_obj_get_user_data(get_checked_child(defect_list)));
-            if( selected_defect !=  nullptr ){
-
-                // assemble defect object
-                defectClass newDefect(
-                    selected_asset,
-                    selected_zone->tag,
-                    selected_component_name,
-                    selected_defect ? *selected_defect : String(""),
-                    severity,
-                    "<<a note>>"
-                );
-
-                // no dupes
-                std::vector<defectClass>& defects = domain->currentInspection.defects;
-                for (size_t i = 0; i < defects.size(); ) {
-                    if (defects[i].isSameComponent(newDefect)) {
-                        defects.erase(defects.begin() + i);
-                    } else {
-                        ++i;
-                    }
-                }
-
-                // save it, or delete it
-                if( target != del_btn ) domain->currentInspection.defects.push_back( newDefect );                
-
-                lv_msgbox_close_async(dialog);   
-
-                refreshZoneAndComponentLabels();                
-                // debugo
-                Serial.println( domain->currentInspection.toString().c_str() );                    
-            }
-        
-            return;                
-        }
-
-        //-------
-
-        if (target == objects.submit) {
-            spinnerStart();
-            try{
-                domainManagerClass* domain = domainManagerClass::getInstance(); 
-
-                // Check if there are any defects BEFORE submitting
-                if (domain->currentInspection.defects.size() == 0) {
-                    spinnerEnd(); 
-                    createDialog("ERROR: Cannot submit empty inspection.");
-                } else {
-                    domain->comms->up();   
-                    domain->currentInspection.submitTime = String(lv_label_get_text(objects.clock_insp));
-                    createDialog(domain->comms->postInspection(domain->currentInspection.toString()).c_str());
-                    domain->comms->down();
-                }                
-                
-            }catch( const std::runtime_error& error ){
-                spinnerEnd();       
-                String chainedError = String( "ERROR: Could not POST: " ) + error.what();           
-                createDialog( chainedError.c_str() );
-            }
-            spinnerEnd();       
-        }
-
     }
 
-    //----------
+    void defectClick(){
 
-    void refreshZoneAndComponentLabels() {
+        Serial.println("create defect click");
 
-    Serial.println("Refresh!");
-
-    domainManagerClass* domain = domainManagerClass::getInstance();
-    if (!domain) throw std::runtime_error("domainManagerClass is null");
-    if (!lastSelectedAsset) throw std::runtime_error("lastSelectedAsset is null");
-
-    // Find layout for selected asset
-    layoutClass* layout = nullptr;
-    for (layoutClass& l : domain->layouts) {
-        if (l.name == lastSelectedAsset->layoutName) {
-            layout = &l;
-            break;
-        }
-    }
-    if (!layout) throw std::runtime_error("Layout not found for selected asset");
-
-    // Iterate over all zones shown in the UI
-    uint32_t zone_count = lv_obj_get_child_cnt(objects.zone_list);
-    for (uint32_t z = 0; z < zone_count; ++z) {
-
-        lv_obj_t* zbtn = lv_obj_get_child(objects.zone_list, z);
-        if (!zbtn) continue;
-
-        layoutZoneClass* ui_zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(zbtn));
-        if (!ui_zone) continue;
-
-        // Find this zone in the DB by tag
-        layoutZoneClass* db_zone = nullptr;
-        for (layoutZoneClass& lz : layout->zones) {
-            if (lz.tag == ui_zone->tag) {
-                db_zone = &lz;
+        // Find selected component in zone_component_list (index version)
+        std::vector<String>* compVec = nullptr;
+        uint32_t i = 0;
+        lv_obj_t* btn = lv_obj_get_child(objects.zone_component_list, i);
+        while (btn) {
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                compVec = (std::vector<String>*) lv_obj_get_user_data(btn);            
                 break;
             }
-        }
-        if (!db_zone) continue;
-
-        bool allHaveDefects = true;
-        bool allAreSev0 = true;
-        bool hasSev1 = false;
-        bool hasSev10 = false;
-
-        // For each expected component in this zone - find defects
-        for (const std::vector<String>& compVec : db_zone->components) {
-            if (compVec.size() <= 1) continue;
-            String compName = compVec[1];
-            bool found = false;
-            int severity = -1;
-            for (const auto& defect : domain->currentInspection.defects) {
-                if (!defect.asset) continue;
-                if (defect.asset->ID == lastSelectedAsset->ID &&
-                    defect.zoneName == db_zone->tag &&
-                    defect.componentName == compName) {
-                    found = true;
-                    severity = defect.severity;
-                    break;
-                }
-            }
-
-            if (!found) {
-                allHaveDefects = false;
-                allAreSev0 = false;
-            } else {
-                if (severity == 1) hasSev1 = true;
-                if (severity == 10) hasSev10 = true;
-                if (severity != 0) allAreSev0 = false;
-            }
-
-            // ---- ON COMPO --> compVec
-            if (lv_obj_has_state(zbtn, LV_STATE_CHECKED)) {
-
-                uint32_t comp_btn_count = lv_obj_get_child_cnt(objects.zone_component_list); // compo list
-                lv_obj_t* matching_btn = nullptr;
-                for (uint32_t c = 0; c < comp_btn_count; ++c) {
-                    lv_obj_t* cbtn = lv_obj_get_child(objects.zone_component_list, c);
-                    std::vector<String>* uiCompVec = static_cast<std::vector<String>*>(lv_obj_get_user_data(cbtn));
-                    if (uiCompVec && uiCompVec->size() > 1 && (*uiCompVec)[1] == compName) {
-                        matching_btn = cbtn;
-                        break;
-                    }
-                }
-                if (!matching_btn) continue; // skip if not found in UI
-
-                String prefix;
-                if (severity == 10)
-                    prefix = LV_SYMBOL_CLOSE;
-                else if (severity == 1)
-                    prefix = LV_SYMBOL_WARNING;
-                else if (severity == 0)
-                    prefix = LV_SYMBOL_OK;
-                else
-                    prefix = "";
-
-                // Update the label for this COMPO button
-                uint32_t comp_child_count = lv_obj_get_child_cnt(matching_btn);
-                for (uint32_t i = 0; i < comp_child_count; ++i) {
-                    lv_obj_t* child = lv_obj_get_child(matching_btn, i);
-                    if (lv_obj_check_type(child, &lv_label_class)) {
-                        String labelText = (prefix.length() > 0 ? prefix + " " : "") + compName;
-                        lv_label_set_text(child, labelText.c_str());
-                    }
-                }
-            }else{
-
-            }
+            ++i;
+            btn = lv_obj_get_child(objects.zone_component_list, i);                
         }
 
-        // ---- ZONE LABEL UPDATE ----
-
-        // Decide the symbol for this zone
-        String prefix;
-        if (hasSev10)
-            prefix = LV_SYMBOL_CLOSE;      // Stop (blocker)
-        else if (hasSev1)
-            prefix = LV_SYMBOL_WARNING;    // Warning (minor)
-        else if (allHaveDefects && allAreSev0)
-            prefix = LV_SYMBOL_OK;         // Checked (all 0)
-        else
-            prefix = "";                   // Unmasked
-
-        // Update the label for this zone button
-        uint32_t zone_child_count = lv_obj_get_child_cnt(zbtn);
-        for (uint32_t i = 0; i < zone_child_count; ++i) {
-            lv_obj_t* child = lv_obj_get_child(zbtn, i);
-            if (lv_obj_check_type(child, &lv_label_class)) {
-                String labelText = (prefix.length() > 0 ? prefix + " " : "") + ui_zone->name;
-                lv_label_set_text(child, labelText.c_str());
-            }
+        if (compVec != nullptr) {
+            openDefectDialog( compVec );
+        }else{
+            Serial.println("No component selected!");
+            createDialog("Please select a component.");
         }
     }
 
-    //--
 
-    // =============================
-    // NEW: check ALL assets and prefix.
-    bool allAssetsFullyDone = true; // Will turn false if any gap found
 
-    uint32_t asset_btn_count = lv_obj_get_child_cnt(objects.zone_asset_list);
-    for (uint32_t a = 0; a < asset_btn_count; ++a) {
-        lv_obj_t* asset_btn = lv_obj_get_child(objects.zone_asset_list, a);
-        assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(asset_btn));
-        if (!asset) continue;
+    void saveDefect( int severity ){
 
-        // Find layout for this asset
+        Serial.println("Defect post...");
+
+        domainManagerClass* domain = domainManagerClass::getInstance();
+
+        // get selection
+        String* selected_defect = static_cast<String*>(lv_obj_get_user_data(get_checked_child(defect_list)));
+
+        // assemble a tentative defect
+        if( selected_defect !=  nullptr ){        
+            defectClass newDefect(
+                selected_asset,
+                selected_zone->tag,
+                selected_component_name,
+                selected_defect ? *selected_defect : String(""),
+                severity,
+                "<<a note>>"
+            );
+
+            // is there a sibling already there - delete it
+            std::vector<defectClass>& defects = domain->currentInspection.defects;
+            for (size_t i = 0; i < defects.size(); ) {
+                if (defects[i].isSameComponent(newDefect)) {
+                    defects.erase(defects.begin() + i);
+                } else {
+                    ++i;
+                }
+            }
+
+            // save it, or delete it
+            if( severity != -1 ) domain->currentInspection.defects.push_back( newDefect );                
+
+            lv_msgbox_close_async(dialog);   
+
+            // debugo
+            Serial.println( domain->currentInspection.toString().c_str() );                    
+        }
+
+    }
+
+    void submitInspection(){
+
+        Serial.println("Submit ...");
+        spinnerStart();
+
+        try{
+            domainManagerClass* domain = domainManagerClass::getInstance(); 
+
+            // Check if there are any defects BEFORE submitting
+            if (domain->currentInspection.defects.size() == 0) {
+                spinnerEnd(); 
+                createDialog("ERROR: Cannot submit empty inspection.");
+            } else {
+                domain->comms->up();   
+                domain->currentInspection.submitTime = String(lv_label_get_text(objects.clock_insp));
+                createDialog(domain->comms->postInspection(domain->currentInspection.toString()).c_str());
+                domain->comms->down();
+            }                
+            
+        }catch( const std::runtime_error& error ){
+            spinnerEnd();       
+            String chainedError = String( "ERROR: Could not POST: " ) + error.what();           
+            createDialog( chainedError.c_str() );
+        }
+
+        spinnerEnd();       
+        Serial.println("Submit ... done!");
+}
+
+
+//==================================================================================================================================
+//==================================================================================================================================
+//==================================================================================================================================
+
+
+    void refreshZoneAndComponentFlags() {
+
+        Serial.println("Refresh!");
+
+        domainManagerClass* domain = domainManagerClass::getInstance();
+        if (!domain) throw std::runtime_error("domainManagerClass is null");
+        if (!lastSelectedAsset) throw std::runtime_error("lastSelectedAsset is null");
+
+        // Find layout for selected asset
         layoutClass* layout = nullptr;
         for (layoutClass& l : domain->layouts) {
-            if (l.name == asset->layoutName) {
+            if (l.name == lastSelectedAsset->layoutName) {
                 layout = &l;
                 break;
             }
         }
-        if (!layout) {
-            allAssetsFullyDone = false; // Cannot check if no layout
-            continue;
-        }
+        if (!layout) throw std::runtime_error("Layout not found for selected asset");
 
-        bool allComponentsDone = true;
-        bool allSev0 = true;
-        bool hasSev1 = false;
-        bool hasSev10 = false;
+        // Iterate over all zones shown in the UI
+        uint32_t zone_count = lv_obj_get_child_cnt(objects.zone_list);
+        for (uint32_t z = 0; z < zone_count; ++z) {
 
-        // Check all zones and components for this asset
-        for (layoutZoneClass& zone : layout->zones) {
-            for (const std::vector<String>& compVec : zone.components) {
+            lv_obj_t* zbtn = lv_obj_get_child(objects.zone_list, z);
+            if (!zbtn) continue;
+
+            layoutZoneClass* ui_zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(zbtn));
+            if (!ui_zone) continue;
+
+            // Find this zone in the DB by tag
+            layoutZoneClass* db_zone = nullptr;
+            for (layoutZoneClass& lz : layout->zones) {
+                if (lz.tag == ui_zone->tag) {
+                    db_zone = &lz;
+                    break;
+                }
+            }
+            if (!db_zone) continue;
+
+            bool allHaveDefects = true;
+            bool allAreSev0 = true;
+            bool hasSev1 = false;
+            bool hasSev10 = false;
+
+            // For each expected component in this zone - find defects
+            for (const std::vector<String>& compVec : db_zone->components) {
                 if (compVec.size() <= 1) continue;
                 String compName = compVec[1];
-
                 bool found = false;
                 int severity = -1;
-
-                for (const defectClass& defect : domain->currentInspection.defects) {
-                    if (defect.asset && defect.asset->ID == asset->ID &&
-                        defect.zoneName == zone.tag &&
+                for (const auto& defect : domain->currentInspection.defects) {
+                    if (!defect.asset) continue;
+                    if (defect.asset->ID == lastSelectedAsset->ID &&
+                        defect.zoneName == db_zone->tag &&
                         defect.componentName == compName) {
                         found = true;
                         severity = defect.severity;
@@ -902,56 +890,177 @@ public:
                 }
 
                 if (!found) {
-                    allComponentsDone = false;
-                    allSev0 = false; // Missing = not all sev 0 either
-                    break;
+                    allHaveDefects = false;
+                    allAreSev0 = false;
                 } else {
                     if (severity == 1) hasSev1 = true;
                     if (severity == 10) hasSev10 = true;
-                    if (severity != 0) allSev0 = false;
+                    if (severity != 0) allAreSev0 = false;
+                }
+
+                // ---- ON COMPO --> compVec
+                if (lv_obj_has_state(zbtn, LV_STATE_CHECKED)) {
+
+                    uint32_t comp_btn_count = lv_obj_get_child_cnt(objects.zone_component_list); // compo list
+                    lv_obj_t* matching_btn = nullptr;
+                    for (uint32_t c = 0; c < comp_btn_count; ++c) {
+                        lv_obj_t* cbtn = lv_obj_get_child(objects.zone_component_list, c);
+                        std::vector<String>* uiCompVec = static_cast<std::vector<String>*>(lv_obj_get_user_data(cbtn));
+                        if (uiCompVec && uiCompVec->size() > 1 && (*uiCompVec)[1] == compName) {
+                            matching_btn = cbtn;
+                            break;
+                        }
+                    }
+                    if (!matching_btn) continue; // skip if not found in UI
+
+                    String prefix;
+                    if (severity == 10)
+                        prefix = LV_SYMBOL_CLOSE;
+                    else if (severity == 1)
+                        prefix = LV_SYMBOL_WARNING;
+                    else if (severity == 0)
+                        prefix = LV_SYMBOL_OK;
+                    else
+                        prefix = "";
+
+                    // Update the label for this COMPO button
+                    uint32_t comp_child_count = lv_obj_get_child_cnt(matching_btn);
+                    for (uint32_t i = 0; i < comp_child_count; ++i) {
+                        lv_obj_t* child = lv_obj_get_child(matching_btn, i);
+                        if (lv_obj_check_type(child, &lv_label_class)) {
+                            String labelText = (prefix.length() > 0 ? prefix + " " : "") + compName;
+                            lv_label_set_text(child, labelText.c_str());
+                        }
+                    }
+                }else{
+
                 }
             }
-            if (!allComponentsDone) break;
-        }
 
-        // Decide prefix for this asset
-        String prefix;
-        if (hasSev10) {
-            prefix = LV_SYMBOL_CLOSE; // Major
-        } else if (hasSev1) {
-            prefix = LV_SYMBOL_WARNING; // Minor
-        } else if (allComponentsDone && allSev0) {
-            prefix = LV_SYMBOL_OK; // All sev 0 and covered
-        } else {
-            prefix = ""; // Incomplete or mixed → no prefix
-        }
+            // ---- ZONE LABEL UPDATE ----
 
-        // If any component missing → inspection not fully ready
-        if (!allComponentsDone) {
-            allAssetsFullyDone = false;
-        }
+            // Decide the symbol for this zone
+            String prefix;
+            if (hasSev10)
+                prefix = LV_SYMBOL_CLOSE;      // Stop (blocker)
+            else if (hasSev1)
+                prefix = LV_SYMBOL_WARNING;    // Warning (minor)
+            else if (allHaveDefects && allAreSev0)
+                prefix = LV_SYMBOL_OK;         // Checked (all 0)
+            else
+                prefix = "";                   // Unmasked
 
-        // Update this asset button label, clearing any old prefix
-        uint32_t child_count = lv_obj_get_child_cnt(asset_btn);
-        for (uint32_t i = 0; i < child_count; ++i) {
-            lv_obj_t* child = lv_obj_get_child(asset_btn, i);
-            if (lv_obj_check_type(child, &lv_label_class)) {
-                String labelText = (prefix.isEmpty() ? "" : prefix + " ") + asset->ID;
-                lv_label_set_text(child, labelText.c_str());
+            // Update the label for this zone button
+            uint32_t zone_child_count = lv_obj_get_child_cnt(zbtn);
+            for (uint32_t i = 0; i < zone_child_count; ++i) {
+                lv_obj_t* child = lv_obj_get_child(zbtn, i);
+                if (lv_obj_check_type(child, &lv_label_class)) {
+                    String labelText = (prefix.length() > 0 ? prefix + " " : "") + ui_zone->name;
+                    lv_label_set_text(child, labelText.c_str());
+                }
             }
         }
-    }
 
-    // =============================
-    // Mark SUBMIT button label 
-    if (objects.submit_label) {
-        String submitLabel = "4 submit \uF0E7";
-        if (allAssetsFullyDone) {
-            submitLabel = LV_SYMBOL_OK + String("4 submit \uF0E7");
+        //--
+
+        // =============================
+        // NEW: check ALL assets and prefix.
+        bool allAssetsFullyDone = true; // Will turn false if any gap found
+
+        uint32_t asset_btn_count = lv_obj_get_child_cnt(objects.zone_asset_list);
+        for (uint32_t a = 0; a < asset_btn_count; ++a) {
+            lv_obj_t* asset_btn = lv_obj_get_child(objects.zone_asset_list, a);
+            assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(asset_btn));
+            if (!asset) continue;
+
+            // Find layout for this asset
+            layoutClass* layout = nullptr;
+            for (layoutClass& l : domain->layouts) {
+                if (l.name == asset->layoutName) {
+                    layout = &l;
+                    break;
+                }
+            }
+            if (!layout) {
+                allAssetsFullyDone = false; // Cannot check if no layout
+                continue;
+            }
+
+            bool allComponentsDone = true;
+            bool allSev0 = true;
+            bool hasSev1 = false;
+            bool hasSev10 = false;
+
+            // Check all zones and components for this asset
+            for (layoutZoneClass& zone : layout->zones) {
+                for (const std::vector<String>& compVec : zone.components) {
+                    if (compVec.size() <= 1) continue;
+                    String compName = compVec[1];
+
+                    bool found = false;
+                    int severity = -1;
+
+                    for (const defectClass& defect : domain->currentInspection.defects) {
+                        if (defect.asset && defect.asset->ID == asset->ID &&
+                            defect.zoneName == zone.tag &&
+                            defect.componentName == compName) {
+                            found = true;
+                            severity = defect.severity;
+                            break;
+                        }
+                    }
+
+                    if (!found) {
+                        allComponentsDone = false;
+                        allSev0 = false; // Missing = not all sev 0 either
+                        break;
+                    } else {
+                        if (severity == 1) hasSev1 = true;
+                        if (severity == 10) hasSev10 = true;
+                        if (severity != 0) allSev0 = false;
+                    }
+                }
+                if (!allComponentsDone) break;
+            }
+
+            // Decide prefix for this asset
+            String prefix;
+            if (hasSev10) {
+                prefix = LV_SYMBOL_CLOSE; // Major
+            } else if (hasSev1) {
+                prefix = LV_SYMBOL_WARNING; // Minor
+            } else if (allComponentsDone && allSev0) {
+                prefix = LV_SYMBOL_OK; // All sev 0 and covered
+            } else {
+                prefix = ""; // Incomplete or mixed → no prefix
+            }
+
+            // If any component missing → inspection not fully ready
+            if (!allComponentsDone) {
+                allAssetsFullyDone = false;
+            }
+
+            // Update this asset button label, clearing any old prefix
+            uint32_t child_count = lv_obj_get_child_cnt(asset_btn);
+            for (uint32_t i = 0; i < child_count; ++i) {
+                lv_obj_t* child = lv_obj_get_child(asset_btn, i);
+                if (lv_obj_check_type(child, &lv_label_class)) {
+                    String labelText = (prefix.isEmpty() ? "" : prefix + " ") + asset->ID;
+                    lv_label_set_text(child, labelText.c_str());
+                }
+            }
         }
-        lv_label_set_text(objects.submit_label, submitLabel.c_str());
-    }
-}        
+
+        // =============================
+        // Mark SUBMIT button label 
+        if (objects.submit_label) {
+            String submitLabel = "4 submit \uF0E7";
+            if (allAssetsFullyDone) {
+                submitLabel = LV_SYMBOL_OK + String("4 submit \uF0E7");
+            }
+            lv_label_set_text(objects.submit_label, submitLabel.c_str());
+        }
+    }        
 
 //--------
 
@@ -1015,12 +1124,7 @@ public:
         if (count > 0) {
             lv_obj_t* first_asset_btn = lv_obj_get_child(objects.zone_asset_list, 0);
             if (lv_obj_check_type(first_asset_btn, &lv_btn_class)) {
-                Serial.println("Activate first asset in list.");
-                lv_event_t fakeEvent;
-                fakeEvent.target = first_asset_btn;
-                fakeEvent.code = LV_EVENT_PRESSED;
-                handleEvents(&fakeEvent);   
-                lv_group_focus_obj(objects.zone_list);             
+                Serial.println("Activate first asset in list.");                
             }
         }
 
