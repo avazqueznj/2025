@@ -204,18 +204,14 @@ public:
 
         // get the focused thing
         lv_obj_t* focused = lv_group_get_focused(inputGroup);
-
-
-
         Serial.print( "Screen Base: Key Handler: " );            
         Serial.println( key );            
 
-
+        // list scrolling
         Serial.print( "1" );            
         keyListScrolling( key );
 
-
-        // no scrolling, then are we navigating ?
+        // item navi add esc and enter
         Serial.print( "2" );            
         if (key == "C") {
             lv_group_focus_prev(inputGroup);

@@ -111,7 +111,7 @@ public:
       }
 
 
-      // SCREEN NAVI button shortcuts
+      // SCREEN TO SCREEN NAVI button shortcuts
       if (
           (key == "7" || key == "9") &&
           !(currentScreenState && 
@@ -189,7 +189,7 @@ public:
 
 
 
-  // touch or key shortcuts
+  // enter and touch common NAVI
   bool handleNavClicks( lv_obj_t *target, String key){
 
     bool handeled = false;

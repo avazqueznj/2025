@@ -139,6 +139,8 @@ public:
             return;
         }
 
+
+
         if (key == "A" || key == "B") {            
             lv_obj_t* next = nullptr;
             if (key == "A") {
@@ -330,6 +332,8 @@ public:
         // auto select the items as we scroll
         if (key == "A" || key == "B") {    
 
+            /* ugg the base class was already doing the skip, maybe that is the source of the segfault
+
             Serial.print("Scroll up down");
 
             //if focused and it is a list
@@ -360,7 +364,7 @@ public:
                     }
 
                     Serial.print("Refresh");
-/*
+
                     // refresh tree if needed
                     if( focused == objects.zone_asset_list ){
 
