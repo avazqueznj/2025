@@ -54,7 +54,7 @@ public:
 
       try{
 
-        Serial.println("state: Event ...");    
+        Serial.print("State:Touch");
         lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
 
         // navigation
@@ -76,23 +76,34 @@ public:
   void keyboardEvent( String key ){
     try{
 
-      Serial.print("Key: ");
+      Serial.print("State:Key:");
       Serial.println(key);
 
-      // are we under a modal? , dont pass events
+      // are we in system modal ?
       if ( overlay != nullptr ) {    
-        Serial.println( "Modal showing -> dismiss." );
+        Serial.println( "State: System modal" );
+        // dismiss dialog
         if (key == "#" ) {    
           Serial.println("Keyboard # -> closing dialog");
           lv_obj_t * mbox = lv_obj_get_child(overlay, 0);  // If overlay only has the mbox.
           lv_msgbox_close(mbox);
           lv_obj_del(overlay);
-          overlay = nullptr;\
+          overlay = nullptr;
         }
         return; // eat the events, simulate modal
       }
 
-      // are we navigating ?
+
+      // window modal  
+      if( currentScreenState !=  NULL  ){ 
+        if( currentScreenState->modalActive() ) {
+          Serial.println( "State: window modal" );
+          return;
+        }          
+      }
+
+
+      // NAV ??
       if( currentScreenState !=  NULL  ){ 
         if( lv_obj_t* target = currentScreenState->getFocusedButton() ){
           if( handleNavClicks( target, key ) ) return; // eat it
@@ -104,6 +115,8 @@ public:
       if (
           (key == "7" || key == "9") &&
           !(currentScreenState && 
+
+            // and not inside a text area, bcs then pass the raw input
             lv_group_get_focused(currentScreenState->inputGroup) && 
             lv_obj_check_type(lv_group_get_focused(currentScreenState->inputGroup), &lv_textarea_class))
       ) {
@@ -120,6 +133,7 @@ public:
           int top = 0;
           stack[top++] = lv_scr_act();
 
+          // find the NVAI buttons by label
           while (top > 0 && found == NULL) {
               lv_obj_t* parent = stack[--top];
 
@@ -175,15 +189,14 @@ public:
 
 
 
-
+  // touch or key shortcuts
   bool handleNavClicks( lv_obj_t *target, String key){
 
     bool handeled = false;
 
     try{
 
-        // dont like this, but it can work for similar buttons on any screen
-        // so for number shortcuts i need to know the current screen
+        // MAIN screen shortcuts
         if (lv_scr_act() == objects.main) {      
 
             // MAIN -> open select asset
@@ -231,7 +244,7 @@ public:
 
         }
 
-        //-- Gral NAVI 
+        //-- Gral NAVI << >> touch or # press
         if( key == "#" || key == "" ){
 
           // INSPE -> open form fields

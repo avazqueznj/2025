@@ -8,6 +8,7 @@
 
 class selectAssetScreenClass:public screenClass{
 public:
+
     std::deque< lv_obj_t* > listButtons;
     lv_obj_t* selectedButton = NULL;
 
@@ -16,7 +17,6 @@ public:
     selectAssetScreenClass(): screenClass( SCREEN_ID_SELECT_ASSET_SCREEN ){}
 
     virtual ~selectAssetScreenClass(){};    
-
 
 
     //----------------------------------
@@ -51,7 +51,6 @@ public:
 
         // 2) Find matching asset and button
         assetClass* matchedAsset = nullptr;
-
         for (lv_obj_t* btn : listButtons) {
             assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
             if (asset && asset->tag == rfidTag) {
@@ -60,7 +59,6 @@ public:
             break;
             }
         }
-
         if (!matchedAsset) {
             createDialog("No matching asset found for this tag!");
             return;
@@ -78,19 +76,6 @@ public:
         Serial.print("RFID matched asset ID: ");
         Serial.println(matchedAsset->ID);
 
-        // 4) Does asset already exist in selected_asset_list?
-        uint32_t child_count = lv_obj_get_child_cnt(objects.selected_asset_list);
-        for (uint32_t i = 0; i < child_count; ++i) {
-            lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, i);
-
-            if (lv_obj_check_type(child, &lv_btn_class)) {
-                assetClass* childAsset = static_cast<assetClass*>(lv_obj_get_user_data(child));
-                if (childAsset && childAsset == matchedAsset) {
-                    Serial.println("Asset already in selected list.");
-                    return; // Already added
-                }
-            }
-        }
 
         // 5) Check inspection type
         if (!hasCommonInspectionType(matchedAsset)) {
@@ -109,8 +94,9 @@ public:
 
     void keyboardEvent(String key) override {
 
-        //>>>>>>
         screenClass::keyboardEvent(key);
+        Serial.println( "SelectAsset:" );
+        Serial.print( key );
 
         // update if the selected item changed  -- DO I STILL NEED THIS WITH THE CHECKFIX
         lv_obj_t* list = objects.asset_list;
@@ -121,7 +107,7 @@ public:
             lv_obj_t* btn = lv_obj_get_child(list, i);
             if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
                 selectedButton = btn;
-                Serial.println("Updated selectedButton from CHECKED state.");
+                Serial.println("Updated selectedButton pointer from list");
                 break;
             }
         }
@@ -136,11 +122,11 @@ public:
             if (focused && lv_obj_check_type(focused, &lv_list_class)){
                 if( key == "#" ){
                     // clicked # enter ? then add assset short cut
-                    lv_event_send( objects.select_asset, LV_EVENT_PRESSED, NULL);  
+                    doSelectAsset();
                 }
                 if(  key == "*" ){
                     // clicked # enter ? then add assset short cut
-                    lv_event_send( objects.de_select_asset, LV_EVENT_PRESSED, NULL);                      
+                    deselectAsset();
                 }
             }
         }
@@ -150,54 +136,19 @@ public:
 
     //----------------------------------
 
+    // touch
     void handleEvents( lv_event_t* e ) override{     
 
         lv_obj_t* target = lv_event_get_target(e);
 
         // CLICK select
         if( target == objects.select_asset  ){
-            Serial.println("select: do select");              
-            if( selectedButton != NULL ){
-
-                // get selected asset
-                assetClass* asset = (assetClass*) lv_obj_get_user_data(selectedButton);
-                if (!asset) return;
-                
-                // Check if asset is already in selected_asset_list
-                uint32_t child_count = lv_obj_get_child_cnt(objects.selected_asset_list);
-                for (uint32_t i = 0; i < child_count; ++i) {
-                    lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, i);
-
-                    if (lv_obj_check_type(child, &lv_btn_class)) {
-                        assetClass* childAsset = static_cast<assetClass*>(lv_obj_get_user_data(child));                    
-                        if (childAsset && childAsset == asset) {
-                            return;  // Asset already in list, skip adding
-                        }
-                    }
-                }
-
-                if (!hasCommonInspectionType(asset)) {
-                    createDialog("Error: The assets selected do have a common inspection type!");
-                    return;
-                }
-
-                // else, add it
-                addAssetToList( objects.selected_asset_list ,  asset, false ); 
-            }       
-            Serial.println("select: do select  OK");                           
-            return;
+            doSelectAsset();
         }
 
         // CLICK deselect selected
         if( target == objects.de_select_asset ){
-            Serial.println("select: do deselect");              
-            while (true) {
-                lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, NULL);
-                if (child == NULL) break;
-                lv_obj_del(child);
-            }
-            Serial.println("select: do deselect OK");                          
-            return;
+            deselectAsset();
         }
 
         // CLICK asset
@@ -219,6 +170,57 @@ public:
 
     //----------------------------------
 
+    void doSelectAsset(){
+
+        Serial.println("select: do select");              
+        if( selectedButton != NULL ){
+
+            // get selected asset
+            assetClass* asset = (assetClass*) lv_obj_get_user_data(selectedButton);
+            if (!asset) return;
+            
+            // Check if asset is already in selected_asset_list
+            uint32_t child_count = lv_obj_get_child_cnt(objects.selected_asset_list);
+            for (uint32_t i = 0; i < child_count; ++i) {
+                lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, i);
+
+                if (lv_obj_check_type(child, &lv_btn_class)) {
+                    assetClass* childAsset = static_cast<assetClass*>(lv_obj_get_user_data(child));                    
+                    if (childAsset && childAsset == asset) {
+                        return;  // Asset already in list, skip adding
+                    }
+                }
+            }
+
+            if (!hasCommonInspectionType(asset)) {
+                createDialog("Error: The assets selected do have a common inspection type!");
+                return;
+            }
+
+            // else, add it
+            addAssetToList( objects.selected_asset_list ,  asset, false ); 
+        }       
+        Serial.println("select: do select  OK");                           
+        return;
+
+    }
+
+    //----------------------------------
+
+    void deselectAsset(){
+        Serial.println("select: do deselect");              
+        while (true) {
+            lv_obj_t* child = lv_obj_get_child(objects.selected_asset_list, NULL);
+            if (child == NULL) break;
+            lv_obj_del(child);
+        }
+        Serial.println("select: do deselect OK");                          
+        return;
+
+    }
+
+    //----------------------------------
+
     void open() override {
 
         domainManagerClass* domain = domainManagerClass::getInstance();        
@@ -235,7 +237,6 @@ public:
         for (assetClass& asset : domain->assets) {
             bool inInspection = false;
             listButtons.push_back(addAssetToList(objects.asset_list, &asset, true));
-
             for (assetClass& selected : domain->currentInspection.assets) {
                 if (asset.ID == selected.ID) {
                     addAssetToList(objects.selected_asset_list, &asset, false);

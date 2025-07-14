@@ -45,8 +45,6 @@ public:
     }
 
     void handleEvents( lv_event_t* e ) override{
-        lv_obj_t *target = lv_event_get_target(e);  // The object that triggered the event
-
         
     }
 

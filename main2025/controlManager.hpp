@@ -36,6 +36,10 @@ public:
         loadScreen( screenId );        
     };
 
+    virtual bool modalActive(){
+        return false;
+    };
+
     virtual void handleEvents( lv_event_t* e ){
         Serial.println("basescreen: event unhandled ...");  
     }
@@ -58,125 +62,6 @@ public:
         if (!obj_class) return nullptr;
 
         return (obj_class == &lv_btn_class) ? focused : nullptr;
-    }
-
-    lv_obj_t* get_prev_sibling(lv_obj_t* obj) {
-        if (!obj) return nullptr;
-        lv_obj_t* parent = lv_obj_get_parent(obj);
-        if (!parent) return nullptr;
-
-        lv_obj_t* prev = nullptr;
-        uint32_t count = lv_obj_get_child_cnt(parent);
-        for (uint32_t i = 0; i < count; ++i) {
-            lv_obj_t* child = lv_obj_get_child(parent, i);
-            if (child == obj) {
-                return prev;
-            }
-            prev = child;
-        }
-        return nullptr;
-    }
-
-    lv_obj_t* get_next_sibling(lv_obj_t* obj) {
-        if (!obj) return nullptr;
-        lv_obj_t* parent = lv_obj_get_parent(obj);
-        if (!parent) return nullptr;
-
-        bool found = false;
-        uint32_t count = lv_obj_get_child_cnt(parent);
-        for (uint32_t i = 0; i < count; ++i) {
-            lv_obj_t* child = lv_obj_get_child(parent, i);
-            if (found) {
-                return child;
-            }
-            if (child == obj) {
-                found = true;
-            }
-        }
-        return nullptr;
-    }
-
-    // screenClass >>>>>>>>>>>>>>>>>>>
-    virtual void keyboardEvent(String key) {
-
-        // get the focused thing
-        lv_obj_t* focused = lv_group_get_focused(inputGroup);
-
-        // is it a list, is it scrolling ...
-        if (focused && lv_obj_check_type(focused, &lv_list_class)) {
-            lv_obj_t* list = focused;
-            lv_obj_t* selected = nullptr;
-
-            // find current selection in the list
-            uint32_t count = lv_obj_get_child_cnt(list);
-            for (uint32_t i = 0; i < count; ++i) {
-                lv_obj_t* btn = lv_obj_get_child(list, i);
-                if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
-                    selected = btn;
-                    break;
-                }
-            }
-
-            // start scrolling...
-            if (key == "A" || key == "B") {
-                if (!selected) {
-                    lv_obj_t* first = lv_obj_get_child(list, 0);
-                    if (first) {
-                        lv_obj_add_state(first, LV_STATE_CHECKED);
-                        lv_obj_scroll_to_view(first, LV_ANIM_ON);
-                        Serial.println("No item selected — selected first.");
-                    }
-                } else {
-                    lv_obj_t* next = nullptr;
-                    if (key == "A") {
-                        next = get_prev_sibling(selected);
-                    } else if (key == "B") {
-                        next = get_next_sibling(selected);
-                    }
-                    if (next) {
-                        lv_obj_clear_state(selected, LV_STATE_CHECKED);
-                        lv_obj_add_state(next, LV_STATE_CHECKED);
-                        lv_obj_scroll_to_view(next, LV_ANIM_ON);
-                    }
-                }
-                
-                return;
-            }
-
-            // no enter # or * on selected item as it might not be what we want
-            // let the child choose what to do on list enter
-        } 
-        
-        // no scrolling, then are we navigating ?
-        if (key == "C") {
-
-            lv_group_focus_prev(inputGroup);
-            checkTextAreaInView();
-            return;
-
-        } else if (key == "D") {
-
-            lv_group_focus_next(inputGroup);
-            checkTextAreaInView();
-            return;
-
-        // else are we clicking ENTER ... ?            
-        } else if (key == "#") {
-
-            if (focused) {
-                lv_event_send(focused, LV_EVENT_PRESSED, NULL);  
-            }
-
-            return;
-
-        // else esc ... 
-        } else if (key == "*") {
-
-            lv_group_send_data(inputGroup, LV_KEY_ESC);
-            return;
-        }
-
-        // else we are done, child class could do something special to the screen
     }
 
     // lvgl should have done this ...
@@ -205,7 +90,143 @@ public:
             }
     }
 
-//---
+
+    // For list navigation ....
+
+    lv_obj_t* get_prev_sibling(lv_obj_t* obj) {
+        if (!obj) return nullptr;
+
+        lv_obj_t* parent = lv_obj_get_parent(obj);
+        if (!parent) return nullptr;
+
+        lv_obj_t* prev = nullptr;
+        uint32_t count = lv_obj_get_child_cnt(parent);
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* child = lv_obj_get_child(parent, i);
+            if (child == obj) {
+                return prev;
+            }
+            prev = child;
+        }
+        return nullptr;
+    }
+
+    lv_obj_t* get_next_sibling(lv_obj_t* obj) {
+        if (!obj) return nullptr;
+
+        lv_obj_t* parent = lv_obj_get_parent(obj);
+        if (!parent) return nullptr;
+
+        bool found = false;
+        uint32_t count = lv_obj_get_child_cnt(parent);
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* child = lv_obj_get_child(parent, i);
+            if (found) {
+                return child;
+            }
+            if (child == obj) {
+                found = true;
+            }
+        }
+        return nullptr;
+    }
+
+
+    void keyListScrolling( String key ){
+
+        // get target
+        lv_obj_t* list = lv_group_get_focused(inputGroup);
+
+        // is it a list ? 
+        if (!list || !lv_obj_check_type(list, &lv_list_class) ) return;
+
+        // is it empty ??
+        uint32_t count = lv_obj_get_child_cnt(list);
+        if( count == 0 ) return;
+
+        // find current selection in the list
+        lv_obj_t* selected = nullptr;        
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* btn = lv_obj_get_child(list, i);
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                selected = btn;
+                break;
+            }
+        }
+
+        // nothing, pick first
+        if (!selected) {
+            lv_obj_t* selected = lv_obj_get_child(list, 0);
+            if (selected) {
+                lv_obj_add_state(selected, LV_STATE_CHECKED);
+                lv_obj_scroll_to_view(selected, LV_ANIM_ON);
+            }else{
+                return; // should not be
+            }
+        }
+
+
+        // start scrolling...
+        if (key == "A" || key == "B") {
+            lv_obj_t* next = nullptr;
+
+            if (key == "A") {
+                next = get_prev_sibling(selected);
+
+            } else if (key == "B") {
+                next = get_next_sibling(selected);
+            }
+
+            // move
+            if (next) {
+                lv_obj_clear_state(selected, LV_STATE_CHECKED);
+                lv_obj_add_state(next, LV_STATE_CHECKED);
+                lv_obj_scroll_to_view(next, LV_ANIM_ON);
+            }
+        }
+
+    }
+
+
+    // base screen class key nav
+    virtual void keyboardEvent(String key) {
+
+        // get the focused thing
+        lv_obj_t* focused = lv_group_get_focused(inputGroup);
+
+        Serial.print( "Screen Base: Key Handler: " );            
+        Serial.println( key );            
+
+        Serial.print( "1" );            
+        keyListScrolling( key );
+
+        Serial.print( "2" );                    
+        // no scrolling, then are we navigating ?
+        if (key == "C") {
+            lv_group_focus_prev(inputGroup);
+            checkTextAreaInView();
+            return;
+
+        } else if (key == "D") {
+            lv_group_focus_next(inputGroup);
+            checkTextAreaInView();
+            return;
+
+        } else if (key == "#") {
+            if (focused) {
+                lv_event_send(focused, LV_EVENT_PRESSED, NULL);  
+
+            }
+            return;    
+        } else if (key == "*") {
+            lv_group_send_data(inputGroup, LV_KEY_ESC);
+            return;
+        }
+
+        Serial.println( "3end" );                    
+        // else we are done, child class could do something special to the screen
+    }
+
 
     virtual ~screenClass(){
         if (inputGroup) {

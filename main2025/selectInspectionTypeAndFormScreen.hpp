@@ -153,6 +153,7 @@ public:
 
     class formFieldsScreenClass : public screenClass {
     public:
+
         lv_obj_t* kb = NULL;                   
         std::vector<lv_obj_t*> textareas;     
 
@@ -162,6 +163,7 @@ public:
         void keyboardEvent(String key) override {        
             screenClass::keyboardEvent( key );
 
+            // add key to values if it is numeric
             if( key != "A" && key != "B" && key != "C" && key != "D" && key != "*" && key != "#"  ){
                 lv_obj_t* focused = lv_group_get_focused(inputGroup);
                 if (focused && lv_obj_check_type(focused, &lv_textarea_class)) {
@@ -169,6 +171,7 @@ public:
                 }
             }
 
+            // use * as backspace
             if (key == "*") {
                 lv_obj_t* focused = lv_group_get_focused(inputGroup);
                 if (focused && lv_obj_check_type(focused, &lv_textarea_class)) {
@@ -211,7 +214,7 @@ public:
             lv_obj_t* parent_obj = objects.form_fields;
             lv_obj_clean(parent_obj);
 
-            // Create keyboard if needed
+            // Create floating keyboard 
             if (kb == NULL) {
                 kb = lv_keyboard_create(objects.inspection_form);
                 lv_obj_set_size(kb, 800, 200);
