@@ -325,6 +325,7 @@ public:
             return; // simulate modal, eat events
         }     
 
+        screenClass::keyboardEvent(key);
       
         // auto select the items as we scroll
         if (key == "A" || key == "B") {    
@@ -335,10 +336,14 @@ public:
             lv_obj_t* focused = lv_group_get_focused(inputGroup);
             if (focused && lv_obj_check_type(focused, &lv_list_class)) {
 
+                Serial.print("focused");
+
                 lv_obj_t* selected = get_checked_child(focused);
 
                 // and there is a selection
                 if (selected) {
+
+                    Serial.print("selected");
 
                     // scroll
                     lv_obj_t* next = nullptr;
@@ -354,8 +359,12 @@ public:
                         lv_obj_add_state(next, LV_STATE_CHECKED);
                     }
 
+                    Serial.print("Refresh");
+/*
                     // refresh tree if needed
                     if( focused == objects.zone_asset_list ){
+
+                        Serial.println("Asset!");                                                                
 
                         // get the domain asset in the asset button
                         assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(next));
@@ -364,7 +373,6 @@ public:
 
                         // has the asset changed from last ?
                         if (asset != lastSelectedAsset) {
-                            // yes update and render
                             lastSelectedAsset = asset;  // new selection   
                             renderAssetZones();
                             renderComponents();
@@ -382,38 +390,46 @@ public:
 
                         Serial.println("Compos");                                    
                     }
-                    
+                    */
+                    Serial.println("Refresh done");
                     return;
                 }
             }
+
+            Serial.println("done");
             return;  
         }
 
 
+        Serial.println("Defect buttons?");                                    
         
         if (key == "1") {
+            Serial.println("allokDefectClick");                                                
             allokDefectClick();
             refreshZoneAndComponentFlags();
             return;              
         }
         if (key == "2") {
+            Serial.println("okDefectClick");                                                
             okDefectClick();
             refreshZoneAndComponentFlags();
             return;              
         }
         if (key == "3") {
+            Serial.println("defectClick");                                                
             defectClick();
             refreshZoneAndComponentFlags();
             return;              
         }
         if (key == "4") {
+            Serial.println("submitInspection");                                                
             submitInspection();
             return;              
         }
 
-          screenClass::keyboardEvent(key);
 
 
+        Serial.println("DONE key handling");                                    
     }
 
 

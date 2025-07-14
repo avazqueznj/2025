@@ -147,28 +147,35 @@ public:
         if( count == 0 ) return;
 
         // find current selection in the list
+        Serial.print( "Sel?" );                            
         lv_obj_t* selected = nullptr;        
         for (uint32_t i = 0; i < count; ++i) {
             lv_obj_t* btn = lv_obj_get_child(list, i);
             if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
                 selected = btn;
+                Serial.print( "Y" );                            
                 break;
             }
         }
 
         // nothing, pick first
         if (!selected) {
+            Serial.print( "N" );                                        
             lv_obj_t* selected = lv_obj_get_child(list, 0);
             if (selected) {
+                Serial.print( "default" );                            
                 lv_obj_add_state(selected, LV_STATE_CHECKED);
                 lv_obj_scroll_to_view(selected, LV_ANIM_ON);
+                return;
             }else{
+                Serial.print( "no default!!!" );                            
                 return; // should not be
             }
         }
 
 
         // start scrolling...
+        Serial.print( "doscroll" );                            
         if (key == "A" || key == "B") {
             lv_obj_t* next = nullptr;
 
@@ -198,15 +205,18 @@ public:
         // get the focused thing
         lv_obj_t* focused = lv_group_get_focused(inputGroup);
 
+
+
         Serial.print( "Screen Base: Key Handler: " );            
         Serial.println( key );            
+
 
         Serial.print( "1" );            
         keyListScrolling( key );
 
-        Serial.print( "2" );    
 
         // no scrolling, then are we navigating ?
+        Serial.print( "2" );            
         if (key == "C") {
             lv_group_focus_prev(inputGroup);
             checkTextAreaInView();
