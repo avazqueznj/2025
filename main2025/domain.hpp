@@ -42,6 +42,12 @@ public:
             buttonName += ": ";
             buttonName += layoutName;
         }
+
+    // Copy constructor
+    assetClass(const assetClass& other)
+        : ID(other.ID), layoutName(other.layoutName), tag(other.tag), buttonName(other.buttonName) {
+    }
+            
     virtual ~assetClass(){}            
 };
 
@@ -60,7 +66,7 @@ public:
 
 class defectClass {
 public:
-    assetClass* asset = NULL;
+    assetClass asset;
     String zoneName;
     String componentName;
     String defectType;
@@ -68,7 +74,7 @@ public:
     String notes;
 
     defectClass(
-        assetClass* assetParam,
+        assetClass assetParam,
         const String& zoneName,
         const String& componentName,
         const String& defectType,
@@ -83,10 +89,7 @@ public:
     {}
 
     bool isSameComponent(const defectClass& other) const {
-        bool sameAsset = false;
-        if (asset && other.asset) {
-            sameAsset = (asset->ID == other.asset->ID);
-        }
+        bool sameAsset = (asset.ID == other.asset.ID);
         bool sameZone = (zoneName == other.zoneName);
         bool sameComponent = (componentName == other.componentName);
         bool result = sameAsset && sameZone && sameComponent;
@@ -177,11 +180,7 @@ public:
         for (const auto& defect : defects) {
             if (defect.severity == 0) {
                 result += " - Asset ID: ";
-                if (defect.asset) {
-                    result += defect.asset->ID;
-                } else {
-                    result += "<null>";
-                }
+                result += defect.asset.ID;
                 result += ", Zone: " + defect.zoneName;
                 result += ", Component: " + defect.componentName;
                 result += ", Type: " + defect.defectType;
@@ -195,12 +194,8 @@ public:
         result += "Defects (sev > 0):\n";
         for (const auto& defect : defects) {
             if (defect.severity > 0) {
-                result += " - Asset ID: ";
-                if (defect.asset) {
-                    result += defect.asset->ID;
-                } else {
-                    result += "<null>";
-                }
+                result += " - Asset ID: ";                
+                result += defect.asset.ID;
                 result += ", Zone: " + defect.zoneName;
                 result += ", Component: " + defect.componentName;
                 result += ", Type: " + defect.defectType;

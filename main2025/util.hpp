@@ -131,42 +131,6 @@ void createDialog( const char* message )
     lv_obj_add_event_cb(btnm, btn_event_cb, LV_EVENT_ALL, NULL);
 }
 
-//----------------------------------------------
-
-void createYesNoDialog(const char* message, const std::function<void()>& onConfirm) {
-    static const char* btns[] = { "Yes", "No", "" };
-
-    // Create message box directly on screen
-    lv_obj_t* mbox = lv_msgbox_create(NULL, "", message, btns, false);
-    lv_obj_center(mbox);
-
-    // Init style once
-    if (!style_ready) {
-        lv_style_init(&style_font);
-        lv_style_set_text_font(&style_font, &lv_font_montserrat_28);
-        style_ready = true;
-    }
-
-    lv_obj_add_style(lv_msgbox_get_text(mbox), &style_font, 0);
-
-    lv_obj_t* btnm = lv_msgbox_get_btns(mbox);
-    lv_obj_add_style(btnm, &style_font, 0);
-
-    // Store lambda on heap so it lives until click
-    auto* callback = new std::function<void()>(onConfirm);
-
-    lv_obj_add_event_cb(btnm, [](lv_event_t* e) {
-        const char* txt = lv_msgbox_get_active_btn_text(lv_event_get_target(e));
-        auto* cb = static_cast<std::function<void()>*>(lv_event_get_user_data(e));
-
-        if (strcmp(txt, "Yes") == 0 && cb) {
-            (*cb)();
-        }
-
-        delete cb;  // free the lambda
-        lv_obj_del(lv_obj_get_parent(lv_event_get_target(e))); // Close mbox
-    }, LV_EVENT_VALUE_CHANGED, callback);
-}
 
 
 //----------------------------------------------

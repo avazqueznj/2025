@@ -1,6 +1,6 @@
 {
   "navigation": {
-    "selectedUserPageObject": "[2025mobile.eez-project]:/userPages/4",
+    "selectedUserPageObject": "[2025mobile.eez-project]:/userPages/5",
     "selectedActionObject": "[2025mobile.eez-project]:/actions/0",
     "selectedBitmapObject": "[2025mobile.eez-project]:/bitmaps/1",
     "subnavigationSelectedItems": {}
@@ -118,7 +118,7 @@
             {
               "type": "row",
               "id": "#b7529d2d-75ab-402b-aee9-c0a4d81a65fd",
-              "weight": 21.154016987046102,
+              "weight": 11.043831456105963,
               "children": [
                 {
                   "type": "tabset",
@@ -188,30 +188,17 @@
             {
               "type": "tabset",
               "id": "EDITORS",
-              "weight": 35.263291819382005,
-              "selected": 1,
+              "weight": 45.37347735032214,
               "enableDeleteWhenEmpty": false,
               "enableClose": false,
               "children": [
                 {
                   "type": "tab",
-                  "id": "#8c827307-a798-4e5a-959c-2fd57c259776",
-                  "name": "Settings",
+                  "id": "#4e400911-0558-4bf1-867c-0cb9c545712a",
+                  "name": "inspectionZones",
                   "component": "editor",
                   "config": {
-                    "objectPath": "[2025mobile.eez-project]:/settings",
-                    "subObjectPath": "[2025mobile.eez-project]:/settings",
-                    "permanent": false
-                  },
-                  "icon": "material:settings"
-                },
-                {
-                  "type": "tab",
-                  "id": "#ec09bf70-9562-442f-bfbb-d42b5510c6cf",
-                  "name": "inspectionForm",
-                  "component": "editor",
-                  "config": {
-                    "objectPath": "[2025mobile.eez-project]:/userPages/4",
+                    "objectPath": "[2025mobile.eez-project]:/userPages/5",
                     "permanent": false
                   },
                   "icon": "svg:page"
@@ -1008,14 +995,16 @@
       "selection": {
         "0": {
           "0": {},
-          "4": {
-            "$selected": true
-          },
+          "4": {},
           "5": {},
           "8": {},
           "10": {},
-          "12": {},
-          "13": {}
+          "12": {
+            "$selected": true
+          },
+          "13": {
+            "$selected": true
+          }
         }
       },
       "transform": {
@@ -1125,8 +1114,13 @@
       "selection": {
         "0": {
           "3": {},
-          "6": {
-            "$selected": true
+          "6": {},
+          "7": {
+            "0": {
+              "6": {
+                "$selected": true
+              }
+            }
           }
         }
       },

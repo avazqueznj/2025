@@ -172,66 +172,13 @@ public:
             return;                        
         }
         if( key == "*" ){
-            lv_msgbox_close_async(dialog);   
+            closeDefectDialog();
             refreshZoneAndComponentFlags();
             return;                
         }
 
     }
 
-    //----------------------------------
-
-    void keyboardEvent(String key) override {
-
-
-        // are we under defecto modal? 
-        if (dialog != nullptr && lv_obj_is_valid(dialog)) {
-            handleModalkeyboardEvent( key );
-            return; // simulate modal, eat events
-        }     
-
-        screenClass::keyboardEvent(key);
-
-
-        // auto select the items as we scroll
-        if (key == "A" || key == "B") {
-            lv_obj_t* focused = lv_group_get_focused(inputGroup);
-            if (focused && lv_obj_check_type(focused, &lv_list_class)) {
-                lv_obj_t* selected = get_checked_child(focused);
-                if (selected) {
-                    // ok one exception to the dont do this list
-                    lv_event_t fakeEvent;
-                    fakeEvent.target = selected;
-                    fakeEvent.code = LV_EVENT_PRESSED;
-                    handleEvents(&fakeEvent);
-                    return;
-                }
-            }
-        }
-
-        
-        if (key == "1") {
-            allokDefectClick();
-            refreshZoneAndComponentFlags();
-            return;              
-        }
-        if (key == "2") {
-            okDefectClick();
-            refreshZoneAndComponentFlags();
-            return;              
-        }
-        if (key == "3") {
-            defectClick();
-            refreshZoneAndComponentFlags();
-            return;              
-        }
-        if (key == "4") {
-            submitInspection();
-            return;              
-        }
-
-
-    }
 
     //----------------
 
@@ -363,6 +310,113 @@ public:
 
     }  
 
+
+    //----------------------------------
+
+    void keyboardEvent(String key) override {
+
+        Serial.print("Inspection key event:");
+        Serial.println(key);
+
+        // are we under defecto modal? 
+        if ( defectDialogOpen ) {
+            Serial.print("Modal is up, handle modal.");
+            handleModalkeyboardEvent( key );
+            return; // simulate modal, eat events
+        }     
+
+      
+        // auto select the items as we scroll
+        if (key == "A" || key == "B") {    
+
+            Serial.print("Scroll up down");
+
+            //if focused and it is a list
+            lv_obj_t* focused = lv_group_get_focused(inputGroup);
+            if (focused && lv_obj_check_type(focused, &lv_list_class)) {
+
+                lv_obj_t* selected = get_checked_child(focused);
+
+                // and there is a selection
+                if (selected) {
+
+                    // scroll
+                    lv_obj_t* next = nullptr;
+                    if (key == "A") {
+                        next = get_prev_sibling(selected);
+                    } else if (key == "B") {
+                        next = get_next_sibling(selected);
+                    }
+
+                    // select
+                    if (next) {
+                        lv_obj_clear_state(selected, LV_STATE_CHECKED);
+                        lv_obj_add_state(next, LV_STATE_CHECKED);
+                    }
+
+                    // refresh tree if needed
+                    if( focused == objects.zone_asset_list ){
+
+                        // get the domain asset in the asset button
+                        assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(next));
+                        if ( !asset ) throw std::runtime_error("No asset in button!!!");            
+                        Serial.println( (*asset).ID );
+
+                        // has the asset changed from last ?
+                        if (asset != lastSelectedAsset) {
+                            // yes update and render
+                            lastSelectedAsset = asset;  // new selection   
+                            renderAssetZones();
+                            renderComponents();
+                            refreshZoneAndComponentFlags();
+                        }                                                
+
+                    }else
+                    if( focused == objects.zone_list ){
+
+                        Serial.println("Zones");                        
+                        renderComponents();
+
+                    }else
+                    if( focused == objects.zone_component_list ){
+
+                        Serial.println("Compos");                                    
+                    }
+                    
+                    return;
+                }
+            }
+            return;  
+        }
+
+
+        
+        if (key == "1") {
+            allokDefectClick();
+            refreshZoneAndComponentFlags();
+            return;              
+        }
+        if (key == "2") {
+            okDefectClick();
+            refreshZoneAndComponentFlags();
+            return;              
+        }
+        if (key == "3") {
+            defectClick();
+            refreshZoneAndComponentFlags();
+            return;              
+        }
+        if (key == "4") {
+            submitInspection();
+            return;              
+        }
+
+          screenClass::keyboardEvent(key);
+
+
+    }
+
+
     void handleEvents(lv_event_t* e) override {
         
         lv_obj_t* target = lv_event_get_target(e);  // The object that triggered the event
@@ -373,8 +427,8 @@ public:
         if (  lv_obj_check_type(target, &lv_btn_class) &&  parent == objects.zone_asset_list ) {
             Serial.println("Asset clicked...");
 
-            // manual highlight
-            bool render = false;
+            // go over the asset list
+            bool render  = false;
             uint32_t child_count = lv_obj_get_child_cnt(objects.zone_asset_list  ); // ZONE assetrs list
             for (uint32_t i = 0; i < child_count; ++i) {
 
@@ -382,28 +436,31 @@ public:
                 lv_obj_t* btn = lv_obj_get_child(objects.zone_asset_list, i);
                 if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
 
-                // clear select
-                if (btn != target) {
+                // clear not selected
+                if (btn != target) {                    
                     lv_obj_clear_state(btn, LV_STATE_CHECKED);
+
                 } else {
-                    // set select
+                    // set selected!
                     lv_obj_add_state(btn, LV_STATE_CHECKED);
-                }
-                            
-                // get the domain asset in the asset button
-                assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
-                if (!asset) {
-                    throw std::runtime_error("inspectionZonesScreenClass: asset in button is null ?");
-                }
 
-                // has the asset changed ?
-                if (asset == lastSelectedAsset) {
-                    return; // nothing to do
-                }else{
-                    lastSelectedAsset = asset;  // new selection         
-                    render = true;    
-                }
+                    // get the domain asset in the asset button
+                    assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
+                    if (!asset) {
+                        throw std::runtime_error("inspectionZonesScreenClass: asset in button is null ?");
+                    }
 
+                    Serial.println( (*asset).ID );
+
+                    // has the asset changed from last ?
+                    if (asset == lastSelectedAsset) {
+                        return; // nothing to do                        
+                    }else{
+                        // yes update and render
+                        lastSelectedAsset = asset;  // new selection   
+                        render  = true;
+                    }
+                }                        
             }
 
             if( render ){
@@ -512,7 +569,7 @@ public:
         // close defecto dialog <-- just call close below
         if( close_btn != nullptr ){
             if (  (lv_event_get_code(e) == LV_EVENT_CLICKED)  &&  lv_obj_check_type(target, &lv_btn_class) &&  target == close_btn ) {
-                lv_msgbox_close_async(dialog);   
+                closeDefectDialog();
                 refreshZoneAndComponentFlags();
                 return;                
             }
@@ -608,8 +665,9 @@ public:
             // Check if a defect already exists for this component
             bool exists = false;
             for (const auto& defect : defects) {
-                if (defect.asset && 
-                    defect.asset->ID == lastSelectedAsset->ID &&
+   
+                if (
+                    defect.asset.ID == (*lastSelectedAsset).ID &&
                     defect.zoneName == selected_zone->tag &&
                     defect.componentName == compName) {
                     exists = true;
@@ -624,7 +682,7 @@ public:
 
             // Make severity 0 defect
             defectClass newDefect(
-                lastSelectedAsset,
+                *lastSelectedAsset,
                 selected_zone->tag,
                 compName,
                 "GOOD",
@@ -684,8 +742,8 @@ public:
                 // Check if defect exists
                 bool exists = false;
                 for (const auto& defect : defects) {
-                    if (defect.asset && 
-                        defect.asset->ID == lastSelectedAsset->ID &&
+                    if (
+                        defect.asset.ID == (*lastSelectedAsset).ID &&
                         defect.zoneName == selected_zone->tag &&
                         defect.componentName == compName) {
                         exists = true;
@@ -701,7 +759,7 @@ public:
 
                 // Add severity 0 defect
                 defectClass newDefect(
-                    lastSelectedAsset,
+                    (*lastSelectedAsset),
                     selected_zone->tag,
                     compName,
                     "GOOD",
@@ -765,7 +823,7 @@ public:
         // assemble a tentative defect
         if( selected_defect !=  nullptr ){        
             defectClass newDefect(
-                selected_asset,
+                *selected_asset,
                 selected_zone->tag,
                 selected_component_name,
                 selected_defect ? *selected_defect : String(""),
@@ -786,7 +844,7 @@ public:
             // save it, or delete it
             if( severity != -1 ) domain->currentInspection.defects.push_back( newDefect );                
 
-            lv_msgbox_close_async(dialog);   
+            closeDefectDialog();
 
             // debugo
             Serial.println( domain->currentInspection.toString().c_str() );                    
@@ -831,11 +889,13 @@ public:
 
     void refreshZoneAndComponentFlags() {
 
-        Serial.println("Refresh!");
+        Serial.print("Refresh");
 
         domainManagerClass* domain = domainManagerClass::getInstance();
         if (!domain) throw std::runtime_error("domainManagerClass is null");
         if (!lastSelectedAsset) throw std::runtime_error("lastSelectedAsset is null");
+
+        Serial.print("L");
 
         // Find layout for selected asset
         layoutClass* layout = nullptr;
@@ -846,6 +906,8 @@ public:
             }
         }
         if (!layout) throw std::runtime_error("Layout not found for selected asset");
+
+        Serial.print("Z");
 
         // Iterate over all zones shown in the UI
         uint32_t zone_count = lv_obj_get_child_cnt(objects.zone_list);
@@ -872,15 +934,18 @@ public:
             bool hasSev1 = false;
             bool hasSev10 = false;
 
+            Serial.print("C");
+
             // For each expected component in this zone - find defects
             for (const std::vector<String>& compVec : db_zone->components) {
                 if (compVec.size() <= 1) continue;
                 String compName = compVec[1];
                 bool found = false;
                 int severity = -1;
+
+                Serial.print("D");                
                 for (const auto& defect : domain->currentInspection.defects) {
-                    if (!defect.asset) continue;
-                    if (defect.asset->ID == lastSelectedAsset->ID &&
+                    if (defect.asset.ID == (*lastSelectedAsset).ID &&
                         defect.zoneName == db_zone->tag &&
                         defect.componentName == compName) {
                         found = true;
@@ -898,8 +963,10 @@ public:
                     if (severity != 0) allAreSev0 = false;
                 }
 
-                // ---- ON COMPO --> compVec
+             
                 if (lv_obj_has_state(zbtn, LV_STATE_CHECKED)) {
+
+                    Serial.print("C");                
 
                     uint32_t comp_btn_count = lv_obj_get_child_cnt(objects.zone_component_list); // compo list
                     lv_obj_t* matching_btn = nullptr;
@@ -950,6 +1017,8 @@ public:
             else
                 prefix = "";                   // Unmasked
 
+            Serial.print("Z");                
+
             // Update the label for this zone button
             uint32_t zone_child_count = lv_obj_get_child_cnt(zbtn);
             for (uint32_t i = 0; i < zone_child_count; ++i) {
@@ -962,6 +1031,8 @@ public:
         }
 
         //--
+
+        Serial.print("A");                
 
         // =============================
         // NEW: check ALL assets and prefix.
@@ -1001,7 +1072,7 @@ public:
                     int severity = -1;
 
                     for (const defectClass& defect : domain->currentInspection.defects) {
-                        if (defect.asset && defect.asset->ID == asset->ID &&
+                        if (defect.asset.ID == asset->ID &&
                             defect.zoneName == zone.tag &&
                             defect.componentName == compName) {
                             found = true;
@@ -1141,7 +1212,19 @@ public:
     }
 
 
-    lv_obj_t *dialog = nullptr;    
+    //---------------------------------------------
+
+    bool defectDialogOpen = false;
+    void closeDefectDialog(){
+        Serial.println("Close defect dialog ...");                
+        if( defectDialogOpen ) lv_msgbox_close_async(dialog1);       
+        defectDialogOpen = false;
+    }
+
+        
+    //---------------------------------------------    
+
+    lv_obj_t *dialog1 = nullptr;
     lv_obj_t *close_btn = nullptr;
     lv_obj_t *del_btn = nullptr;
     lv_obj_t *minor_btn = nullptr;
@@ -1213,30 +1296,32 @@ public:
 
         // restore if this is an edit ....
         for (auto& d : domain->currentInspection.defects) {
-            if (d.asset == selected_asset && d.zoneName == selected_zone->tag && d.componentName == selected_component_name) {
+            if (d.asset.ID == (*selected_asset).ID && d.zoneName == selected_zone->tag && d.componentName == selected_component_name) {
                 existingDefect = &d;
                 break;
             }
         }
 
         // Create defectDialog
-        dialog = lv_msgbox_create(NULL, "", "", 0, true);                
-        lv_obj_set_pos(dialog, 89, 39);
-        lv_obj_set_size(dialog, 626, 400); // Make dialog taller to fit keyboard
-        lv_obj_clear_flag(dialog, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_CHAIN_VER |
+        dialog1 = lv_msgbox_create(NULL, "", "", 0, true);      
+        defectDialogOpen = true;
+
+        lv_obj_set_pos(dialog1, 89, 39);
+        lv_obj_set_size(dialog1, 626, 400); // Make dialog taller to fit keyboard
+        lv_obj_clear_flag(dialog1, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_SCROLL_CHAIN_HOR | LV_OBJ_FLAG_SCROLL_CHAIN_VER |
                                     LV_OBJ_FLAG_SCROLL_ELASTIC | LV_OBJ_FLAG_SCROLL_MOMENTUM | LV_OBJ_FLAG_SCROLL_WITH_ARROW);
-        lv_obj_set_style_align(dialog, LV_ALIGN_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_layout(dialog, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_align(dialog1, LV_ALIGN_DEFAULT, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_layout(dialog1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         // add event handler
-        close_btn = lv_msgbox_get_close_btn(dialog);
+        close_btn = lv_msgbox_get_close_btn(dialog1);
         if (close_btn) {
         Serial.println("set handler!");            
             lv_obj_add_event_cb(close_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void*)0);
         }
 
         {
-            lv_obj_t *parent_obj = dialog;
+            lv_obj_t *parent_obj = dialog1;
 
             // delete button
             del_btn = lv_btn_create(parent_obj);
@@ -1378,4 +1463,16 @@ public:
         Serial.println("defect click done!");
 
     }    
+
+//==============================================
+   
 };
+
+
+//----
+
+
+
+
+
+

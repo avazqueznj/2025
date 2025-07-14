@@ -73,7 +73,7 @@ public:
 
                 if (ta != nullptr && lv_obj_check_type(ta, &lv_textarea_class)) {
 
-                    Serial.println("scroll");
+                    Serial.println("scroll TA");
 
                     // Ensure layout is valid before scrolling
                     lv_obj_update_layout(objects.form_fields);
@@ -134,6 +134,8 @@ public:
 
     void keyListScrolling( String key ){
 
+        Serial.print( "Scroll" );                    
+
         // get target
         lv_obj_t* list = lv_group_get_focused(inputGroup);
 
@@ -185,6 +187,8 @@ public:
             }
         }
 
+        Serial.println( " Scrolled" );                    
+
     }
 
 
@@ -200,7 +204,8 @@ public:
         Serial.print( "1" );            
         keyListScrolling( key );
 
-        Serial.print( "2" );                    
+        Serial.print( "2" );    
+
         // no scrolling, then are we navigating ?
         if (key == "C") {
             lv_group_focus_prev(inputGroup);
