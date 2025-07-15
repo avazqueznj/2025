@@ -329,80 +329,43 @@ public:
 
         screenClass::keyboardEvent(key);
       
-        // auto select the items as we scroll
-        if (key == "A" || key == "B") {    
 
-            /* ugg the base class was already doing the skip, maybe that is the source of the segfault
+/*
+    updateAssetSeverityLabels();
+    updateZoneSeverityLabels();
+    updateComponentSeverityLabels();
+*/
 
-            Serial.print("Scroll up down");
+Serial.println("ABCD refresh?");                                    
+if (key == "A" || key == "B" || key == "C" || key == "D") {
+    lv_obj_t* focused = lv_group_get_focused(inputGroup);
 
-            //if focused and it is a list
-            lv_obj_t* focused = lv_group_get_focused(inputGroup);
-            if (focused && lv_obj_check_type(focused, &lv_list_class)) {
+    if (focused == objects.zone_asset_list) {
+        assetClass* asset = nullptr;
 
-                Serial.print("focused");
-
-                lv_obj_t* selected = get_checked_child(focused);
-
-                // and there is a selection
-                if (selected) {
-
-                    Serial.print("selected");
-
-                    // scroll
-                    lv_obj_t* next = nullptr;
-                    if (key == "A") {
-                        next = get_prev_sibling(selected);
-                    } else if (key == "B") {
-                        next = get_next_sibling(selected);
-                    }
-
-                    // select
-                    if (next) {
-                        lv_obj_clear_state(selected, LV_STATE_CHECKED);
-                        lv_obj_add_state(next, LV_STATE_CHECKED);
-                    }
-
-                    Serial.print("Refresh");
-
-                    // refresh tree if needed
-                    if( focused == objects.zone_asset_list ){
-
-                        Serial.println("Asset!");                                                                
-
-                        // get the domain asset in the asset button
-                        assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(next));
-                        if ( !asset ) throw std::runtime_error("No asset in button!!!");            
-                        Serial.println( (*asset).ID );
-
-                        // has the asset changed from last ?
-                        if (asset != lastSelectedAsset) {
-                            lastSelectedAsset = asset;  // new selection   
-                            renderAssetZones();
-                            renderComponents();
-                            refreshZoneAndComponentFlags();
-                        }                                                
-
-                    }else
-                    if( focused == objects.zone_list ){
-
-                        Serial.println("Zones");                        
-                        renderComponents();
-
-                    }else
-                    if( focused == objects.zone_component_list ){
-
-                        Serial.println("Compos");                                    
-                    }
-                    */
-                    Serial.println("Refresh done");
-                    return;
-                }
+        uint32_t count = lv_obj_get_child_cnt(objects.zone_asset_list);
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* btn = lv_obj_get_child(objects.zone_asset_list, i);
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
+                break;
             }
-
-            Serial.println("done");
-            return;  
         }
+        if (asset) {
+            Serial.println("Refresh zones...");
+            lastSelectedAsset = asset;
+            renderAssetZones();
+            updateZoneSeverityLabels();
+        }
+        
+    }
+    else if (focused == objects.zone_list) {
+        Serial.println("Refresh compos...");
+        renderComponents();
+        updateComponentSeverityLabels();
+    }
+    // else: do nothing
+}
 
 
         Serial.println("Defect buttons?");                                    
@@ -908,7 +871,182 @@ public:
 
 
     void refreshZoneAndComponentFlags() {
+
+        updateAssetSeverityLabels();
+        updateZoneSeverityLabels();
+        updateComponentSeverityLabels();
     }        
+
+    void updateAssetSeverityLabels() {
+        domainManagerClass* domain = domainManagerClass::getInstance();
+
+        Serial.println("Refresh Asset flags:");
+
+        uint32_t count = lv_obj_get_child_cnt(objects.zone_asset_list);
+        for (uint32_t i = 0; i < count; ++i) {
+
+            // get the asset button
+            lv_obj_t* assetButton = lv_obj_get_child(objects.zone_asset_list, i);
+            if (!assetButton) continue;
+
+            // get the cargo
+            assetClass* asset = static_cast<assetClass*>(lv_obj_get_user_data(assetButton));
+            if (!asset) continue;
+
+            Serial.print(asset->ID);
+            Serial.print("Defect?");
+
+            // check against defects
+            int maxSeverity = -1;
+            for (const defectClass& defect : domain->currentInspection.defects) {
+                if (defect.asset.ID == asset->ID) {
+
+                    Serial.print( defect.severity );  // report over fix
+
+                    if (defect.severity > maxSeverity) {
+                        maxSeverity = defect.severity;
+                    }
+                }
+            }
+
+            String prefix;
+            if (maxSeverity == 10) prefix = String(LV_SYMBOL_CLOSE) + " ";
+            else if (maxSeverity == 1) prefix = String(LV_SYMBOL_WARNING) + " ";
+            else if (maxSeverity == 0) prefix = String(LV_SYMBOL_OK) + " ";
+            else prefix = "";
+
+            lv_obj_t* label = lv_obj_get_child(assetButton, 0);
+            if (label) {
+                String newText = prefix + asset->buttonName;
+                lv_label_set_text(label, newText.c_str());
+
+                Serial.print("->");
+                Serial.println(newText);
+            }
+        }
+    }
+
+
+    void updateZoneSeverityLabels() {
+
+        Serial.println("Refresh Zone flags:");
+
+        domainManagerClass* domain = domainManagerClass::getInstance();
+        if (!lastSelectedAsset) return;
+
+        uint32_t count = lv_obj_get_child_cnt(objects.zone_list);
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* zoneButton = lv_obj_get_child(objects.zone_list, i);
+            if (!zoneButton) continue;
+
+            layoutZoneClass* zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(zoneButton));
+            if (!zone) continue;
+
+            Serial.print("Zone:");
+            Serial.print(zone->name);
+            Serial.print(" def:");
+
+            // Get max severity for this zone
+            int maxSeverity = -1;
+            for (const defectClass& defect : domain->currentInspection.defects) {
+                if (defect.asset.ID == lastSelectedAsset->ID && defect.zoneName == zone->tag) {
+                    Serial.print(defect.severity);
+                    if (defect.severity > maxSeverity) {
+                        maxSeverity = defect.severity;
+                    }
+                }
+            }
+
+            String prefix;
+            if (maxSeverity == 10) prefix = String(LV_SYMBOL_CLOSE) + " ";
+            else if (maxSeverity == 1) prefix = String(LV_SYMBOL_WARNING) + " ";
+            else if (maxSeverity == 0) prefix = String(LV_SYMBOL_OK) + " ";
+            else prefix = "";
+
+            // Update label text
+            lv_obj_t* label = lv_obj_get_child(zoneButton, 0); // Assuming first child is label
+            if (label) {
+                String newText = prefix + zone->name;
+                lv_label_set_text(label, newText.c_str());
+                Serial.print(" label:");
+                Serial.println(newText);
+            }
+        }
+    }
+
+    void updateComponentSeverityLabels() {
+        domainManagerClass* domain = domainManagerClass::getInstance();
+        if (!lastSelectedAsset) return;
+
+        Serial.println("Refresh Compo flags:");
+
+        // --- Find the selected zone ---
+        layoutZoneClass* selectedZone = nullptr;
+        uint32_t zoneCount = lv_obj_get_child_cnt(objects.zone_list);
+        for (uint32_t i = 0; i < zoneCount; ++i) {
+            lv_obj_t* zoneButton = lv_obj_get_child(objects.zone_list, i);
+            if (!zoneButton) continue;
+
+            if (lv_obj_has_state(zoneButton, LV_STATE_CHECKED)) {
+                selectedZone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(zoneButton));
+                break;
+            }
+        }
+        if (!selectedZone) return; // no zone selected, nothing to update
+
+        Serial.print("Zone:");
+        Serial.print(selectedZone->tag);
+
+        // --- Update all component labels for selected zone ---
+        uint32_t count = lv_obj_get_child_cnt(objects.zone_component_list);
+        for (uint32_t i = 0; i < count; ++i) {
+            lv_obj_t* compButton = lv_obj_get_child(objects.zone_component_list, i);
+            if (!compButton) continue;
+
+            // get the name form the comp vec
+            std::vector<String>* compVec = static_cast<std::vector<String>*>(lv_obj_get_user_data(compButton));
+            if (!compVec || compVec->size() < 2) continue;
+            String componentName = (*compVec)[1];
+
+            Serial.print("Comp:");
+            Serial.print(componentName);
+            
+
+            int maxSeverity = -1;
+            for (const defectClass& defect : domain->currentInspection.defects) {            
+
+                if (defect.asset.ID == lastSelectedAsset->ID &&
+                    defect.zoneName == selectedZone->tag &&
+                    defect.componentName == componentName) 
+                    {
+
+                        if (defect.severity > maxSeverity) maxSeverity = defect.severity;
+                        Serial.print("S:");
+                        Serial.print(defect.severity);
+
+                    }
+
+            }
+
+            String prefix;
+            if (maxSeverity == 10) prefix = String(LV_SYMBOL_CLOSE) + " ";
+            else if (maxSeverity == 1) prefix = String(LV_SYMBOL_WARNING) + " ";
+            else if (maxSeverity == 0) prefix = String(LV_SYMBOL_OK) + " ";
+            else prefix = "";
+
+            lv_obj_t* label = lv_obj_get_child(compButton, 0);
+            if (label) {
+                String newText = prefix + componentName;
+                lv_label_set_text(label, newText.c_str());
+
+                Serial.print("Label:");
+                Serial.println(newText);
+            }
+        }
+    }    
+
+
+
 
 //==================================================================================================================================
 //==================================================================================================================================
