@@ -902,6 +902,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
                 if (defect.asset.ID == asset->ID) {
 
                     Serial.print( defect.severity );  // report over fix
+                    Serial.print(" ");
 
                     if (defect.severity > maxSeverity) {
                         maxSeverity = defect.severity;
@@ -951,6 +952,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
             for (const defectClass& defect : domain->currentInspection.defects) {
                 if (defect.asset.ID == lastSelectedAsset->ID && defect.zoneName == zone->tag) {
                     Serial.print(defect.severity);
+                    Serial.print(" ");
                     if (defect.severity > maxSeverity) {
                         maxSeverity = defect.severity;
                     }
@@ -1010,7 +1012,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
 
             Serial.print(" Comp:");
             Serial.print(componentName);
-            
+            Serial.print(" ");                                    
 
             int maxSeverity = -1;
             for (const defectClass& defect : domain->currentInspection.defects) {            
@@ -1021,9 +1023,8 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
                     {
 
                         if (defect.severity > maxSeverity) maxSeverity = defect.severity;
-                        Serial.print(" S:");
                         Serial.print(defect.severity);
-
+                        Serial.print(" ");                        
                     }
 
             }

@@ -24,12 +24,12 @@ public:
     WiFiClient client;
 
     // daday phone
-    //String ssid = "DadyPhone";
-    //String pass = "Casiopea1";
+    String ssid = "DadyPhone";
+    String pass = "Casiopea1";
 
     // house
-    String ssid = "irazu2G";
-    String pass = "casiocasio";
+    //String ssid = "irazu2G";
+    //String pass = "casiocasio";
 
     // hot spot
     //String ssid = "irazu5g";
