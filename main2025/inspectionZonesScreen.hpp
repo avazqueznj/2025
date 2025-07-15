@@ -357,7 +357,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
             renderAssetZones();
             updateZoneSeverityLabels();
         }
-        
+
     }
     else if (focused == objects.zone_list) {
         Serial.println("Refresh compos...");
@@ -894,7 +894,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
             if (!asset) continue;
 
             Serial.print(asset->ID);
-            Serial.print("Defect?");
+            Serial.print(" Defect?");
 
             // check against defects
             int maxSeverity = -1;
@@ -920,7 +920,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
                 String newText = prefix + asset->buttonName;
                 lv_label_set_text(label, newText.c_str());
 
-                Serial.print("->");
+                Serial.print(" -> ");
                 Serial.println(newText);
             }
         }
@@ -1008,7 +1008,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
             if (!compVec || compVec->size() < 2) continue;
             String componentName = (*compVec)[1];
 
-            Serial.print("Comp:");
+            Serial.print(" Comp:");
             Serial.print(componentName);
             
 
@@ -1021,7 +1021,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
                     {
 
                         if (defect.severity > maxSeverity) maxSeverity = defect.severity;
-                        Serial.print("S:");
+                        Serial.print(" S:");
                         Serial.print(defect.severity);
 
                     }
@@ -1039,7 +1039,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
                 String newText = prefix + componentName;
                 lv_label_set_text(label, newText.c_str());
 
-                Serial.print("Label:");
+                Serial.print("  -> Label:");
                 Serial.println(newText);
             }
         }
