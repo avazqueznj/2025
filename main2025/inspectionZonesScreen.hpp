@@ -995,7 +995,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
         if (!selectedZone) return; // no zone selected, nothing to update
 
         Serial.print("Zone:");
-        Serial.print(selectedZone->tag);
+        Serial.println(selectedZone->tag);
 
         // --- Update all component labels for selected zone ---
         uint32_t count = lv_obj_get_child_cnt(objects.zone_component_list);
