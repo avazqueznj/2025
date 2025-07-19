@@ -48,6 +48,9 @@ public:
     }
 
     void emptyAll() {
+
+        currentInspection.clear();
+
         assets.clear();
         layouts.clear();
         inspectionTypes.clear();
@@ -60,12 +63,11 @@ public:
         try{
 
             comms->up();
-            std::vector<String> config = comms->getContent();
-            emptyAll();
-            parse( &config );
-            saveConfigToKVStore( &config );
 
-            comms->syncClockWithNTP();
+                std::vector<String> config = comms->getContent();
+                parse( &config );
+                saveConfigToKVStore( &config );
+                comms->syncClockWithNTP();
 
             comms->down();
 
@@ -82,7 +84,7 @@ public:
     void parse( std::vector<String>* config ){        
         Serial.println( "Parsing ..." );
 
-        currentInspection.clear();
+        emptyAll();
 
         std::vector<String>::iterator iterator = config->begin();    
         while ( iterator != config->end() ) {   
@@ -323,10 +325,6 @@ void loadConfigFromKVStore() {
         start = end + 1;
         end = joined.indexOf('\n', start);
     }
-
-    assets.clear();
-    layouts.clear();
-    inspectionTypes.clear();
 
     parse(&config);
 

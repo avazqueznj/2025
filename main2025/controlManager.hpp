@@ -225,7 +225,7 @@ public:
 
         } else if (key == "#") {
             if (focused) {
-                lv_event_send(focused, LV_EVENT_PRESSED, NULL);  
+                lv_event_send(focused, LV_EVENT_PRESSED, NULL);  // only exception of artificial events
 
             }
             return;    
