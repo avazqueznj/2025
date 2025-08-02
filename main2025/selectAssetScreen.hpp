@@ -214,6 +214,9 @@ public:
             if (child == NULL) break;
             lv_obj_del(child);
         }
+
+        domainManagerClass::getInstance()->currentInspection.clear();
+
         Serial.println("select: do deselect OK");                          
         return;
 
@@ -227,13 +230,15 @@ public:
         if( !domain->isLoaded ){
             domain->loadConfigFromKVStore();
         }
+
+        domain->currentInspection.clear();
     
         // clean
         listButtons.clear();
         lv_obj_clean(objects.asset_list); 
         lv_obj_clean(objects.selected_asset_list); 
 
-        // sync with current inspection
+        // load all assets
         for (assetClass& asset : domain->assets) {
             bool inInspection = false;
             listButtons.push_back(addAssetToList(objects.asset_list, &asset, true));
@@ -245,6 +250,7 @@ public:
                 }
             }
         }
+
 
         {
             //-------------------------------------

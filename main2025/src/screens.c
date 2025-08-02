@@ -1045,7 +1045,7 @@ void create_screen_inspection_zones() {
                             // readZone
                             lv_obj_t *obj = lv_btn_create(parent_obj);
                             objects.read_zone = obj;
-                            lv_obj_set_pos(obj, 177, -13);
+                            lv_obj_set_pos(obj, 74, -13);
                             lv_obj_set_size(obj, 100, 40);
                             lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
                             lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE);
@@ -1086,7 +1086,7 @@ void create_screen_inspection_zones() {
                             // compOkButton
                             lv_obj_t *obj = lv_btn_create(parent_obj);
                             objects.comp_ok_button = obj;
-                            lv_obj_set_pos(obj, 506, -13);
+                            lv_obj_set_pos(obj, 505, -13);
                             lv_obj_set_size(obj, 120, 40);
                             lv_obj_add_event_cb(obj, action_main_event_dispatcher, LV_EVENT_PRESSED, (void *)0);
                             lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE);
@@ -1176,7 +1176,7 @@ void create_screen_inspection_zones() {
                             lv_obj_t *obj = lv_list_create(parent_obj);
                             objects.zone_list = obj;
                             lv_obj_set_pos(obj, 182, 32);
-                            lv_obj_set_size(obj, 250, 276);
+                            lv_obj_set_size(obj, 256, 276);
                             lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC);
                             lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_ON);
                             lv_obj_set_scroll_dir(obj, LV_DIR_VER);
@@ -1216,8 +1216,8 @@ void create_screen_inspection_zones() {
                             // zoneComponentList
                             lv_obj_t *obj = lv_list_create(parent_obj);
                             objects.zone_component_list = obj;
-                            lv_obj_set_pos(obj, 432, 32);
-                            lv_obj_set_size(obj, 301, 276);
+                            lv_obj_set_pos(obj, 443, 32);
+                            lv_obj_set_size(obj, 308, 276);
                             lv_obj_clear_flag(obj, LV_OBJ_FLAG_CLICK_FOCUSABLE|LV_OBJ_FLAG_SCROLL_CHAIN_HOR|LV_OBJ_FLAG_SCROLL_CHAIN_VER|LV_OBJ_FLAG_SCROLL_ELASTIC);
                             lv_obj_set_scrollbar_mode(obj, LV_SCROLLBAR_MODE_ON);
                             lv_obj_set_scroll_dir(obj, LV_DIR_VER);

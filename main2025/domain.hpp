@@ -103,8 +103,8 @@ public:
     inspectionTypeClass* type = NULL;
     std::vector<assetClass> assets;    
     std::vector<defectClass> defects;
-    String submitTime;
     std::vector<  String  > inspectionFormFieldValues; 
+    String submitTime;
 
     inspectionClass(){}
 

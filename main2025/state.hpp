@@ -203,6 +203,7 @@ public:
             // MAIN -> start inspection, select asset
             if( ( target == objects.do_inspect_button && key == ""  ) || ( target == objects.do_inspect_button && key == "#"  ) || key == "1" ){
               Serial.println("state: Open selectAssetScreenClass..");    
+              domainManagerClass::getInstance()->currentInspection.clear();
               openScreen( new selectAssetScreenClass() );
               handeled = true;
             }        
