@@ -190,6 +190,7 @@ public:
 
 
   // enter and touch common NAVI
+  // so this is here so that screens do not know  each other, ie change in one screen ui will never impact another
   bool handleNavClicks( lv_obj_t *target, String key){
 
     bool handeled = false;
@@ -199,14 +200,14 @@ public:
         // MAIN screen shortcuts
         if (lv_scr_act() == objects.main) {      
 
-            // MAIN -> open select asset
+            // MAIN -> start inspection, select asset
             if( ( target == objects.do_inspect_button && key == ""  ) || ( target == objects.do_inspect_button && key == "#"  ) || key == "1" ){
               Serial.println("state: Open selectAssetScreenClass..");    
               openScreen( new selectAssetScreenClass() );
               handeled = true;
             }        
 
-
+            // MAIN: sync
             if( ( target == objects.do_sync && key == ""  ) || ( target == objects.do_sync && key == "#"  ) || key == "2" ){
                 try{
 
@@ -233,6 +234,8 @@ public:
                     Serial.println( error.what() );            
                     createDialog( error.what() );     
                 }
+
+                handeled = true;        
             }
 
             // MAIN -> open settings
@@ -247,7 +250,7 @@ public:
         //-- Gral NAVI << >> touch or # press
         if( key == "#" || key == "" ){
 
-          // INSPE -> open form fields
+          // INSPE TYPE -> open form fields
           if(target == objects.do_inspection_form ){
             Serial.println("state: Open FF ..");            
 
@@ -337,7 +340,11 @@ public:
 
     }catch( const std::runtime_error& error ){
       Serial.println( "*** ERROR while handling event ***" );                    
-      Serial.println( error.what() );                    
+      Serial.println( error.what() );    
+
+      createDialog( error.what() );     
+
+      return handeled;           
     }      
   }
 
@@ -363,6 +370,7 @@ public:
 
     }catch( const std::runtime_error& error ){
         // no delete here, as designed, leak it, i dont care.
+        Serial.println( "*** window closed but not recycled ***" );   
         Serial.println( error.what() );            
         createDialog( error.what() );  
     }

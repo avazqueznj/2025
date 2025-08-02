@@ -256,8 +256,8 @@ public:
             lv_group_add_obj(inputGroup, objects.de_select_asset);
 
             // nav bar 
-            //lv_group_add_obj(inputGroup, objects.do_select_inspection_type);            
-            //lv_group_add_obj(inputGroup, objects.back_from_select_asset);            
+            lv_group_add_obj(inputGroup, objects.do_select_inspection_type);            
+            lv_group_add_obj(inputGroup, objects.back_from_select_asset);            
 
         }
         

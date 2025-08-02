@@ -5,13 +5,8 @@
  * © [2025] [Alejandro Vazquez]. All rights reserved.
  * 
  * Portions of this software are based on LVGL (https://lvgl.io),
- * which is licensed under the MIT License:
+ * which is licensed under the MIT License.
  *
- * MIT License
- * Copyright (c) 2021 LVGL LLC
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction...
  ********************************************************************************************/
 
 #include "mbed.h"
@@ -190,27 +185,32 @@ void getInternalHeapFreeBytes() {
 byte currentCardUID[10];
 byte currentCardLength = 0;
 
-int RFIDrefreshCounts = 0;
-int refreshCounts = 0;
+int slowPollInterval = 0;
+int memStatReportInterval = 0;
 
 void loop() {
+
+  // wait for start
   if (!startedUp) {
     delay(100);
     return;
   }
 
-  delayBlink();
+  // general delay  - render
+  delayBlink();  // 50MSEC *********************
   lv_timer_handler(); 
   ui_tick();   
 
-  refreshCounts += 1;
-  if (refreshCounts == 200) {  
+  memStatReportInterval += 1;
+  if (memStatReportInterval == ( 20 + 20 + 20 ) ) {  // 3 sec 
     getInternalHeapFreeBytes();
-    refreshCounts = 0;   
+    memStatReportInterval = 0;   
   }
 
-  RFIDrefreshCounts += 1;
-  if (RFIDrefreshCounts == 25) {
+  slowPollInterval += 1;
+  if (slowPollInterval ==  2 ) { // x main delay = 100msec
+
+    slowPollInterval = 0;   
 
     //---------------------------------------------------------
     // rfid
@@ -276,8 +276,7 @@ void loop() {
     if (stateManager != nullptr && stateManager->currentScreenState != nullptr) {
         // get screen
         screenClass* screen = stateManager->currentScreenState;
-
-        // is kb open
+        // is kb open ??
         formFieldsScreenClass* ff = static_cast<formFieldsScreenClass*>(screen);
         if (ff != nullptr && ff->kb != nullptr && !lv_obj_has_flag(ff->kb, LV_OBJ_FLAG_HIDDEN)) {
             screen->checkTextAreaInView(); // check that lvgl did not overlap the entry area with the kb
@@ -286,23 +285,12 @@ void loop() {
 
   //------------------------------------------
 
-    RFIDrefreshCounts = 0;   
+    
   }
 
 
 
 } //<< END
 
-
-//----------------------------------------------------------
-//----------------------------------------------------------
-
-
-// setup eez
-// in eez peoject override location of lvgl heder -> "lvglInclude": "lvgl.h"
-// in sketch add folder src, and copy the code
-// set code output to sketch path, so it makes a src folder with all the files
-// in ino, include ui.h
-// lv_conf in C:\Users\alejandro.vazquez\AppData\Local\Arduino15\packages\arduino\hardware\mbed_giga\4.3.1\libraries\Arduino_H7_Video\src
 
 

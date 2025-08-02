@@ -40,6 +40,22 @@ public:
 
     }
 
+
+    void keyboardEvent(String key) override {        
+     
+        // Check for # key and if inspection_types is focused
+        if (key == "#") {
+            lv_obj_t* focused = lv_group_get_focused(inputGroup);
+            if (focused == objects.inspection_types) {
+                lv_event_send(objects.do_inspection_form, LV_EVENT_PRESSED, NULL);
+                return;
+            }
+        }
+
+        screenClass::keyboardEvent(key);
+    }
+
+
     void open() override {
 
         domainManagerClass* domain = domainManagerClass::getInstance();
@@ -49,7 +65,7 @@ public:
         // Clear the list in case it has old items
         lv_obj_clean(objects.inspection_types);
 
-        // For each inspection type, check if it matches ALL selected assets
+        // For each inspection type, check if asset matches ALL selected assets
         for (const inspectionTypeClass& type : domain->inspectionTypes) {
             bool valid = true;
 
@@ -69,7 +85,8 @@ public:
                 }
             }
 
-            if (valid) {
+            if (valid) { // ie all assets share the type
+
                 // Create button for this inspection type
                 lv_obj_t* btn = lv_btn_create(objects.inspection_types);
                 lv_obj_set_size(btn, 411, 84);
@@ -104,8 +121,8 @@ public:
             lv_group_add_obj(inputGroup, objects.inspection_types  );
 
             // nav bar
-            //lv_group_add_obj(inputGroup, objects.do_inspection_form);            
-            //lv_group_add_obj(inputGroup, objects.back_from_select_insp);            
+            lv_group_add_obj(inputGroup, objects.do_inspection_form);            
+            lv_group_add_obj(inputGroup, objects.back_from_select_insp);            
 
         }
 
@@ -117,13 +134,13 @@ public:
 
         domainManagerClass* domain = domainManagerClass::getInstance();
 
+        // check inspe type ui
         uint32_t child_count = lv_obj_get_child_cnt(objects.inspection_types);
-
         for (uint32_t i = 0; i < child_count; ++i) {
+
             lv_obj_t* btn = lv_obj_get_child(objects.inspection_types, i);
-
             if (!lv_obj_check_type(btn, &lv_btn_class)) continue;
-
+            // find selected
             if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
                 inspectionTypeClass* selectedType =
                     static_cast<inspectionTypeClass*>(lv_obj_get_user_data(btn));
@@ -140,11 +157,9 @@ public:
 
         // If none found checked, clear current type
         domain->currentInspection.type = NULL;
-        Serial.println("syncToInspection: No inspection type selected — cleared.");
+        throw std::runtime_error("Error: Please select an inspection type.");
+
     }
-
-
-
 
 };
 
@@ -230,6 +245,8 @@ public:
                     }
                 }, LV_EVENT_ALL, this);
             }
+
+            // Form Fields ====================================================
 
             for (size_t i = 0; i < currentType->formFields.size(); ++i) {
                 const std::vector<String>& row = currentType->formFields[i];

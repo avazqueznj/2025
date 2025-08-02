@@ -34,9 +34,9 @@ lv_obj_t* get_checked_child(lv_obj_t* list) {
 
 void delayBlink() {
     digitalWrite(LED_BUILTIN, HIGH);
-    delay(5);
+    delay(25);
     digitalWrite(LED_BUILTIN, LOW);
-    delay(5);
+    delay(25);
 }
 
 void sosBlink() {

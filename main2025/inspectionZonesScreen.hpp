@@ -182,137 +182,6 @@ public:
     }
 
 
-    //----------------
-
-    void renderAssetZones(){
-
-        Serial.println("Render asset zones...");
-            
-        domainManagerClass* domain = domainManagerClass::getInstance();
-
-        // reset zones and compos
-        lv_obj_clean(objects.zone_list);
-        lv_obj_clean(objects.zone_component_list);
-
-        // Find the layout for the asset
-        layoutClass* layout = nullptr;
-        for (layoutClass& l : domain->layouts) {
-            if (l.name == lastSelectedAsset->layoutName) {
-                layout = &l;
-                break;
-            }
-        }
-        if (!layout) {
-            throw std::runtime_error("inspectionZonesScreenClass: layout not found" );
-        }
-
-        //=================================================
-        // ZONE RENDER
-
-        // read the zones from the layout
-        bool foundZone = false;
-        for (layoutZoneClass& zone : layout->zones) {
-            foundZone = true;
-
-            // Add zone button
-            lv_obj_t* zbtn = lv_btn_create(objects.zone_list);
-            lv_obj_set_size(zbtn, 230, 50);
-            //lv_obj_add_flag(zbtn, LV_OBJ_FLAG_CHECKABLE);
-            lv_obj_set_style_bg_color(zbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_color(zbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-
-            lv_obj_add_event_cb(zbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
-
-                lv_obj_t* zlabel = lv_label_create(zbtn);
-                lv_obj_set_style_text_font(zlabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-                lv_label_set_text(zlabel, zone.name.c_str());
-                lv_obj_set_user_data(zbtn, (void*)&zone);    
-        }
-
-        if (!foundZone) {
-            throw std::runtime_error("inspectionZonesScreenClass: no zones found in layout: " );
-        }
-    
-                
-        Serial.println("Render asset zones...done!");
-        return;
-    }   
-
-    void renderComponents(){  
-
-        Serial.println("Render components ...");
-
-        lv_obj_t* btn = NULL;
-
-        // find the selected zone btn
-        uint32_t child_count = lv_obj_get_child_cnt(objects.zone_list);
-        if (child_count == 0) return;
-        for (uint32_t i = 0; i < child_count; ++i) {
-            lv_obj_t* b = lv_obj_get_child(objects.zone_list, i);
-            if (!lv_obj_check_type(b, &lv_btn_class)) continue;
-
-            if (lv_obj_has_state(b, LV_STATE_CHECKED)) {
-                btn = b;
-                break;
-            }
-        }    
-
-        if(!btn) return;
-
-        // clean compos
-        lv_obj_clean(objects.zone_component_list);
-
-        // get the zone
-        layoutZoneClass* zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(btn));
-        if (!zone) {
-            throw std::runtime_error("Zone user_data is null in ZONE click handler");
-        }
-        if (!lastSelectedAsset) {
-            throw std::runtime_error("lastSelectedAsset is null in ZONE click handler");
-        }
-
-        domainManagerClass* domain = domainManagerClass::getInstance();
-        const std::vector<defectClass>& defects = domain->currentInspection.defects;
-
-
-        // COMPO RENDER ====================
-        for (size_t j = 0; j < zone->components.size(); ++j) {
-
-            const std::vector<String>& compVec = zone->components[j];
-                        
-            if (compVec.empty()) {
-                throw std::runtime_error("Component vector is empty");
-            }
-            if (compVec.size() <= 1) {
-                throw std::runtime_error("Component vector missing name");
-            }
-
-            String compName = compVec[1];
-            String labelText = String( " " ) + compName;
-
-            lv_obj_t* cbtn = lv_btn_create(objects.zone_component_list);
-            lv_obj_set_size(cbtn, 280, 50);
-            //lv_obj_add_flag(cbtn, LV_OBJ_FLAG_CHECKABLE);
-            lv_obj_set_style_bg_color(cbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_text_color(cbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-
-            lv_obj_set_user_data(cbtn, (void*)&compVec);
-            lv_obj_add_event_cb(cbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
-
-            lv_obj_t* clabel = lv_label_create(cbtn);
-            lv_obj_set_style_text_font(clabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_label_set_text(clabel, labelText.c_str());
-            
-            
-        }
-    
-        Serial.println("Render components ...done!");
-
-        return;
-
-    }  
-
-
     //----------------------------------
 
     void keyboardEvent(String key) override {
@@ -330,42 +199,42 @@ public:
         screenClass::keyboardEvent(key);
       
 
-/*
-    updateAssetSeverityLabels();
-    updateZoneSeverityLabels();
-    updateComponentSeverityLabels();
-*/
-
-Serial.println("ABCD refresh?");                                    
-if (key == "A" || key == "B" || key == "C" || key == "D") {
-    lv_obj_t* focused = lv_group_get_focused(inputGroup);
-
-    if (focused == objects.zone_asset_list) {
-        assetClass* asset = nullptr;
-
-        uint32_t count = lv_obj_get_child_cnt(objects.zone_asset_list);
-        for (uint32_t i = 0; i < count; ++i) {
-            lv_obj_t* btn = lv_obj_get_child(objects.zone_asset_list, i);
-            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
-                asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
-                break;
-            }
-        }
-        if (asset) {
-            Serial.println("Refresh zones...");
-            lastSelectedAsset = asset;
-            renderAssetZones();
+        /*
+            updateAssetSeverityLabels();
             updateZoneSeverityLabels();
-        }
+            updateComponentSeverityLabels();
+        */
 
-    }
-    else if (focused == objects.zone_list) {
-        Serial.println("Refresh compos...");
-        renderComponents();
-        updateComponentSeverityLabels();
-    }
-    // else: do nothing
-}
+        Serial.println("ABCD refresh?");                                    
+        if (key == "A" || key == "B" || key == "C" || key == "D") {
+            lv_obj_t* focused = lv_group_get_focused(inputGroup);
+
+            if (focused == objects.zone_asset_list) {
+                assetClass* asset = nullptr;
+
+                uint32_t count = lv_obj_get_child_cnt(objects.zone_asset_list);
+                for (uint32_t i = 0; i < count; ++i) {
+                    lv_obj_t* btn = lv_obj_get_child(objects.zone_asset_list, i);
+                    if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                        asset = static_cast<assetClass*>(lv_obj_get_user_data(btn));
+                        break;
+                    }
+                }
+                if (asset) {
+                    Serial.println("Refresh zones...");
+                    lastSelectedAsset = asset;
+                    renderAssetZones();
+                    updateZoneSeverityLabels();
+                }
+
+            }
+            else if (focused == objects.zone_list) {
+                Serial.println("Refresh compos...");
+                renderComponents();
+                updateComponentSeverityLabels();
+            }
+            // else: do nothing
+        }
 
 
         Serial.println("Defect buttons?");                                    
@@ -399,6 +268,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
         Serial.println("DONE key handling");                                    
     }
 
+    //--------------------------------
 
     void handleEvents(lv_event_t* e) override {
         
@@ -870,6 +740,139 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
 //==================================================================================================================================
 
 
+    void renderAssetZones(){
+
+        Serial.println("Render asset zones...");
+            
+        domainManagerClass* domain = domainManagerClass::getInstance();
+
+        // reset zones and compos
+        lv_obj_clean(objects.zone_list);
+        lv_obj_clean(objects.zone_component_list);
+
+        // Find the layout for the asset
+        layoutClass* layout = nullptr;
+        for (layoutClass& l : domain->layouts) {
+            if (l.name == lastSelectedAsset->layoutName) {
+                layout = &l;
+                break;
+            }
+        }
+        if (!layout) {
+            throw std::runtime_error("inspectionZonesScreenClass: layout not found" );
+        }
+
+        //=================================================
+        // ZONE RENDER
+
+        // read the zones from the layout
+        bool foundZone = false;
+        for (layoutZoneClass& zone : layout->zones) {
+            foundZone = true;
+
+            // Add zone button
+            lv_obj_t* zbtn = lv_btn_create(objects.zone_list);
+            lv_obj_set_size(zbtn, 230, 50);
+            //lv_obj_add_flag(zbtn, LV_OBJ_FLAG_CHECKABLE);
+            lv_obj_set_style_bg_color(zbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(zbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_add_event_cb(zbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
+
+                lv_obj_t* zlabel = lv_label_create(zbtn);
+                lv_obj_set_style_text_font(zlabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+                lv_label_set_text(zlabel, zone.name.c_str());
+                lv_obj_set_user_data(zbtn, (void*)&zone);    
+        }
+
+        if (!foundZone) {
+            throw std::runtime_error("inspectionZonesScreenClass: no zones found in layout: " );
+        }
+    
+                
+        Serial.println("Render asset zones...done!");
+        return;
+    }   
+
+    void renderComponents(){  
+
+        Serial.println("Render components ...");
+
+        lv_obj_t* btn = NULL;
+
+        // find the selected zone btn
+        uint32_t child_count = lv_obj_get_child_cnt(objects.zone_list);
+        if (child_count == 0) return;
+        for (uint32_t i = 0; i < child_count; ++i) {
+            lv_obj_t* b = lv_obj_get_child(objects.zone_list, i);
+            if (!lv_obj_check_type(b, &lv_btn_class)) continue;
+
+            if (lv_obj_has_state(b, LV_STATE_CHECKED)) {
+                btn = b;
+                break;
+            }
+        }    
+
+        if(!btn) return;
+
+        // clean compos
+        lv_obj_clean(objects.zone_component_list);
+
+        // get the zone
+        layoutZoneClass* zone = static_cast<layoutZoneClass*>(lv_obj_get_user_data(btn));
+        if (!zone) {
+            throw std::runtime_error("Zone user_data is null in ZONE click handler");
+        }
+        if (!lastSelectedAsset) {
+            throw std::runtime_error("lastSelectedAsset is null in ZONE click handler");
+        }
+
+        domainManagerClass* domain = domainManagerClass::getInstance();
+        const std::vector<defectClass>& defects = domain->currentInspection.defects;
+
+
+        // COMPO RENDER ====================
+        for (size_t j = 0; j < zone->components.size(); ++j) {
+
+            const std::vector<String>& compVec = zone->components[j];
+                        
+            if (compVec.empty()) {
+                throw std::runtime_error("Component vector is empty");
+            }
+            if (compVec.size() <= 1) {
+                throw std::runtime_error("Component vector missing name");
+            }
+
+            String compName = compVec[1];
+            String labelText = String( " " ) + compName;
+
+            lv_obj_t* cbtn = lv_btn_create(objects.zone_component_list);
+            lv_obj_set_size(cbtn, 280, 50);
+            //lv_obj_add_flag(cbtn, LV_OBJ_FLAG_CHECKABLE);
+            lv_obj_set_style_bg_color(cbtn, lv_color_hex(0xffffffff), LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_text_color(cbtn, lv_color_hex(0xff000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+            lv_obj_set_user_data(cbtn, (void*)&compVec);
+            lv_obj_add_event_cb(cbtn, action_main_event_dispatcher, LV_EVENT_PRESSED, this);
+
+            lv_obj_t* clabel = lv_label_create(cbtn);
+            lv_obj_set_style_text_font(clabel, &lv_font_montserrat_28, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_label_set_text(clabel, labelText.c_str());
+            
+            
+        }
+    
+        Serial.println("Render components ...done!");
+
+        return;
+
+    }  
+
+
+
+//-----------------------------------------------------------
+
+
     void refreshZoneAndComponentFlags() {
 
         updateAssetSeverityLabels();
@@ -1104,8 +1107,8 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
             //lv_group_add_obj(inputGroup, objects.defect_button  );            
 
             // nav bar -- also too complicated, use numbers this will never work
-            //lv_group_add_obj(inputGroup, objects.back_from_form_zones );            
-            //lv_group_add_obj(inputGroup, objects.submit);       
+            lv_group_add_obj(inputGroup, objects.back_from_form_zones );            
+            lv_group_add_obj(inputGroup, objects.submit);       
         }
 
         screenClass::open();
@@ -1115,7 +1118,9 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
         if (count > 0) {
             lv_obj_t* first_asset_btn = lv_obj_get_child(objects.zone_asset_list, 0);
             if (lv_obj_check_type(first_asset_btn, &lv_btn_class)) {
-                Serial.println("Activate first asset in list.");                
+                Serial.println("Activate first asset in list.");
+
+                //tbd                
             }
         }
 
@@ -1236,7 +1241,7 @@ if (key == "A" || key == "B" || key == "C" || key == "D") {
         // add event handler
         close_btn = lv_msgbox_get_close_btn(dialog1);
         if (close_btn) {
-        Serial.println("set handler!");            
+            Serial.println("set handler!");            
             lv_obj_add_event_cb(close_btn, action_main_event_dispatcher, LV_EVENT_PRESSED, (void*)0);
         }
 

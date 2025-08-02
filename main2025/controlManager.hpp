@@ -73,7 +73,7 @@ public:
 
                 if (ta != nullptr && lv_obj_check_type(ta, &lv_textarea_class)) {
 
-                    Serial.println("scroll TA");
+                    //Serial.println("scroll TA");
 
                     // Ensure layout is valid before scrolling
                     lv_obj_update_layout(objects.form_fields);
