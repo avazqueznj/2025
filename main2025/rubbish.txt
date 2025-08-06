@@ -275,5 +275,21 @@ void loop() {}
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+//----------------------------------------------------------
+//----------------------------------------------------------
+
+
+// setup eez
+// in eez peoject override location of lvgl heder -> "lvglInclude": "lvgl.h"
+// in sketch add folder src, and copy the code
+// set code output to sketch path, so it makes a src folder with all the files
+// in ino, include ui.h
+// lv_conf in C:\Users\alejandro.vazquez\AppData\Local\Arduino15\packages\arduino\hardware\mbed_giga\4.3.1\libraries\Arduino_H7_Video\src
+
+
+
+
+
+
 
   
