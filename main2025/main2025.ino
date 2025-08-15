@@ -164,8 +164,18 @@ void setup() {
   delay(100);
   Serial.println("Start screens  ...");
   create_screens();           
-  stateManager = new stateClass();
-  stateManager->openScreen(new mainScreenClass());
+
+  stateManager = new stateClass();  
+  stateManager->openScreen(new loginScreenClass());
+
+  try{
+      domainManagerClass::getInstance()->loadConfigFromKVStore();
+  }catch( const std::runtime_error& error ){
+      Serial.println( error.what() );            
+      createDialog( error.what() );     
+  }  
+
+
   Serial.println("Start screens / 2025 init .... DONE!");
 }
 

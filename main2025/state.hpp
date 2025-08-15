@@ -105,9 +105,8 @@ public:
 
       // NAV ??
       if( currentScreenState !=  NULL  ){ 
-        if( lv_obj_t* target = currentScreenState->getFocusedButton() ){
-          if( handleNavClicks( target, key ) ) return; // eat it
-        }
+          lv_obj_t* target = currentScreenState->getFocusedButton();
+          if( handleNavClicks( target, key ) ) return; // eat it        
       }
 
 
@@ -197,6 +196,126 @@ public:
 
     try{
 
+        Serial.print("Navi ");
+        Serial.print(key);
+
+        // SUBMIT
+        if (lv_scr_act() == objects.inspection_zones ) {   
+
+            if( 
+              ( target == objects.submit && key == ""  ) ||  // for touch
+              ( target == objects.submit && key == "#" ) ||   // for key
+              key == "4"
+            ){
+
+
+                Serial.println("Submit ...");
+                spinnerStart();
+
+                try{
+
+                    domainManagerClass* domain = domainManagerClass::getInstance(); 
+
+                    // Check if there are any defects BEFORE submitting
+                    if (domain->currentInspection.defects.size() == 0) {
+
+                        spinnerEnd(); 
+                        createDialog("ERROR: Cannot submit empty inspection.");
+
+                    } else {
+
+                        domain->comms->up();   
+                        domain->currentInspection.submitTime = String(lv_label_get_text(objects.clock_insp));
+                        String result =  domain->comms->postInspection( domain->currentInspection.toString() ) ;
+                        domain->comms->down();
+
+                        spinnerEnd();      
+                        openScreen( new mainScreenClass() );  
+
+                        //createDialog( result.c_str() );
+                    }                
+                    
+                }catch( const std::runtime_error& error ){
+                    spinnerEnd();       
+                    String chainedError = String( "ERROR: Could not POST: " ) + error.what();           
+                    createDialog( chainedError.c_str() );
+                }
+                
+                Serial.println("Submit ... done!");
+                handeled = true;
+            }        
+        }
+
+
+        //-=-=
+
+        // LOGIN screen shortcuts
+        if (lv_scr_act() == objects.login_screen) {   
+
+
+            if( 
+              ( target == objects.login && key == ""  ) ||  // for touch
+              ( target == objects.login && key == "#" )    // for key
+            ){
+
+              Serial.println("state: login..");  
+
+              domainManagerClass::getInstance()->login(
+                  String(lv_textarea_get_text(objects.login_username)),
+                  String(lv_textarea_get_text(objects.login_password))
+              );
+
+              Serial.println("state: Open main..");    
+              domainManagerClass::getInstance()->currentInspection.clear();
+              openScreen( new mainScreenClass() );
+              handeled = true;
+            }        
+
+
+            if( ( target == objects.do_sync_2 && key == ""  ) || ( target == objects.do_sync_2 && key == "#"  )  ){
+                try{
+
+                    Serial.println("main: sync ...");  
+                    domainManagerClass::getInstance()->sync();
+
+                    String syncMessage = "Sync successful. \n";
+                    syncMessage += "Loaded: \n";
+
+                    syncMessage += domainManagerClass::getInstance()->assets.size();
+                    syncMessage += " assets \n";
+
+
+                    syncMessage += domainManagerClass::getInstance()->layouts.size();
+                    syncMessage += " layouts \n";
+
+
+                    syncMessage += domainManagerClass::getInstance()->inspectionTypes.size();
+                    syncMessage += " Inspection types \n";
+
+                    syncMessage += domainManagerClass::getInstance()->users.size();
+                    syncMessage += " Users \n";
+
+
+                    createDialog( syncMessage.c_str() );   
+
+                }catch( const std::runtime_error& error ){
+                    Serial.println( error.what() );            
+                    createDialog( error.what() );     
+                }
+
+                handeled = true;        
+            }
+
+            /*  need to figure different returns .. later
+            if( ( target == objects.do_settings_2 && key == ""  ) || ( target == objects.do_settings_2 && key == "#"  )  ){
+              Serial.println("state: Open settingsScreenClass..");            
+              openScreen( new settingsScreenClass() );
+              handeled = true;
+            } 
+            */    
+
+        }
+
         // MAIN screen shortcuts
         if (lv_scr_act() == objects.main) {      
 
@@ -207,6 +326,19 @@ public:
               openScreen( new selectAssetScreenClass() );
               handeled = true;
             }        
+
+            // MAIN -> start inspection, select asset
+            if( ( target == objects.logout && key == ""  ) || ( target == objects.logout && key == "#"  ) || key == "4" ){
+
+              Serial.println("state: logout..");    
+              domainManagerClass::getInstance()->currentInspection.clear();
+
+              userClass blank;
+              domainManagerClass::getInstance()->loggedUser = blank;
+
+              openScreen( new loginScreenClass() );
+              handeled = true;
+            }  
 
             // MAIN: sync
             if( ( target == objects.do_sync && key == ""  ) || ( target == objects.do_sync && key == "#"  ) || key == "2" ){
@@ -350,15 +482,6 @@ public:
   }
 
   // SCREEN NAVIGATION
-
-  // Note: if open() throws, we deliberately do NOT delete the screen here.
-  // Rationale:
-  //   - If open() fails, the object may be partially initialized.
-  //   - Deleting a partially initialized object risks undefined behavior.
-  //   - Small leak is safer than a risky destructor call.
-  // In normal flow, open() should never fail — but this pattern ensures
-  // fail-safe behavior if something unexpected happens.  
-
   void openScreen( screenClass* screen ){        
     try{
 
@@ -370,12 +493,14 @@ public:
       currentScreenState = screen;
 
     }catch( const std::runtime_error& error ){
-        // no delete here, as designed, leak it, i dont care.
+        // no delete 
         Serial.println( "*** window closed but not recycled ***" );   
         Serial.println( error.what() );            
         createDialog( error.what() );  
     }
   }
+
+
 
 };
 

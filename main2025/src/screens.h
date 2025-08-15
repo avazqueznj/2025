@@ -14,13 +14,16 @@ typedef struct _objects_t {
     lv_obj_t *select_inspection_type;
     lv_obj_t *inspection_form;
     lv_obj_t *inspection_zones;
+    lv_obj_t *login_screen;
     lv_obj_t *obj0;
     lv_obj_t *clock;
+    lv_obj_t *driver_name_main;
     lv_obj_t *logo1;
     lv_obj_t *do_inspect_button;
     lv_obj_t *do_sync;
     lv_obj_t *do_settings;
     lv_obj_t *help1;
+    lv_obj_t *logout;
     lv_obj_t *obj1;
     lv_obj_t *logo1_2;
     lv_obj_t *back_from_settings;
@@ -79,6 +82,15 @@ typedef struct _objects_t {
     lv_obj_t *zone_template;
     lv_obj_t *zone_component_list;
     lv_obj_t *compo_template;
+    lv_obj_t *obj10;
+    lv_obj_t *clock_login;
+    lv_obj_t *logo1_6;
+    lv_obj_t *login;
+    lv_obj_t *help1_1;
+    lv_obj_t *login_username;
+    lv_obj_t *do_settings_2;
+    lv_obj_t *login_password;
+    lv_obj_t *do_sync_2;
 } objects_t;
 
 extern objects_t objects;
@@ -90,6 +102,7 @@ enum ScreensEnum {
     SCREEN_ID_SELECT_INSPECTION_TYPE = 4,
     SCREEN_ID_INSPECTION_FORM = 5,
     SCREEN_ID_INSPECTION_ZONES = 6,
+    SCREEN_ID_LOGIN_SCREEN = 7,
 };
 
 void create_screen_main();
@@ -109,6 +122,9 @@ void tick_screen_inspection_form();
 
 void create_screen_inspection_zones();
 void tick_screen_inspection_zones();
+
+void create_screen_login_screen();
+void tick_screen_login_screen();
 
 void tick_screen_by_id(enum ScreensEnum screenId);
 void tick_screen(int screen_index);

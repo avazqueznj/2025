@@ -227,9 +227,6 @@ public:
     void open() override {
 
         domainManagerClass* domain = domainManagerClass::getInstance();        
-        if( !domain->isLoaded ){
-            domain->loadConfigFromKVStore();
-        }
 
         domain->currentInspection.clear();
     
@@ -274,6 +271,8 @@ public:
 
         domainManagerClass* domain = domainManagerClass::getInstance();    
         domain->currentInspection.assets.clear();
+
+        domain->currentInspection.driverName = domain->loggedUser.name;
 
         // Count selected asset buttons
         uint32_t child_count = lv_obj_get_child_cnt(objects.selected_asset_list);

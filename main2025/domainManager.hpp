@@ -26,12 +26,16 @@ public:
     commsClass* comms = NULL;
 
     // database
+    std::vector<userClass> users;    
     std::vector<assetClass> assets;
     std::vector<layoutClass> layouts;
     std::vector<inspectionTypeClass> inspectionTypes;
 
     // inspection
     inspectionClass currentInspection;
+
+    //logged user
+    userClass loggedUser;
 
     // singleton
     static domainManagerClass* getInstance() {
@@ -54,6 +58,24 @@ public:
         assets.clear();
         layouts.clear();
         inspectionTypes.clear();
+        users.clear();
+    }
+
+    void login(String usernameParam, String passwordParam) {
+
+        for (size_t i = 0; i < users.size(); i++) {
+            if (users[i].username == usernameParam && users[i].password == passwordParam) {
+
+                loggedUser = users[i];
+
+                Serial.print("Login successful: ");
+                Serial.println(users[i].name);
+                return; // Exit once we find a match
+            }
+        }
+
+        // else..
+        throw std::runtime_error("Invalid credentials");
     }
 
     void sync(){
@@ -220,13 +242,49 @@ public:
                     throw std::runtime_error( "Parse error, expecting INSPTYPES" );
                 }                    
 
+                //--
+
+                //  USERS TYPES ----->
+                if( tokens[ 0 ] == "USERS" ){ 
+                    Serial.println( "[USERS] found... " );
+                    
+                    while( true ){  // get the next user            
+                        if (++iterator == config->end()) throw std::runtime_error("Unexpected end ");
+                        tokens = tokenize( *iterator , '*' );                                        
+                        if( tokens[ 0 ] != "USER" ) break; // end users
+                        Serial.println( "Found USER ..." );                        
+
+                        // get data
+                        String name; 
+                        String username; 
+                        String password; 
+                        if( tokens.size() == 4 ){
+                            name = tokens[ 1 ];
+                            username = tokens[ 2 ];
+                            password = tokens[ 3 ];
+                        }else throw std::runtime_error( "Parse error token USER expecting 4 tokens " );
+                        userClass nextUser( name, username, password );
+                        users.push_back( nextUser );
+                    }     
+
+                }else{
+                    throw std::runtime_error( "Parse error, expecting USERS" );
+                }                    
+
+
+                //--
+
                 // done?
                 if( tokens[ 0 ] == "END" ){ 
                     Serial.println( "Found [END]" );                
                     isLoaded = true;
                     printDebugContents();
                     return;
-                };
+                }else{
+                    Serial.println( "Parse error un expected token" );                
+                    Serial.println( tokens[ 0 ] );                                    
+                    throw std::runtime_error( "Parse error un expected token" );                    
+                }
 
             } // header found
         } // scanning
@@ -278,58 +336,72 @@ public:
                 Serial.println();
             }
         }
+
+        Serial.println("========= USERS =========");
+        for (size_t i = 0; i < users.size(); i++) {
+            Serial.print("User ");
+            Serial.print(i);
+            Serial.print(": Name=");
+            Serial.print(users[i].name);
+            Serial.print(", Username=");
+            Serial.print(users[i].username);
+            Serial.print(", Password=");
+            Serial.println( "*" );  // users[i].password
+        }
+        Serial.println("-------------------");
+
     }
 
     //------------------------------
 
-void saveConfigToKVStore(const std::vector<String>* config) {
+    void saveConfigToKVStore(const std::vector<String>* config) {
 
-    Serial.println("Config save to KVStore....");
+        Serial.println("Config save to KVStore....");
 
-    String joined = "";
-    for (size_t i = 0; i < config->size(); i++) {
-        joined += config->at(i);
-        joined += '\n';
-    }
-
-    int ret = kv_set("/kv/config2025", joined.c_str(), joined.length(), 0);
-    if (ret != MBED_SUCCESS) {
-        throw std::runtime_error("Failed to save config to KVStore!");
-    }
-
-    Serial.println("Config saved to KVStore.");
-}
-
-void loadConfigFromKVStore() {
-    Serial.println("Config load from KVStore and parsed  ....");
-
-    size_t actual_size = 0;
-    char buffer[4096]; // adjust if your config is bigger
-
-    int ret = kv_get("/kv/config2025", buffer, sizeof(buffer), &actual_size);
-    if (ret != MBED_SUCCESS || actual_size == 0) {
-        throw std::runtime_error("Failed to read config from disk!\nHave you ever synced ?");
-    }
-
-    String joined = String(buffer).substring(0, actual_size);
-
-    std::vector<String> config;
-    int start = 0;
-    int end = joined.indexOf('\n');
-    while (end >= 0) {
-        String line = joined.substring(start, end);
-        line.trim();
-        if (line.length() > 0) {
-            config.push_back(line);
+        String joined = "";
+        for (size_t i = 0; i < config->size(); i++) {
+            joined += config->at(i);
+            joined += '\n';
         }
-        start = end + 1;
-        end = joined.indexOf('\n', start);
+
+        int ret = kv_set("/kv/config2025", joined.c_str(), joined.length(), 0);
+        if (ret != MBED_SUCCESS) {
+            throw std::runtime_error("Failed to save config to KVStore!");
+        }
+
+        Serial.println("Config saved to KVStore.");
     }
 
-    parse(&config);
+    void loadConfigFromKVStore() {
+        Serial.println("Config load from KVStore and parsed  ....");
 
-    Serial.println("Config loaded from KVStore and parsed!");
-}
+        size_t actual_size = 0;
+        char buffer[4096]; // adjust if your config is bigger
+
+        int ret = kv_get("/kv/config2025", buffer, sizeof(buffer), &actual_size);
+        if (ret != MBED_SUCCESS || actual_size == 0) {
+            throw std::runtime_error("Failed to read config from disk!\nHave you ever synced ?");
+        }
+
+        String joined = String(buffer).substring(0, actual_size);
+
+        std::vector<String> config;
+        int start = 0;
+        int end = joined.indexOf('\n');
+        while (end >= 0) {
+            String line = joined.substring(start, end);
+            line.trim();
+            if (line.length() > 0) {
+                config.push_back(line);
+            }
+            start = end + 1;
+            end = joined.indexOf('\n', start);
+        }
+
+        parse(&config);
+
+        Serial.println("Config loaded from KVStore and parsed!");
+    }
 
 //-------------------------------------------------
 

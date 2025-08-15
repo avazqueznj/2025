@@ -10,6 +10,22 @@
                                 // P R O B L E M  ***  D O M A I N 
 
 
+class userClass{
+public:
+    String name;
+    String username;
+    String password;
+
+    userClass(){}
+
+    userClass(String nameParam, String usernameParam, String passwordParam):
+        name(nameParam),
+        username(usernameParam),
+        password(passwordParam){}
+
+    virtual ~userClass(){}
+};
+
 
 class layoutZoneClass{
 public:
@@ -105,6 +121,7 @@ public:
     std::vector<defectClass> defects;
     std::vector<  String  > inspectionFormFieldValues; 
     String submitTime;
+    String driverName;
 
     inspectionClass(){}
 
@@ -114,6 +131,7 @@ public:
         defects.clear();
         inspectionFormFieldValues.clear();
         submitTime = "";
+        driverName = "";
     }
 
     String toString() const {
@@ -124,6 +142,10 @@ public:
             result += "Type: ";
             result += type->name;
             result += "\n";
+
+            result += "Driver: ";
+            result += driverName;
+            result += "\n";            
 
             result += "Layouts:\n";
             for (const auto& layout : type->layouts) {

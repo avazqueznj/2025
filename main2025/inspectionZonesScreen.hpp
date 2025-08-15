@@ -257,11 +257,13 @@ public:
             refreshZoneAndComponentFlags();
             return;              
         }
+        /*
         if (key == "4") {
             Serial.println("submitInspection");                                                
             submitInspection();
             return;              
         }
+        */
 
 
 
@@ -448,10 +450,12 @@ public:
 
         //-------
 
+        /*
         if (target == objects.submit) {
             submitInspection();
             return;  
         }
+        */
 
     }
 
@@ -705,34 +709,6 @@ public:
 
     }
 
-    void submitInspection(){
-
-        Serial.println("Submit ...");
-        spinnerStart();
-
-        try{
-            domainManagerClass* domain = domainManagerClass::getInstance(); 
-
-            // Check if there are any defects BEFORE submitting
-            if (domain->currentInspection.defects.size() == 0) {
-                spinnerEnd(); 
-                createDialog("ERROR: Cannot submit empty inspection.");
-            } else {
-                domain->comms->up();   
-                domain->currentInspection.submitTime = String(lv_label_get_text(objects.clock_insp));
-                createDialog(domain->comms->postInspection(domain->currentInspection.toString()).c_str());
-                domain->comms->down();
-            }                
-            
-        }catch( const std::runtime_error& error ){
-            spinnerEnd();       
-            String chainedError = String( "ERROR: Could not POST: " ) + error.what();           
-            createDialog( chainedError.c_str() );
-        }
-
-        spinnerEnd();       
-        Serial.println("Submit ... done!");
-}
 
 
 //==================================================================================================================================

@@ -28,12 +28,12 @@ public:
     //String pass = "Casiopea1";
 
     // house
-    //String ssid = "irazu2G";
-    //String pass = "casiocasio";
+    String ssid = "irazu2G";
+    String pass = "casiocasio";
 
     // hot spot
-    String ssid = "irazu5g";
-    String pass = "Casiopea4";
+    //String ssid = "irazu5g";
+    //String pass = "Casiopea4";
 
 
     String serverURL = "zzz2025.duckdns.org";
