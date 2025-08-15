@@ -91,6 +91,27 @@ public:
                 saveConfigToKVStore( &config );
                 comms->syncClockWithNTP();
 
+                    String syncMessage = "Sync successful. \n";
+                    syncMessage += "Loaded: \n";
+
+                    syncMessage += domainManagerClass::getInstance()->assets.size();
+                    syncMessage += " assets \n";
+
+
+                    syncMessage += domainManagerClass::getInstance()->layouts.size();
+                    syncMessage += " layouts \n";
+
+
+                    syncMessage += domainManagerClass::getInstance()->inspectionTypes.size();
+                    syncMessage += " Inspection types \n";
+
+                    syncMessage += domainManagerClass::getInstance()->users.size();
+                    syncMessage += " Users \n";       
+
+                    spinnerEnd();        
+                    
+                    createDialog( syncMessage.c_str() );                                
+
             comms->down();
 
         }catch( const std::runtime_error& error ){
@@ -99,7 +120,7 @@ public:
             throw std::runtime_error( chainedError.c_str() );
         }
 
-        spinnerEnd();        
+
     }
 
 

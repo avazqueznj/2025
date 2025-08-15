@@ -172,7 +172,6 @@ void setup() {
       domainManagerClass::getInstance()->loadConfigFromKVStore();
   }catch( const std::runtime_error& error ){
       Serial.println( error.what() );            
-      createDialog( error.what() );     
   }  
 
 

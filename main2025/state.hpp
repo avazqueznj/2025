@@ -278,26 +278,6 @@ public:
                     Serial.println("main: sync ...");  
                     domainManagerClass::getInstance()->sync();
 
-                    String syncMessage = "Sync successful. \n";
-                    syncMessage += "Loaded: \n";
-
-                    syncMessage += domainManagerClass::getInstance()->assets.size();
-                    syncMessage += " assets \n";
-
-
-                    syncMessage += domainManagerClass::getInstance()->layouts.size();
-                    syncMessage += " layouts \n";
-
-
-                    syncMessage += domainManagerClass::getInstance()->inspectionTypes.size();
-                    syncMessage += " Inspection types \n";
-
-                    syncMessage += domainManagerClass::getInstance()->users.size();
-                    syncMessage += " Users \n";
-
-
-                    createDialog( syncMessage.c_str() );   
-
                 }catch( const std::runtime_error& error ){
                     Serial.println( error.what() );            
                     createDialog( error.what() );     
@@ -346,23 +326,7 @@ public:
 
                     Serial.println("main: sync ...");  
                     domainManagerClass::getInstance()->sync();
-
-                    String syncMessage = "Sync successful. \n";
-                    syncMessage += "Loaded: \n";
-
-                    syncMessage += domainManagerClass::getInstance()->assets.size();
-                    syncMessage += " assets \n";
-
-
-                    syncMessage += domainManagerClass::getInstance()->layouts.size();
-                    syncMessage += " layouts \n";
-
-
-                    syncMessage += domainManagerClass::getInstance()->inspectionTypes.size();
-                    syncMessage += " Inspection types \n";
-
-                    createDialog( syncMessage.c_str() );   
-
+                    
                 }catch( const std::runtime_error& error ){
                     Serial.println( error.what() );            
                     createDialog( error.what() );     
