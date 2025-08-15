@@ -971,15 +971,21 @@
     "[2025mobile.eez-project]:/userPages/0[flow-state]": {
       "selection": {
         "0": {
+          "0": {
+            "1": {
+              "$selected": true
+            }
+          },
           "2": {},
-          "5": {
-            "$selected": true
-          }
+          "3": {},
+          "4": {},
+          "5": {},
+          "7": {}
         }
       },
       "transform": {
         "translate": {
-          "x": -357.75,
+          "x": -356.75,
           "y": -281.1749977111816
         },
         "scale": 0.9
@@ -1070,7 +1076,16 @@
       "selection": {
         "0": {
           "1": {},
-          "6": {},
+          "6": {
+            "0": {
+              "0": {
+                "$selected": true
+              },
+              "1": {
+                "$selected": true
+              }
+            }
+          },
           "7": {}
         }
       },
@@ -1115,7 +1130,11 @@
     "[2025mobile.eez-project]:/userPages/5[flow-state]": {
       "selection": {
         "0": {
+          "1": {},
           "3": {},
+          "5": {
+            "$selected": true
+          },
           "7": {
             "0": {
               "2": {},
@@ -1145,9 +1164,14 @@
       "selection": {
         "0": {
           "0": {
-            "3": {},
+            "0": {}
+          },
+          "3": {},
+          "7": {},
+          "9": {
             "$selected": true
-          }
+          },
+          "10": {}
         }
       },
       "transform": {
@@ -1155,7 +1179,7 @@
           "x": -400,
           "y": -240
         },
-        "scale": 1
+        "scale": 0.9
       },
       "timeline": {
         "isEditorActive": false,
